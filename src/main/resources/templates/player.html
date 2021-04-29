@@ -13,20 +13,22 @@
           <div id="rules-list">
               <p class="rules-list__header">ルール</p>
               <ul id="rules">
-                  <li class="rule" th:each="rule : ${rules}">
+                  <li class="rule__item" th:each="rule : ${rules}">
                       <div th:class="(${rule.accessType.name()} == 'ASSIGNED')? 'rule\_\_assigned' : 'rule\_\_shared'">
-                          <span class="rules-list__number" th:text="${rule.ruleNumber}">1</span>
-                          <span class="rules-list__text" th:text="${rule.title}">hoge</span>
+                          <a class="rule__item__link" th:href="'/player/' + ${playerId} + '/game/' + ${gameId} + '/rule/' + ${rule.ruleNumber}">
+                              <span class="rules-list__number" th:text="${rule.ruleNumber}">1</span>
+                              <span class="rules-list__text" th:text="${rule.title}">hoge</span>
+                          </a>
                       </div>
                   </li>
               </ul>
           </div>
-          <div id="rule">
+          <div id="rule" th:if="${selectedRule != null}">
               <div class="rule__header">
-                  <div id="rule__number">1</div>
-                  <div id="rule__title">あずにゃん</div>
+                  <div id="rule__number" th:text="${selectedRule.ruleNumber}">1</div>
+                  <div id="rule__title" th:text="${selectedRule.title}">あずにゃん</div>
               </div>
-              <div id="rule__text">あずにゃんはかわいい</div>
+              <div id="rule__text" th:text="${selectedRule.text}">あずにゃんはかわいい</div>
           </div>
       </div>
   </div>

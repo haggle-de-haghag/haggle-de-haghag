@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -32,8 +33,13 @@ public class PlayerController {
         this.ruleAccessRepository = ruleAccessRepository;
     }
 
-    @GetMapping("/game/{gameId}")
-    public String index(@PathVariable final int playerId, @PathVariable final int gameId, final Model model) {
+    @GetMapping({"/game/{gameId}", "/game/{gameId}/rule/{ruleNumber}"})
+    public String index(
+            @PathVariable final int playerId,
+            @PathVariable final int gameId,
+            @PathVariable(required = false) final Integer ruleNumber,
+            final Model model
+    ) {
         final List<RuleAccess> ruleAccesses = ruleAccessRepository.findAllByGameIdAndPlayerId(gameId, playerId);
         Map<Integer, RuleAccess> ruleAccessMap = ruleAccesses.stream()
                 .collect(Collectors.toMap(RuleAccess::ruleNumber, Function.identity()));
@@ -44,6 +50,12 @@ public class PlayerController {
                 .map((rule) -> RuleView.create(rule, ruleAccessMap.get(rule.ruleNumber()).type()))
                 .collect(Collectors.toList());
         model.addAttribute("rules", ruleViews);
+        if (ruleNumber != null) {
+            final Optional<RuleView> maybeRuleView = ruleViews.stream()
+                    .filter((r) -> r.ruleNumber() == ruleNumber)
+                    .findFirst();
+            maybeRuleView.ifPresent((ruleView) -> model.addAttribute("selectedRule", ruleView));
+        }
         return "player";
     }
 }
