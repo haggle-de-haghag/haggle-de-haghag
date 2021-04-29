@@ -1,12 +1,15 @@
 package jp.osak.haggledehaghag.model;
 
-import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Embedded;
 
-public record Rule(
+public record RuleAccess(
         int gameId,
         int ruleNumber,
-        String title,
-        String text
+        int playerId,
+        Type type
 ) {
+    public enum Type {
+        ASSIGNED,
+        SHARED
+    }
 }

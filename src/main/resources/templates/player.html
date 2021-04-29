@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="ja" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="/style.css">
+    <title>ハグルでハグハグ - プレイヤー</title>
+</head>
+<body>
+  <div class="main">
+      <div id="session-name">ゲーム名</div>
+      <div id="control-panel">
+          <div id="rules-pane">
+              <p class="rules-pane__header">ルール</p>
+              <ul id="rules">
+                  <li class="rule" th:each="rule : ${rules}">
+                      <div th:class="(${rule.accessType.name()} == 'ASSIGNED')? 'rule\_\_assigned' : 'rule\_\_shared'">
+                          <span class="rule--ordinal" th:text="${rule.ruleNumber}">1</span>
+                          <span class="rule--text" th:text="${rule.title}">hoge</span>
+                      </div>
+                  </li>
+              </ul>
+          </div>
+      </div>
+  </div>
+</body>
+</html>
