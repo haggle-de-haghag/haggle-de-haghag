@@ -16,14 +16,14 @@
     margin-top: 16px;
 }
 
-#rules-pane {
+#rules-list {
     width: 20%;
     min-width: 300px;
     border-right: 1px solid black;
     padding: 8px;
 }
 
-#rules-pane .rules-pane__header {
+#rules-list .rules-list__header {
     font-size: 16px;
 }
 
@@ -33,4 +33,32 @@
 
 .rule__shared {
     background-color: #ffffff;
+}
+
+.rule__header {
+    display: flex;
+    align-items: center;
+}
+
+#rule {
+    margin-left: 32px;
+}
+
+#rule__number {
+    font-size: 72px;
+    width: 96px;
+    height: 96px;
+    border: 2px solid black;
+    border-radius: 50%;
+    text-align: center;
+}
+
+#rule__title {
+    font-size: 64px;
+    margin-left: 32px;
+}
+
+#rule__text {
+    font-size: 20px;
+    margin-top: 20px;
 }

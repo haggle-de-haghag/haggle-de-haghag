@@ -3,22 +3,30 @@
 <head>
     <meta charset="UTF-8">
     <link rel="stylesheet" href="/style.css">
+    <script src="/player.js"></script>
     <title>ハグルでハグハグ - プレイヤー</title>
 </head>
 <body>
   <div class="main">
       <div id="session-name">ゲーム名</div>
       <div id="control-panel">
-          <div id="rules-pane">
-              <p class="rules-pane__header">ルール</p>
+          <div id="rules-list">
+              <p class="rules-list__header">ルール</p>
               <ul id="rules">
                   <li class="rule" th:each="rule : ${rules}">
                       <div th:class="(${rule.accessType.name()} == 'ASSIGNED')? 'rule\_\_assigned' : 'rule\_\_shared'">
-                          <span class="rule--ordinal" th:text="${rule.ruleNumber}">1</span>
-                          <span class="rule--text" th:text="${rule.title}">hoge</span>
+                          <span class="rules-list__number" th:text="${rule.ruleNumber}">1</span>
+                          <span class="rules-list__text" th:text="${rule.title}">hoge</span>
                       </div>
                   </li>
               </ul>
+          </div>
+          <div id="rule">
+              <div class="rule__header">
+                  <div id="rule__number">1</div>
+                  <div id="rule__title">あずにゃん</div>
+              </div>
+              <div id="rule__text">あずにゃんはかわいい</div>
           </div>
       </div>
   </div>
