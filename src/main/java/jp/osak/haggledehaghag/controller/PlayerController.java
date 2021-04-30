@@ -1,61 +1,34 @@
 package jp.osak.haggledehaghag.controller;
 
+import jp.osak.haggledehaghag.model.Player;
 import jp.osak.haggledehaghag.model.Rule;
-import jp.osak.haggledehaghag.model.RuleAccess;
-import jp.osak.haggledehaghag.model.RuleId;
-import jp.osak.haggledehaghag.repository.RuleAccessRepository;
-import jp.osak.haggledehaghag.repository.RuleRepository;
+import jp.osak.haggledehaghag.service.PlayerService;
+import jp.osak.haggledehaghag.service.model.RuleWithAccess;
 import jp.osak.haggledehaghag.viewmodel.RuleView;
-import org.springframework.stereotype.Controller;
-import org.springframework.ui.Model;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Optional;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
-@RequestMapping("/player/{playerId}")
-@Controller
+@RequestMapping("/api/player/{playerKey}")
+@RestController
 public class PlayerController {
-    private final RuleRepository ruleRepository;
-    private final RuleAccessRepository ruleAccessRepository;
+    private final PlayerService playerService;
 
-    public PlayerController(
-            final RuleRepository ruleRepository,
-            RuleAccessRepository ruleAccessRepository
-    ) {
-        this.ruleRepository = ruleRepository;
-        this.ruleAccessRepository = ruleAccessRepository;
+    public PlayerController(final PlayerService playerService) {
+        this.playerService = playerService;
     }
 
-    @GetMapping({"/game/{gameId}", "/game/{gameId}/rule/{ruleNumber}"})
-    public String index(
-            @PathVariable final int playerId,
-            @PathVariable final int gameId,
-            @PathVariable(required = false) final Integer ruleNumber,
-            final Model model
-    ) {
-        final List<RuleAccess> ruleAccesses = ruleAccessRepository.findAllByGameIdAndPlayerId(gameId, playerId);
-        Map<Integer, RuleAccess> ruleAccessMap = ruleAccesses.stream()
-                .collect(Collectors.toMap(RuleAccess::ruleId, Function.identity()));
-        final List<Integer> ruleIds = ruleAccesses.stream().map(RuleAccess::ruleId).collect(Collectors.toList());
-
-        final List<Rule> rules = ruleRepository.findByGameIdAndIdIn(gameId, ruleIds);
-        final List<RuleView> ruleViews = rules.stream()
-                .map((rule) -> RuleView.create(rule, ruleAccessMap.get(rule.id()).type()))
-                .collect(Collectors.toList());
-        model.addAttribute("rules", ruleViews);
-        if (ruleNumber != null) {
-            final Optional<RuleView> maybeRuleView = ruleViews.stream()
-                    .filter((r) -> r.ruleNumber() == ruleNumber)
-                    .findFirst();
-            maybeRuleView.ifPresent((ruleView) -> model.addAttribute("selectedRule", ruleView));
-        }
-        return "player";
+    @GetMapping("/rules")
+    public List<RuleView> findAllAccessibleRules(@PathVariable final String playerKey) {
+        final Player player = playerService.findPlayer(playerKey)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid player key: " + playerKey));
+        final List<RuleWithAccess> rules = playerService.findAllAccessibleRules(player);
+        return rules.stream().map(RuleView::of).collect(Collectors.toList());
     }
 }
