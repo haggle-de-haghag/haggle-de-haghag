@@ -42,12 +42,12 @@ public class PlayerController {
     ) {
         final List<RuleAccess> ruleAccesses = ruleAccessRepository.findAllByGameIdAndPlayerId(gameId, playerId);
         Map<Integer, RuleAccess> ruleAccessMap = ruleAccesses.stream()
-                .collect(Collectors.toMap(RuleAccess::ruleNumber, Function.identity()));
-        final List<Integer> ruleNumbers = ruleAccesses.stream().map(RuleAccess::ruleNumber).collect(Collectors.toList());
+                .collect(Collectors.toMap(RuleAccess::ruleId, Function.identity()));
+        final List<Integer> ruleIds = ruleAccesses.stream().map(RuleAccess::ruleId).collect(Collectors.toList());
 
-        final List<Rule> rules = ruleRepository.findByGameIdAndRuleNumberIn(gameId, ruleNumbers);
+        final List<Rule> rules = ruleRepository.findByGameIdAndIdIn(gameId, ruleIds);
         final List<RuleView> ruleViews = rules.stream()
-                .map((rule) -> RuleView.create(rule, ruleAccessMap.get(rule.ruleNumber()).type()))
+                .map((rule) -> RuleView.create(rule, ruleAccessMap.get(rule.id()).type()))
                 .collect(Collectors.toList());
         model.addAttribute("rules", ruleViews);
         if (ruleNumber != null) {

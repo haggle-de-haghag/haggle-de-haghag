@@ -1,10 +1,10 @@
 package jp.osak.haggledehaghag.model;
 
-import org.springframework.data.relational.core.mapping.Embedded;
-
+/**
+ * Represents the fact that a player has access to a rule.
+ */
 public record RuleAccess(
-        int gameId,
-        int ruleNumber,
+        int ruleId,
         int playerId,
         Type type
 ) {

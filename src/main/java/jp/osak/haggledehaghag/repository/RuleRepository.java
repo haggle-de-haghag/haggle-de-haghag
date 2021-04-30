@@ -10,5 +10,5 @@ import java.util.List;
 public interface RuleRepository extends CrudRepository<Rule, RuleId> {
     List<Rule> findByGameId(int gameId);
 
-    List<Rule> findByGameIdAndRuleNumberIn(int gameId, Collection<Integer> ruleNumbers);
+    List<Rule> findByGameIdAndIdIn(int gameId, Collection<Integer> ruleIds);
 }

@@ -1,9 +1,12 @@
 package jp.osak.haggledehaghag.model;
 
 import org.springframework.data.annotation.Id;
-import org.springframework.data.relational.core.mapping.Embedded;
 
+/**
+ * Represents a rule used in a game.
+ */
 public record Rule(
+        @Id int id,
         int gameId,
         int ruleNumber,
         String title,
