@@ -20,15 +20,18 @@ public class PlayerService {
     private final PlayerRepository playerRepository;
     private final RuleRepository ruleRepository;
     private final RuleAccessRepository ruleAccessRepository;
+    private final RuleService ruleService;
 
     public PlayerService(
             final PlayerRepository playerRepository,
             final RuleRepository ruleRepository,
-            final RuleAccessRepository ruleAccessRepository
+            final RuleAccessRepository ruleAccessRepository,
+            final RuleService ruleService
     ) {
         this.playerRepository = playerRepository;
         this.ruleRepository = ruleRepository;
         this.ruleAccessRepository = ruleAccessRepository;
+        this.ruleService = ruleService;
     }
 
     public Optional<Player> findPlayer(final String playerKey) {
@@ -45,5 +48,17 @@ public class PlayerService {
         return rules.stream()
                 .map((r) -> new RuleWithAccess(r, accessMap.get(r.id()).type()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * Share a rule with specified player.
+     *
+     * @param player the player attempts to share the rule. The rule must be assigned to this player.
+     * @param to the player who will get access to the rule
+     * @param rule the rule to be shared
+     * @return true if the rule is successfully shared. false if the rule is not assigned to the <code>from</code> player.
+     */
+    public boolean shareRule(final Player player, final Player to, final Rule rule) {
+        return ruleService.share(rule, player, to);
     }
 }
