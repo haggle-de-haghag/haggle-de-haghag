@@ -8,7 +8,7 @@ plugins {
 
 group = 'jp.osak'
 version = '0.0.1-SNAPSHOT'
-sourceCompatibility = '16'
+sourceCompatibility = '14'
 
 configurations {
     compileOnly {
@@ -52,11 +52,11 @@ asciidoctor {
 }
 compileKotlin {
     kotlinOptions {
-        jvmTarget = "15"
+        jvmTarget = "14"
     }
 }
 compileTestKotlin {
     kotlinOptions {
-        jvmTarget = "15"
+        jvmTarget = "14"
     }
 }
