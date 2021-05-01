@@ -19,8 +19,7 @@ class GameService (
         val key = generateKey(title)
         val masterKey = "gm-" + generateKey(title)
         val game = Game(0, title, key, masterKey)
-        gameRepository.save(game)
-        return game
+        return gameRepository.save(game)
     }
 
     fun findGame(gameKey: String): Game? {
