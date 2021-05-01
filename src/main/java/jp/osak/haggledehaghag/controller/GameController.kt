@@ -8,35 +8,28 @@ import jp.osak.haggledehaghag.viewmodel.GameView
 import jp.osak.haggledehaghag.viewmodel.PlayerView
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
-@RequestMapping("/api/game")
+@RequestMapping("/api/games")
 @RestController
 class GameController(
-        private val gameRepository: GameRepository,
         private val gameService: GameService,
-        private val playerRepository: PlayerRepository
 ) {
     @PostMapping
     fun create(@RequestBody request: CreateRequest): GameView {
-        val game = Game(0, request.title)
-        val createdGame = gameRepository.save(game)
-        return GameView(createdGame)
+        val game = gameService.createNewGame(request.title)
+        return GameView(game)
     }
 
-    @PostMapping("/join")
-    fun join(@RequestBody request: JoinRequest): PlayerView {
-        val game = gameRepository.findByIdOrNull(request.gameId)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game id: " + request.gameId)
+    @PostMapping("{gameKey}/join")
+    fun join(@PathVariable gameKey: String, @RequestBody request: JoinRequest): PlayerView {
+        val game = gameService.findGame(gameKey)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game key: " + gameKey)
         val player = gameService.createNewPlayer(game, request.playerName)
-        val createdPlayer = playerRepository.save(player)
-        return PlayerView(createdPlayer)
+        return PlayerView(player)
     }
 
     data class CreateRequest(val title: String)
-    data class JoinRequest(val gameId: Int, val playerName: String)
+    data class JoinRequest(val playerName: String)
 }

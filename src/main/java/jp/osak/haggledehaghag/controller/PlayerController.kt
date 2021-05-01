@@ -15,7 +15,7 @@ import java.util.stream.Collectors
 /**
  * API endpoints for player actions in the game.
  */
-@RequestMapping("/api/player/{playerKey}")
+@RequestMapping("/api/players/{playerKey}")
 @RestController
 class PlayerController(private val playerService: PlayerService) {
     @ModelAttribute

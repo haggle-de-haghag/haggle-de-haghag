@@ -19,6 +19,13 @@ class PlayerService(
         private val ruleAccessRepository: RuleAccessRepository,
         private val ruleService: RuleService
 ) {
+    fun createNewPlayer(gameId: Int, displayName: String): Player {
+        val playerKey = generateKey("${gameId}-${displayName}")
+        val player = Player(0, gameId, displayName, playerKey)
+        playerRepository.save(player)
+        return player
+    }
+
     fun findPlayer(playerKey: String): Player? {
         return playerRepository.findByPlayerKey(playerKey)
     }
@@ -43,5 +50,11 @@ class PlayerService(
      */
     fun shareRule(player: Player, to: Player, rule: Rule): Boolean {
         return ruleService.share(rule, player, to)
+    }
+
+    private fun generateKey(base: String): String {
+        val salt = Math.random()
+        val keyBase = "$base-$salt"
+        return String.format("%08x", keyBase.hashCode())
     }
 }

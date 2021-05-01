@@ -5,6 +5,7 @@ import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
@@ -12,6 +13,18 @@ class RuleService(
         private val ruleRepository: RuleRepository,
         private val ruleAccessRepository: RuleAccessRepository
 ) {
+    fun findRule(ruleId: Int): Rule? {
+        return ruleRepository.findByIdOrNull(ruleId)
+    }
+
+    fun updateRule(rule: Rule, title: String? = null, text: String? = null): Rule {
+        val newRule = rule.copy(
+                title = title ?: rule.title,
+                text = text ?: rule.text
+        )
+        return ruleRepository.save(newRule)
+    }
+
     /**
      * Share a rule with specified player.
      *
