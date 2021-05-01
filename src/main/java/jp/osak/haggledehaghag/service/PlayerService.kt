@@ -7,6 +7,7 @@ import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
 import jp.osak.haggledehaghag.service.model.RuleWithAccess
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.*
 import java.util.function.Function
@@ -24,6 +25,10 @@ class PlayerService(
         val player = Player(0, gameId, displayName, playerKey)
         playerRepository.save(player)
         return player
+    }
+
+    fun findPlayer(playerId: Int): Player? {
+        return playerRepository.findByIdOrNull(playerId)
     }
 
     fun findPlayer(playerKey: String): Player? {

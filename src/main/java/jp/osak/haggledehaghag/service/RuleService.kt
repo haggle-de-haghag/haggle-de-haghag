@@ -5,6 +5,7 @@ import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
+import jp.osak.haggledehaghag.util.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -25,6 +26,17 @@ class RuleService(
         return ruleRepository.save(newRule)
     }
 
+    fun assign(rule: Rule, player: Player): Either<RuleAccess, AssignError> {
+        val existingAccess = ruleAccessRepository.findByRuleIdAndPlayerId(rule.id, player.id)
+        if (existingAccess != null) {
+            return Either.Err(AssignError.ALREADY_ASSIGNED)
+        }
+
+        val access = RuleAccess(0, rule.id, player.id, RuleAccess.Type.ASSIGNED)
+        val result = ruleAccessRepository.save(access)
+        return Either.Ok(result)
+    }
+
     /**
      * Share a rule with specified player.
      *
@@ -41,4 +53,8 @@ class RuleService(
         ruleAccessRepository.save(access)
         return true
     }
+}
+
+enum class AssignError {
+    ALREADY_ASSIGNED
 }

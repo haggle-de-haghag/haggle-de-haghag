@@ -6,4 +6,5 @@ import java.util.*
 
 interface PlayerRepository : CrudRepository<Player, Int> {
     fun findByPlayerKey(playerKey: String): Player?
+    fun findByGameId(gameId: Int): List<Player>
 }
