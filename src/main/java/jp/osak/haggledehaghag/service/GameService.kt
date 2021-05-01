@@ -17,13 +17,18 @@ class GameService (
 ){
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
-        val game = Game(0, title, key)
+        val masterKey = "gm-" + generateKey(title)
+        val game = Game(0, title, key, masterKey)
         gameRepository.save(game)
         return game
     }
 
     fun findGame(gameKey: String): Game? {
         return gameRepository.findByGameKey(gameKey)
+    }
+
+    fun findGameForMasterKey(masterKey: String): Game? {
+        return gameRepository.findByMasterKey(masterKey)
     }
 
     fun createNewPlayer(game: Game, displayName: String): Player {

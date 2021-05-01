@@ -12,7 +12,7 @@ import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
-@RequestMapping("/api/games/{gameKey}/game_master")
+@RequestMapping("/api/game_master/{masterKey}")
 @RestController
 class GameMasterController (
         private val gameService: GameService,
@@ -20,9 +20,9 @@ class GameMasterController (
         private val playerService: PlayerService,
 ){
     @ModelAttribute
-    fun addGame(@PathVariable gameKey: String): Game {
-        return gameService.findGame(gameKey)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game key: $gameKey")
+    fun addGame(@PathVariable masterKey: String): Game {
+        return gameService.findGameForMasterKey(masterKey)
+                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game master key: $masterKey")
     }
 
     @GetMapping("/rules")

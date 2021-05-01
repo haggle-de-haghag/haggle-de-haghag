@@ -5,4 +5,5 @@ import org.springframework.data.repository.CrudRepository
 
 interface GameRepository : CrudRepository<Game, Int> {
     fun findByGameKey(gameKey: String): Game?
+    fun findByMasterKey(masterKey: String): Game?
 }
