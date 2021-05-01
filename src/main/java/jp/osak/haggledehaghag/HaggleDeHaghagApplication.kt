@@ -1,13 +1,14 @@
-package jp.osak.haggledehaghag;
+package jp.osak.haggledehaghag
 
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.SpringApplication
+import org.springframework.boot.autoconfigure.SpringBootApplication
 
 @SpringBootApplication
-public class HaggleDeHaghagApplication {
-
-    public static void main(String[] args) {
-        SpringApplication.run(HaggleDeHaghagApplication.class, args);
+open class HaggleDeHaghagApplication {
+    companion object {
+        @JvmStatic
+        fun main(args: Array<String>) {
+            SpringApplication.run(HaggleDeHaghagApplication::class.java, *args)
+        }
     }
-
 }
