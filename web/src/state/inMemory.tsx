@@ -2,6 +2,8 @@ import React, {Dispatch, useReducer} from 'react';
 import {GameAction, GameState, GameStateContext} from "./gameState";
 import {AccessType, Rule} from "../model";
 import {GameMasterAction, GameMasterState, GameMasterStateContext} from "./gameMasterState";
+import {Simulate} from "react-dom/test-utils";
+import play = Simulate.play;
 
 function reducer(state: GameState, action: GameAction): GameState {
     switch (action.type) {
@@ -56,7 +58,7 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
     console.log(state);
     switch (action.type) {
         case 'CreateRule': {
-            const {title, text} = action;
+            const {title, text, accessList} = action;
             const ruleNumber = state.rules.length + 1;
             const rule: Rule = {
                 id: ruleNumber,
@@ -65,7 +67,15 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
                 ruleNumber,
                 accessType: AccessType.ASSIGNED
             };
-            return {...state, rules: [...state.rules, rule]};
+            const ruleAccessList = {
+                ...state.ruleAccessList,
+                [rule.id]: accessList,
+            };
+            return {
+                ...state,
+                rules: [...state.rules, rule],
+                ruleAccessList: ruleAccessList,
+            };
         }
         case 'UpdateRule': {
             const {ruleId, title, text} = action;
@@ -79,13 +89,13 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
             });
             return {...state, rules};
         }
-        case 'ChangeRuleAccess': {
+        case 'ChangeRuleAccessListInput': {
             const {ruleId, playerId, assigned} = action;
-            const playerAccessList = state.ruleAccessList[playerId].filter((rid) => rid != ruleId);
+            const accessList = state.ruleAccessListInput.filter((pid) => pid != playerId);
             if (assigned) {
-                playerAccessList.push(ruleId);
+                accessList.push(playerId);
             }
-            return {...state, ruleAccessList: { ...state.ruleAccessList, [playerId]: playerAccessList }};
+            return {...state, ruleAccessListInput: accessList };
         }
         case 'SetRuleTitleInput': {
             const {value} = action;
@@ -108,6 +118,7 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
                 selectedRuleId: ruleId,
                 ruleTitleInput: rule.title,
                 ruleTextInput: rule.text,
+                ruleAccessListInput: state.ruleAccessList[ruleId] ?? [],
             };
         }
     }
@@ -132,6 +143,7 @@ export function ProvideInMemoryGameMasterState(props: any) {
         ruleAccessList: [],
         ruleTitleInput: '',
         ruleTextInput: '',
+        ruleAccessListInput: [],
     };
 
     //@ts-ignore

@@ -5,18 +5,20 @@ export interface GameMasterState {
     // Model state
     players: Player[];
     rules: Rule[];
-    ruleAccessList: { [key: number]: RuleId[] }; // key: PlayerId
+    ruleAccessList: { [key: number]: PlayerId[] }; // key: RuleId
 
     // UI state
     ruleTitleInput: string;
     ruleTextInput: string;
     selectedRuleId?: RuleId;
+    ruleAccessListInput: PlayerId[];
 }
 
 export interface CreateRule {
     type: 'CreateRule';
     title: string;
     text: string;
+    accessList: PlayerId[];
 }
 
 export interface UpdateRule {
@@ -24,10 +26,11 @@ export interface UpdateRule {
     ruleId: RuleId;
     title?: string;
     text?: string;
+    accessList?: PlayerId[];
 }
 
 export interface ChangeRuleAccess {
-    type: 'ChangeRuleAccess';
+    type: 'ChangeRuleAccessListInput';
     playerId: PlayerId;
     ruleId: RuleId;
     assigned: boolean;
@@ -56,6 +59,7 @@ const fallback: GameMasterState = {
     ruleAccessList: [],
     ruleTitleInput: '',
     ruleTextInput: '',
+    ruleAccessListInput: [],
 };
 
 export const GameMasterStateContext: React.Context<[GameMasterState, Dispatch<GameMasterAction>]>
