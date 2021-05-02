@@ -1,20 +1,22 @@
-import React, {useContext} from 'react';
-import {GameMasterStateContext} from "../../state/gameMasterState";
+import React from 'react';
 import RuleListComponent from '../../component/RuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
 import {PlayerId} from "../../model";
+import {useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export function RuleList() {
-    const [state, dispatch] = useContext(GameMasterStateContext);
+    const { rules, selectedRuleId } = useGMSelector((state) => state);
+    const dispatch = useGMDispatch();
 
     return <RuleListComponent
-        rules={state.rules}
-        selectedRuleId={state.selectedRuleId}
+        rules={rules}
+        selectedRuleId={selectedRuleId}
         onRuleClick={(r) => dispatch({type: 'ChangeSelectedRule', ruleId: r.id})}/>;
 }
 
 export function RuleEditor() {
-    const [state, dispatch] = useContext(GameMasterStateContext);
+    const state = useGMSelector((state) => state);
+    const dispatch = useGMDispatch();
 
     const currentRuleId = state.selectedRuleId;
     if (currentRuleId == undefined) {

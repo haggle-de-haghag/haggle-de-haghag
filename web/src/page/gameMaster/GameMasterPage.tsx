@@ -1,11 +1,10 @@
-import {ProvideInMemoryGameMasterState} from "../../state/inMemory";
 import {Box, Button, Grid, Typography} from "@material-ui/core/index";
-import React, {useContext} from "react";
-import {GameMasterStateContext} from "../../state/gameMasterState";
+import React from "react";
 import {RuleEditor, RuleList} from "./materializedCompoents";
+import {useGMDispatch} from "../../state/gameMasterState";
 
 export default function GameMasterPage() {
-    const [state, dispatch] = useContext(GameMasterStateContext);
+    const dispatch = useGMDispatch();
 
     const onNewRuleClick = () => dispatch({
         type: 'CreateRule',
