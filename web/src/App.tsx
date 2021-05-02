@@ -1,7 +1,7 @@
 import React from 'react';
 import './App.css';
 import {Box, Container, Typography} from "@material-ui/core/index";
-import ProvideInMemoryGameState from "./state/inMemory";
+import {ProvideInMemoryGameState} from "./state/inMemory";
 import {ProvideUIState} from "./state/uiState";
 import PlayerPage from "./page/PlayerPage";
 
