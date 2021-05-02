@@ -16,7 +16,7 @@ export default function GameMasterPage() {
                         <Box><Typography variant="h6">ルール</Typography></Box>
                         <Box><RuleList /></Box>
                     </Grid>
-                    <Grid item xs={6}><RuleEditor /></Grid>
+                    <Grid item xs={9}><RuleEditor /></Grid>
                 </Grid>
             </Grid>
         </ProvideInMemoryGameMasterState>

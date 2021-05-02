@@ -1,4 +1,4 @@
-import {GameId, Player, PlayerId, Rule, RuleId} from "../model";
+import {Player, PlayerId, Rule, RuleId} from "../model";
 import React, {Dispatch} from "react";
 
 export interface GameMasterState {

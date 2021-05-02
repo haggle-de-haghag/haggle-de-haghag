@@ -52,6 +52,8 @@ export function ProvideInMemoryGameState(props: any) {
 }
 
 export function gameMasterReducer(state: GameMasterState, action: GameMasterAction): GameMasterState {
+    console.log(action);
+    console.log(state);
     switch (action.type) {
         case 'CreateRule': {
             const {title, text} = action;
@@ -133,7 +135,7 @@ export function ProvideInMemoryGameMasterState(props: any) {
     };
 
     //@ts-ignore
-    const [state, dispatch] = useReducer(reducer, initialState) as [GameMasterState, Dispatch<GameMasterAction>];
+    const [state, dispatch] = useReducer(gameMasterReducer, initialState) as [GameMasterState, Dispatch<GameMasterAction>];
 
     return <GameMasterStateContext.Provider value={[state, dispatch]}>
         {props.children}

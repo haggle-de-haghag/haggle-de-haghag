@@ -22,11 +22,17 @@ export function RuleEditor() {
         type: 'SetRuleTextInput',
         value: text,
     });
+    const onSaveButtonClick = () => dispatch({
+        type: 'CreateRule',
+        title: state.ruleTitleInput,
+        text: state.ruleTextInput,
+    })
 
     return <RuleEditorComponent
         ruleTitle={state.ruleTitleInput}
         ruleText={state.ruleTextInput}
         onRuleTitleChange={onRuleTitleChange}
         onRuleTextChange={onRuleTextChange}
+        onSaveButtonClick={onSaveButtonClick}
     />;
 }

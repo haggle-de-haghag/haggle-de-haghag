@@ -1,8 +1,7 @@
 import React from 'react';
-import {Box, Container } from "@material-ui/core/index";
+import {Box, Container} from "@material-ui/core/index";
 import {ProvideInMemoryGameState} from "./state/inMemory";
 import {ProvideUIState} from "./state/uiState";
-import PlayerPage from "./page/PlayerPage";
 
 export default function App(props: any) {
   return (
