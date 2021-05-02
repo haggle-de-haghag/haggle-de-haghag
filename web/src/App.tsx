@@ -4,13 +4,13 @@ import {ProvideInMemoryGameState} from "./state/inMemory";
 import {ProvideUIState} from "./state/uiState";
 import PlayerPage from "./page/PlayerPage";
 
-export default function App() {
+export default function App(props: any) {
   return (
       <ProvideInMemoryGameState>
           <ProvideUIState>
               <Container>
                   <Box my={4}>
-                      <PlayerPage />
+                      {props.children}
                   </Box>
               </Container>
           </ProvideUIState>

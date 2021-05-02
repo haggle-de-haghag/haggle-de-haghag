@@ -3,7 +3,10 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
     mode: 'development',
-    entry: './src/index.tsx',
+    entry: {
+        player: './src/index_player.tsx',
+        game_master: './src/index_gm.tsx'
+    },
     module: {
         rules: [
             {
@@ -17,12 +20,21 @@ module.exports = {
         extensions: ['.tsx', '.ts', '.js'],
     },
     output: {
-        filename: 'main.js',
+        filename: '[name].js',
         path: path.resolve(__dirname, 'dist'),
     },
-    plugins: [new HtmlWebpackPlugin({
-        template: 'public/index.html'
-    })],
+    plugins: [
+        new HtmlWebpackPlugin({
+            filename: 'player.html',
+            template: 'public/index.html',
+            chunks: ['player']
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'game_master.html',
+            template: 'public/index.html',
+            chunks: ['game_master']
+        }),
+    ],
     devServer: {
         port: 3000
     },
