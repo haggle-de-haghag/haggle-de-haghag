@@ -1,26 +1,32 @@
 import {Rule} from "../model";
+import {get, patch, post} from "./common";
 
-export class GameMasterRestApi {
-    private gameKey: string;
-    private urlBase: string;
+interface Config {
+    gameMasterKey: string;
+    urlBase: string;
+}
 
-    constructor(gameKey: string) {
-        this.gameKey = gameKey;
-        this.urlBase = "http://localhost:8080/api/game_master";
-    }
+let config: Config;
 
-    public async createRule(title: string, text: string): Promise<Rule> {
-        const response = await fetch(`${this.urlBase}/${this.gameKey}/rules`, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({title, text})
-        });
-        if (response.status != 200) {
-            throw new Error("failed to create a rule");
-        }
-        const body = await response.json();
-        return body as Rule;
-    }
+export function configure(gameMasterKey: string, urlBase: string) {
+    config = {
+        gameMasterKey,
+        urlBase
+    };
+}
+
+export async function listRules(): Promise<Rule[]> {
+    return get(fullUrl('/rules'));
+}
+
+export async function createRule(title: string, text: string): Promise<Rule> {
+    return post(fullUrl('/rules'), {title, text});
+}
+
+export async function updateRule(ruleId: number, title?: string, text?: string): Promise<Rule> {
+    return patch(fullUrl(`/rules/${ruleId}`), {title, text})
+}
+
+function fullUrl(api: string): string {
+    return `${config.urlBase}/game_master/${config.gameMasterKey}${api}`;
 }

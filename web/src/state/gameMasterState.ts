@@ -1,9 +1,9 @@
-import {AccessType, Player, PlayerId, Rule, RuleId} from "../model";
+import {Player, PlayerId, Rule, RuleId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
-import {call, put, takeEvery} from 'redux-saga/effects';
-import {GameMasterRestApi} from "../rest/gameMaster";
+import {all, call, put, takeEvery} from 'redux-saga/effects';
+import * as GameMasterRestApi from '../rest/gameMaster';
 
 export interface GameMasterState {
     // Model state
@@ -103,6 +103,15 @@ const slice = createSlice({
             };
         },
 
+        replaceRule: (state, action: PayloadAction<Rule>) => {
+            const rule = action.payload;
+            const index = state.rules.findIndex((r) => r.id = rule.id);
+            if (index == -1) {
+                throw Error(`Rule ${rule.id} does not exist`);
+            }
+            state.rules[index] = rule;
+        },
+
         updateRule: (state, action: PayloadAction<UpdateRule>) => {
             const {ruleId, title, text, accessList} = action.payload;
             const rules = state.rules.map((r) => {
@@ -155,6 +164,13 @@ const slice = createSlice({
                 ruleTextInput: rule.text,
                 ruleAccessListInput: state.ruleAccessList[ruleId] ?? [],
             };
+        },
+
+        initialize: (state, action: PayloadAction<Rule[]>) => {
+            state.rules = action.payload;
+            state.ruleTitleInput = '';
+            state.ruleTextInput = '';
+            state.selectedRuleId = undefined;
         }
     }
 });
@@ -162,13 +178,28 @@ const slice = createSlice({
 export const actions = slice.actions;
 
 function* createRuleSaga(action: ReturnType<typeof actions.createRule>) {
-    const api = new GameMasterRestApi('gm-4dd98f02');
-    const createdRule: Rule = yield call(api.createRule.bind(api), action.payload.title, action.payload.text);
+    const payload = action.payload;
+    const createdRule: Rule = yield call(GameMasterRestApi.createRule, payload.title, payload.text);
     yield put(actions.addRule(createdRule));
 }
 
+function* updateRuleSaga(action: ReturnType<typeof actions.updateRule>) {
+    const payload = action.payload;
+    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text);
+    yield put(actions.replaceRule(updatedRule));
+}
+
 function* createRuleWatcherSaga() {
-    yield takeEvery(actions.createRule, createRuleSaga);
+    yield all([
+        takeEvery(actions.createRule, createRuleSaga),
+        takeEvery(actions.updateRule, updateRuleSaga),
+    ]);
+}
+
+function* initSaga() {
+    yield call(GameMasterRestApi.configure, 'gm-4dd98f02', 'http://localhost:8080/api')
+    const rules: Rule[] = yield call(GameMasterRestApi.listRules);
+    yield put(actions.initialize(rules));
 }
 
 const sagaMiddleware = createSagaMiddleware();
@@ -178,6 +209,7 @@ export const store = configureStore({
     devTools: process.env.NODE_ENV !== 'production',
 });
 sagaMiddleware.run(createRuleWatcherSaga);
+sagaMiddleware.run(initSaga as any);
 
 export type GMDispatch = typeof store.dispatch;
 export const useGMDispatch = () => useDispatch<GMDispatch>();
