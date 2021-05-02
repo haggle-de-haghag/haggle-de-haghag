@@ -1,10 +1,9 @@
 import React from 'react';
 import './App.css';
-import {Box, Container, Grid, Typography} from "@material-ui/core/index";
+import {Box, Container, Typography} from "@material-ui/core/index";
 import ProvideInMemoryGameState from "./state/inMemory";
 import {ProvideUIState} from "./state/uiState";
-import RuleList from "./materialized/RuleList";
-import RuleView from "./materialized/RuleView";
+import PlayerPage from "./page/PlayerPage";
 
 export default function App() {
   return (
@@ -12,12 +11,8 @@ export default function App() {
           <ProvideUIState>
               <Container>
                   <Box my={4}>
-                      <Typography variant="h4">Haggle de haghag</Typography>
+                      <PlayerPage />
                   </Box>
-                  <Grid container spacing={3}>
-                      <Grid item xs={4}><RuleList /></Grid>
-                      <Grid item><RuleView /></Grid>
-                  </Grid>
               </Container>
           </ProvideUIState>
       </ProvideInMemoryGameState>

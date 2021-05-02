@@ -6,7 +6,7 @@ function reducer(state: GameState, action: GameAction): GameState {
     switch (action.type) {
         case 'ShareRule':
             const { rule, player } = action;
-            console.log(`Share rule ${rule.ruleNumber} with ${player.id} (${player.displayName}`);
+            console.log(`Share rule ${rule.ruleNumber} with ${player.id} (${player.displayName})`);
             break;
     }
     return state;
@@ -14,12 +14,25 @@ function reducer(state: GameState, action: GameAction): GameState {
 
 export default function ProvideInMemoryGameState(props: any) {
     const initialState: GameState = {
+        game: {
+            id: 1,
+            title: "Test game",
+        },
         player: {
             id: 1,
             displayName: "azusa",
             playerKey: "abcd1234",
         },
-        players: [],
+        players: [
+            {
+                id: 2,
+                displayName: "yui",
+            },
+            {
+                id: 3,
+                displayName: "mio"
+            }
+        ],
         rules: [{
             id: 1,
             ruleNumber: 1,

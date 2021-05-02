@@ -1,7 +1,8 @@
 import React, {Dispatch} from "react";
-import {ForeignPlayer, Player, Rule} from "../model";
+import {ForeignPlayer, Game, Player, Rule} from "../model";
 
 export interface GameState {
+    game: Game;
     player: Player;
     players: ForeignPlayer[];
     rules: Rule[];
@@ -16,6 +17,10 @@ export interface ShareRule {
 export type GameAction = ShareRule;
 
 const fallback: GameState = {
+    game: {
+        id: 0,
+        title: "",
+    },
     player: {
         id: 0,
         displayName: "",
