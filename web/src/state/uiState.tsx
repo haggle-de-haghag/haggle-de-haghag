@@ -13,6 +13,7 @@ interface SetSelectedRule {
 type UIAction = SetSelectedRule;
 
 function reducer(state: UIState, action: UIAction): UIState {
+    console.log(action);
     switch (action.type) {
         case 'SetSelectedRule':
             const { rule } = action;

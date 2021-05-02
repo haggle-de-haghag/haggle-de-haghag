@@ -1,6 +1,7 @@
 import React from 'react';
-import {Box, List, ListItem} from "@material-ui/core/index";
+import {Avatar, Box, List, ListItem} from "@material-ui/core/index";
 import {Rule} from "../model";
+import {makeStyles} from "@material-ui/core/styles";
 
 interface Props {
     rules: Rule[];
@@ -12,7 +13,9 @@ export default function RuleList(props: Props) {
         <Box>
             <List>
                 {props.rules.map((rule) =>
-                    <ListItem button onClick={() => props.onRuleClick(rule)}>{rule.title}</ListItem>
+                    <ListItem button onClick={() => props.onRuleClick(rule)}>
+                        {rule.ruleNumber}: {rule.title}
+                    </ListItem>
                 )}
             </List>
         </Box>

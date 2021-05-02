@@ -1,5 +1,6 @@
 import React, {Dispatch, useReducer} from 'react';
 import {GameAction, GameState, GameStateContext} from "./gameState";
+import {AccessType} from "../model";
 
 function reducer(state: GameState, action: GameAction): GameState {
     switch (action.type) {
@@ -12,8 +13,7 @@ function reducer(state: GameState, action: GameAction): GameState {
 }
 
 export default function ProvideInMemoryGameState(props: any) {
-    //@ts-ignore
-    const [state, dispatch] = useReducer(reducer, {
+    const initialState: GameState = {
         player: {
             id: 1,
             displayName: "azusa",
@@ -22,10 +22,15 @@ export default function ProvideInMemoryGameState(props: any) {
         players: [],
         rules: [{
             id: 1,
+            ruleNumber: 1,
             title: "azusa",
-            text: "azusa de azuazu"
+            text: "azusa de azuazu",
+            accessType: AccessType.ASSIGNED
         }],
-    }) as [GameState, Dispatch<GameAction>];
+    };
+
+    //@ts-ignore
+    const [state, dispatch] = useReducer(reducer, initialState) as [GameState, Dispatch<GameAction>];
 
     return <GameStateContext.Provider value={[state, dispatch]}>
         {props.children}
