@@ -2,10 +2,12 @@ import {AccessType, Player, PlayerId, Rule, RuleId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
-import {put, takeEvery} from 'redux-saga/effects';
+import {call, put, takeEvery} from 'redux-saga/effects';
+import {GameMasterRestApi} from "../rest/gameMaster";
 
 export interface GameMasterState {
     // Model state
+    gameMasterKey: string;
     players: Player[];
     rules: Rule[];
     ruleAccessList: { [key: number]: PlayerId[] }; // key: RuleId
@@ -37,6 +39,7 @@ export interface ChangeRuleAccess {
 }
 
 const initialState: GameMasterState = {
+    gameMasterKey: 'gm-4dd98f02',
     players: [],
     rules: [],
     ruleAccessList: [],
@@ -46,6 +49,7 @@ const initialState: GameMasterState = {
 };
 
 const inMemoryInitialState: GameMasterState = {
+    gameMasterKey: '',
     players: [
         {
             id: 1,
@@ -70,6 +74,7 @@ const slice = createSlice({
     initialState: initialState,
     reducers: {
         createRule: (state, action: PayloadAction<CreateRule>) => {
+            /*
             const {title, text, accessList} = action.payload;
             const ruleNumber = state.rules.length + 1;
             const rule: Rule = {
@@ -88,6 +93,7 @@ const slice = createSlice({
                 rules: [...state.rules, rule],
                 ruleAccessList: ruleAccessList,
             };
+             */
         },
 
         addRule: (state, action: PayloadAction<Rule>) => {
@@ -155,15 +161,10 @@ const slice = createSlice({
 
 export const actions = slice.actions;
 
-function* createRuleSaga() {
-    const rule: Rule = {
-        id: 2,
-        ruleNumber: 1,
-        title: "hoge",
-        text: "fuga",
-        accessType: AccessType.ASSIGNED,
-    }
-    yield put(slice.actions.addRule(rule));
+function* createRuleSaga(action: ReturnType<typeof actions.createRule>) {
+    const api = new GameMasterRestApi('gm-4dd98f02');
+    const createdRule: Rule = yield call(api.createRule.bind(api), action.payload.title, action.payload.text);
+    yield put(actions.addRule(createdRule));
 }
 
 function* createRuleWatcherSaga() {
