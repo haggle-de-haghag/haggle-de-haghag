@@ -1,6 +1,6 @@
 import {AccessType, Player, PlayerId, Rule, RuleId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
-import {configureStore} from "@reduxjs/toolkit";
+import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {put, takeEvery} from 'redux-saga/effects';
 
@@ -18,19 +18,12 @@ export interface GameMasterState {
 }
 
 export interface CreateRule {
-    type: 'CreateRule';
     title: string;
     text: string;
     accessList: PlayerId[];
 }
 
-export interface AddRule {
-    type: 'AddRule';
-    rule: Rule;
-}
-
 export interface UpdateRule {
-    type: 'UpdateRule';
     ruleId: RuleId;
     title?: string;
     text?: string;
@@ -38,28 +31,10 @@ export interface UpdateRule {
 }
 
 export interface ChangeRuleAccess {
-    type: 'ChangeRuleAccessListInput';
     playerId: PlayerId;
     ruleId: RuleId;
     assigned: boolean;
 }
-
-export interface SetRuleTitleInput {
-    type: 'SetRuleTitleInput';
-    value: string;
-}
-
-export interface SetRuleTextInput {
-    type: 'SetRuleTextInput';
-    value: string;
-}
-
-export interface ChangeSelectedRule {
-    type: 'ChangeSelectedRule';
-    ruleId: RuleId;
-}
-
-export type GameMasterAction = CreateRule | AddRule | UpdateRule | ChangeRuleAccess | SetRuleTitleInput | SetRuleTextInput | ChangeSelectedRule;
 
 const initialState: GameMasterState = {
     players: [],
@@ -69,17 +44,6 @@ const initialState: GameMasterState = {
     ruleTextInput: '',
     ruleAccessListInput: [],
 };
-
-function gameMasterReducer(state: GameMasterState = initialState, action: GameMasterAction): GameMasterState {
-    switch (action.type) {
-        case 'AddRule':
-            return {
-                ...state,
-                rules: [...state.rules, action.rule]
-            };
-    }
-    return state;
-}
 
 const inMemoryInitialState: GameMasterState = {
     players: [
@@ -101,10 +65,12 @@ const inMemoryInitialState: GameMasterState = {
     ruleAccessListInput: [],
 };
 
-export function inMemoryGameMasterReducer(state: GameMasterState = inMemoryInitialState, action: GameMasterAction): GameMasterState {
-    switch (action.type) {
-        case 'CreateRule': {
-            const {title, text, accessList} = action;
+const slice = createSlice({
+    name: 'state',
+    initialState: initialState,
+    reducers: {
+        createRule: (state, action: PayloadAction<CreateRule>) => {
+            const {title, text, accessList} = action.payload;
             const ruleNumber = state.rules.length + 1;
             const rule: Rule = {
                 id: ruleNumber,
@@ -122,9 +88,17 @@ export function inMemoryGameMasterReducer(state: GameMasterState = inMemoryIniti
                 rules: [...state.rules, rule],
                 ruleAccessList: ruleAccessList,
             };
-        }
-        case 'UpdateRule': {
-            const {ruleId, title, text, accessList} = action;
+        },
+
+        addRule: (state, action: PayloadAction<Rule>) => {
+            return {
+                ...state,
+                rules: [...state.rules, action.payload]
+            };
+        },
+
+        updateRule: (state, action: PayloadAction<UpdateRule>) => {
+            const {ruleId, title, text, accessList} = action.payload;
             const rules = state.rules.map((r) => {
                 if (r.id != ruleId) return r;
                 return {
@@ -141,25 +115,27 @@ export function inMemoryGameMasterReducer(state: GameMasterState = inMemoryIniti
                     [ruleId]: accessList ?? state.ruleAccessList[ruleId],
                 }
             };
-        }
-        case 'ChangeRuleAccessListInput': {
-            const {ruleId, playerId, assigned} = action;
+        },
+
+        changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
+            const {ruleId, playerId, assigned} = action.payload;
             const accessList = state.ruleAccessListInput.filter((pid) => pid != playerId);
             if (assigned) {
                 accessList.push(playerId);
             }
-            return {...state, ruleAccessListInput: accessList };
-        }
-        case 'SetRuleTitleInput': {
-            const {value} = action;
-            return {...state, ruleTitleInput: value};
-        }
-        case 'SetRuleTextInput': {
-            const {value} = action;
-            return {...state, ruleTextInput: value};
-        }
-        case "ChangeSelectedRule": {
-            const {ruleId} = action;
+            state.ruleAccessListInput = accessList;
+        },
+
+        setRuleTitleInput: (state, action: PayloadAction<string>) => {
+            state.ruleTitleInput = action.payload;
+        },
+
+        setRuleTextInput: (state, action: PayloadAction<string>) => {
+            state.ruleTextInput = action.payload;
+        },
+
+        changeSelectedRule: (state, action: PayloadAction<RuleId>) => {
+            const ruleId = action.payload;
             const rule = state.rules.find((r) => r.id == ruleId);
             if (rule == undefined) {
                 console.error(`Rule ${ruleId} doesn't exist. Action: ${action}`);
@@ -175,8 +151,9 @@ export function inMemoryGameMasterReducer(state: GameMasterState = inMemoryIniti
             };
         }
     }
-    return gameMasterReducer(state, action);
-}
+});
+
+export const actions = slice.actions;
 
 function* createRuleSaga() {
     const rule: Rule = {
@@ -186,17 +163,18 @@ function* createRuleSaga() {
         text: "fuga",
         accessType: AccessType.ASSIGNED,
     }
-    yield put<GameMasterAction>({type: "AddRule", rule: rule});
+    yield put(slice.actions.addRule(rule));
 }
 
 function* createRuleWatcherSaga() {
-    yield takeEvery('CreateRule', createRuleSaga);
+    yield takeEvery(actions.createRule, createRuleSaga);
 }
 
 const sagaMiddleware = createSagaMiddleware();
 export const store = configureStore({
-    reducer: inMemoryGameMasterReducer,
-    middleware: [sagaMiddleware]
+    reducer: slice.reducer,
+    middleware: [sagaMiddleware],
+    devTools: process.env.NODE_ENV !== 'production',
 });
 sagaMiddleware.run(createRuleWatcherSaga);
 

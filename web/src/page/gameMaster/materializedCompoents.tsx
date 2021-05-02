@@ -2,7 +2,7 @@ import React from 'react';
 import RuleListComponent from '../../component/RuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
 import {PlayerId} from "../../model";
-import {useGMDispatch, useGMSelector} from "../../state/gameMasterState";
+import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export function RuleList() {
     const { rules, selectedRuleId } = useGMSelector((state) => state);
@@ -11,7 +11,7 @@ export function RuleList() {
     return <RuleListComponent
         rules={rules}
         selectedRuleId={selectedRuleId}
-        onRuleClick={(r) => dispatch({type: 'ChangeSelectedRule', ruleId: r.id})}/>;
+        onRuleClick={(r) => dispatch(actions.changeSelectedRule(r.id))}/>;
 }
 
 export function RuleEditor() {
@@ -25,27 +25,19 @@ export function RuleEditor() {
 
     const assignedPlayerIds = state.ruleAccessListInput;
 
-    const onRuleTitleChange = (text: string) => dispatch({
-        type: 'SetRuleTitleInput',
-        value: text
-    });
-    const onRuleTextChange = (text: string) => dispatch({
-        type: 'SetRuleTextInput',
-        value: text,
-    });
-    const onSaveButtonClick = () => dispatch({
-        type: 'UpdateRule',
+    const onRuleTitleChange = (text: string) => dispatch(actions.setRuleTitleInput(text));
+    const onRuleTextChange = (text: string) => dispatch(actions.setRuleTextInput(text));
+    const onSaveButtonClick = () => dispatch(actions.updateRule({
         ruleId: currentRuleId,
         title: state.ruleTitleInput,
         text: state.ruleTextInput,
         accessList: assignedPlayerIds,
-    });
-    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch({
-        type: 'ChangeRuleAccessListInput',
+    }));
+    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.changeRuleAccessListInput({
         playerId,
         ruleId: currentRuleId,
         assigned
-    });
+    }));
 
     return <RuleEditorComponent
         ruleTitle={state.ruleTitleInput}

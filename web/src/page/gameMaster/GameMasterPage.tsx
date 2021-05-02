@@ -1,17 +1,16 @@
 import {Box, Button, Grid, Typography} from "@material-ui/core/index";
 import React from "react";
 import {RuleEditor, RuleList} from "./materializedCompoents";
-import {useGMDispatch} from "../../state/gameMasterState";
+import {actions, useGMDispatch} from "../../state/gameMasterState";
 
 export default function GameMasterPage() {
     const dispatch = useGMDispatch();
 
-    const onNewRuleClick = () => dispatch({
-        type: 'CreateRule',
+    const onNewRuleClick = () => dispatch(actions.createRule({
         title: '（新規ルール）',
         text: '',
         accessList: [],
-    });
+    }));
 
     return (
         <Grid container direction="column">
