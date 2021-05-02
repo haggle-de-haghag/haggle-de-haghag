@@ -1,7 +1,8 @@
 import {AccessType, Player, PlayerId, Rule, RuleId} from "../model";
-import {createStore} from "redux/index";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore} from "@reduxjs/toolkit";
+import createSagaMiddleware from 'redux-saga';
+import {put, takeEvery} from 'redux-saga/effects';
 
 export interface GameMasterState {
     // Model state
@@ -21,6 +22,11 @@ export interface CreateRule {
     title: string;
     text: string;
     accessList: PlayerId[];
+}
+
+export interface AddRule {
+    type: 'AddRule';
+    rule: Rule;
 }
 
 export interface UpdateRule {
@@ -53,7 +59,27 @@ export interface ChangeSelectedRule {
     ruleId: RuleId;
 }
 
-export type GameMasterAction = CreateRule | UpdateRule | ChangeRuleAccess | SetRuleTitleInput | SetRuleTextInput | ChangeSelectedRule;
+export type GameMasterAction = CreateRule | AddRule | UpdateRule | ChangeRuleAccess | SetRuleTitleInput | SetRuleTextInput | ChangeSelectedRule;
+
+const initialState: GameMasterState = {
+    players: [],
+    rules: [],
+    ruleAccessList: [],
+    ruleTitleInput: '',
+    ruleTextInput: '',
+    ruleAccessListInput: [],
+};
+
+function gameMasterReducer(state: GameMasterState = initialState, action: GameMasterAction): GameMasterState {
+    switch (action.type) {
+        case 'AddRule':
+            return {
+                ...state,
+                rules: [...state.rules, action.rule]
+            };
+    }
+    return state;
+}
 
 const inMemoryInitialState: GameMasterState = {
     players: [
@@ -149,12 +175,31 @@ export function inMemoryGameMasterReducer(state: GameMasterState = inMemoryIniti
             };
         }
     }
-    return state;
+    return gameMasterReducer(state, action);
 }
 
+function* createRuleSaga() {
+    const rule: Rule = {
+        id: 2,
+        ruleNumber: 1,
+        title: "hoge",
+        text: "fuga",
+        accessType: AccessType.ASSIGNED,
+    }
+    yield put<GameMasterAction>({type: "AddRule", rule: rule});
+}
+
+function* createRuleWatcherSaga() {
+    yield takeEvery('CreateRule', createRuleSaga);
+}
+
+const sagaMiddleware = createSagaMiddleware();
 export const store = configureStore({
-    reducer: inMemoryGameMasterReducer
+    reducer: inMemoryGameMasterReducer,
+    middleware: [sagaMiddleware]
 });
+sagaMiddleware.run(createRuleWatcherSaga);
+
 export type GMDispatch = typeof store.dispatch;
 export const useGMDispatch = () => useDispatch<GMDispatch>();
 export const useGMSelector: TypedUseSelectorHook<GameMasterState> = useSelector;
