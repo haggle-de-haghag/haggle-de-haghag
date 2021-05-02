@@ -197,8 +197,10 @@ function* createRuleWatcherSaga() {
 }
 
 function* initSaga() {
-    yield call(GameMasterRestApi.configure, 'gm-4dd98f02', 'http://localhost:8080/api')
+    const key = location.hash.substring(1);
+    yield call(GameMasterRestApi.configure, key, 'http://localhost:8080/api')
     const rules: Rule[] = yield call(GameMasterRestApi.listRules);
+    rules.sort((a, b) => a.ruleNumber - b.ruleNumber);
     yield put(actions.initialize(rules));
 }
 
