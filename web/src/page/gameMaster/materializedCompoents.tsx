@@ -8,7 +8,7 @@ export function RuleList() {
 
     return <RuleListComponent
         rules={state.rules}
-        onRuleClick={(r) => dispatch({type: 'SetSelectedRuleId', ruleId: r.id})}/>;
+        onRuleClick={(r) => dispatch({type: 'ChangeSelectedRule', ruleId: r.id})}/>;
 }
 
 export function RuleEditor() {

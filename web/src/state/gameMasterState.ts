@@ -5,7 +5,7 @@ export interface GameMasterState {
     // Model state
     players: Player[];
     rules: Rule[];
-    ruleAccessList: { [key: PlayerId]: GameId[] };
+    ruleAccessList: { [key: number]: RuleId[] }; // key: PlayerId
 
     // UI state
     ruleTitleInput: string;
