@@ -78,7 +78,7 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
             };
         }
         case 'UpdateRule': {
-            const {ruleId, title, text} = action;
+            const {ruleId, title, text, accessList} = action;
             const rules = state.rules.map((r) => {
                 if (r.id != ruleId) return r;
                 return {
@@ -87,7 +87,14 @@ export function gameMasterReducer(state: GameMasterState, action: GameMasterActi
                     text: text ?? r.text,
                 };
             });
-            return {...state, rules};
+            return {
+                ...state,
+                rules,
+                ruleAccessList: {
+                    ...state.ruleAccessList,
+                    [ruleId]: accessList ?? state.ruleAccessList[ruleId],
+                }
+            };
         }
         case 'ChangeRuleAccessListInput': {
             const {ruleId, playerId, assigned} = action;

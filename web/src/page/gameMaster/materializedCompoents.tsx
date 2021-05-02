@@ -16,7 +16,11 @@ export function RuleList() {
 export function RuleEditor() {
     const [state, dispatch] = useContext(GameMasterStateContext);
 
-    const currentRuleId = state.selectedRuleId ?? -1;
+    const currentRuleId = state.selectedRuleId;
+    if (currentRuleId == undefined) {
+        return null;
+    }
+
     const assignedPlayerIds = state.ruleAccessListInput;
 
     const onRuleTitleChange = (text: string) => dispatch({
@@ -28,7 +32,8 @@ export function RuleEditor() {
         value: text,
     });
     const onSaveButtonClick = () => dispatch({
-        type: 'CreateRule',
+        type: 'UpdateRule',
+        ruleId: currentRuleId,
         title: state.ruleTitleInput,
         text: state.ruleTextInput,
         accessList: assignedPlayerIds,
