@@ -3,14 +3,17 @@ package jp.osak.haggledehaghag.service
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
+import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
 import jp.osak.haggledehaghag.util.Either
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 
 @Service
-class RuleService(
+open class RuleService(
+        private val playerRepository: PlayerRepository,
         private val ruleRepository: RuleRepository,
         private val ruleAccessRepository: RuleAccessRepository
 ) {
@@ -18,12 +21,27 @@ class RuleService(
         return ruleRepository.findByIdOrNull(ruleId)
     }
 
-    fun updateRule(rule: Rule, title: String? = null, text: String? = null): Rule {
+    @Transactional
+    open fun updateRule(rule: Rule, title: String? = null, text: String? = null, assignedPlayerIds: List<Int>): Rule {
+        // Pre-flight check: assignedPlayerIds are all in the same game as rule
+        val players = playerRepository.findAllByIdIn(assignedPlayerIds)
+        if (players.any { it.gameId != rule.gameId }) {
+            throw IllegalArgumentException("Some playerIds don't exist in the same game as the given rule")
+        }
+
+        // Pre-flight check passed. Go forward with the actual updates.
         val newRule = rule.copy(
                 title = title ?: rule.title,
                 text = text ?: rule.text
         )
-        return ruleRepository.save(newRule)
+        val newRuleAccesses = assignedPlayerIds.map {
+            RuleAccess(0, rule.id, it, RuleAccess.Type.ASSIGNED)
+        }
+        val savedRule = ruleRepository.save(newRule)
+        ruleAccessRepository.deleteByRuleId(rule.id)
+        ruleAccessRepository.saveAll(newRuleAccesses)
+
+        return savedRule
     }
 
     fun assign(rule: Rule, player: Player): Either<RuleAccess, AssignError> {

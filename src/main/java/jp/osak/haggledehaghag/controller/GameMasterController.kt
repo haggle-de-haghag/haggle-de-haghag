@@ -60,8 +60,7 @@ class GameMasterController (
         if (rule == null || rule.gameId != game.id) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId does not belong to the game ${game.id}")
         }
-
-        return ruleService.updateRule(rule, request.title, request.text)
+        return ruleService.updateRule(rule, request.title, request.text, request.assignedPlayerIds)
     }
 
     @PostMapping("/rules/{ruleId}/assign")
@@ -94,6 +93,6 @@ class GameMasterController (
     }
 
     data class CreateRuleRequest(val title: String, val text: String)
-    data class UpdateRuleRequest(val title: String?, val text: String?)
+    data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class AssignRuleRequest(val playerId: Int)
 }

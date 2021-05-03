@@ -195,7 +195,7 @@ function* createRuleSaga(action: ReturnType<typeof actions.createRule>) {
 
 function* updateRuleSaga(action: ReturnType<typeof actions.updateRule>) {
     const payload = action.payload;
-    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text);
+    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.accessList);
     yield put(actions.replaceRule(updatedRule));
 }
 

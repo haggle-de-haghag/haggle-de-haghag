@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, Rule} from "../model";
+import {ForeignPlayer, Game, PlayerId, Rule} from "../model";
 import {get, patch, post} from "./common";
 
 interface Config {
@@ -33,8 +33,8 @@ export async function createRule(title: string, text: string): Promise<Rule> {
     return post(fullUrl('/rules'), {title, text});
 }
 
-export async function updateRule(ruleId: number, title?: string, text?: string): Promise<Rule> {
-    return patch(fullUrl(`/rules/${ruleId}`), {title, text})
+export async function updateRule(ruleId: number, title?: string, text?: string, assignedPlayerIds?: PlayerId[]): Promise<Rule> {
+    return patch(fullUrl(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
 }
 
 function fullUrl(api: string): string {

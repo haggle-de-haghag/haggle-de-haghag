@@ -14,4 +14,6 @@ interface RuleAccessRepository : CrudRepository<RuleAccess, Int> {
     fun findAllByGameIdAndPlayerId(gameId: Int, playerId: Int): List<RuleAccess>
 
     fun findByRuleIdAndPlayerId(ruleId: Int, playerId: Int): RuleAccess?
+
+    fun deleteByRuleId(ruleId: Int)
 }
