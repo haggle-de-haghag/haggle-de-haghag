@@ -1,0 +1,74 @@
+import createSagaMiddleware from "redux-saga";
+import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
+import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
+import {all, call, takeEvery} from "redux-saga/effects";
+import * as LobbyApi from '../rest/lobby';
+import {Game, Player} from "../model";
+import {create} from "domain";
+
+export interface LobbyState {
+    gameKeyInput: string;
+    playerNameInput: string;
+}
+
+interface JoinGame {
+    gameKey: string;
+    playerName: string;
+}
+
+const slice = createSlice({
+    name: 'lobby',
+    initialState: {
+        gameKeyInput: '',
+        playerNameInput: '',
+    } as LobbyState,
+    reducers: {
+        setGameKeyInput: (state, action: PayloadAction<string>) => {
+            state.gameKeyInput = action.payload;
+        },
+
+        setPlayerNameInput: (state, action: PayloadAction<string>) => {
+            state.playerNameInput = action.payload;
+        },
+
+        joinGame: (state, action: PayloadAction<JoinGame>) => {},
+        createGame: (state) => {}
+    }
+});
+
+export const actions = slice.actions;
+
+function* joinGameSaga(action: ReturnType<typeof actions.joinGame>) {
+    const payload = action.payload;
+    const player: Player = yield call(LobbyApi.joinGame, payload.gameKey, payload.playerName);
+    location.assign(`${location.protocol}//${location.host}/player.html#${player.playerKey}`);
+}
+
+function* createGameSaga(action: ReturnType<typeof actions.createGame>) {
+    const game: Game = yield call(LobbyApi.createGame, '');
+    location.assign(`${location.protocol}//${location.host}/game_master.html#${game.masterKey}`);
+}
+
+function* createWatcherSaga() {
+    yield all([
+        takeEvery(actions.joinGame, joinGameSaga),
+        takeEvery(actions.createGame, createGameSaga),
+    ]);
+}
+
+function* initializeSaga() {
+    yield call(LobbyApi.configure, 'http://localhost:8080/api');
+}
+
+const sagaMiddleware = createSagaMiddleware();
+export const store = configureStore({
+    reducer: slice.reducer,
+    middleware: [sagaMiddleware],
+    devTools: process.env.NODE_ENV !== 'production',
+});
+sagaMiddleware.run(initializeSaga);
+sagaMiddleware.run(createWatcherSaga);
+
+export type LobbyDispatch = typeof store.dispatch;
+export const useLobbyDispatch = () => useDispatch<LobbyDispatch>();
+export const useLobbySelector: TypedUseSelectorHook<LobbyState> = useSelector;

@@ -5,7 +5,8 @@ module.exports = {
     mode: 'development',
     entry: {
         player: './src/index_player.tsx',
-        game_master: './src/index_gm.tsx'
+        game_master: './src/index_gm.tsx',
+        lobby: './src/index_lobby.tsx',
     },
     module: {
         rules: [
@@ -33,6 +34,11 @@ module.exports = {
             filename: 'game_master.html',
             template: 'public/index.html',
             chunks: ['game_master']
+        }),
+        new HtmlWebpackPlugin({
+            filename: 'lobby.html',
+            template: 'public/index.html',
+            chunks: ['lobby']
         }),
     ],
     devServer: {

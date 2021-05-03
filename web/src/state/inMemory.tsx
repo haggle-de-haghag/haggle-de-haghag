@@ -17,6 +17,8 @@ export function ProvideInMemoryGameState(props: any) {
         game: {
             id: 1,
             title: "Test game",
+            gameKey: '',
+            masterKey: '',
         },
         player: {
             id: 1,

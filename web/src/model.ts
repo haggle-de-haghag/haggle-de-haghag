@@ -5,6 +5,8 @@ export type RuleId = number;
 export interface Game {
     id: GameId;
     title: string;
+    gameKey: string;
+    masterKey: string;
 }
 
 export interface Player {

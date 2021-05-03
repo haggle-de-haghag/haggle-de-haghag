@@ -20,6 +20,8 @@ const fallback: GameState = {
     game: {
         id: 0,
         title: "",
+        gameKey: '',
+        masterKey: '',
     },
     player: {
         id: 0,
