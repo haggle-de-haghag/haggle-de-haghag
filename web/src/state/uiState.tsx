@@ -2,7 +2,6 @@ import React, {Dispatch, useReducer} from "react";
 import {Rule} from "../model";
 
 export interface UIState {
-    selectedRuleNumber: number | undefined;
 }
 
 interface SetSelectedRule {

@@ -1,14 +1,15 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
+import {Provider} from 'react-redux';
 import App from './App';
-import PlayerPage from "./page/PlayerPage";
-import {ProvideInMemoryGameState} from "./state/inMemory";
+import PlayerPage from "./page/player/PlayerPage";
+import {store} from "./state/playerState";
 
 ReactDOM.render(
     <React.StrictMode>
-        <ProvideInMemoryGameState>
+        <Provider store={store}>
             <App><PlayerPage /></App>
-        </ProvideInMemoryGameState>
+        </Provider>
     </React.StrictMode>,
     document.getElementById('root')
 );

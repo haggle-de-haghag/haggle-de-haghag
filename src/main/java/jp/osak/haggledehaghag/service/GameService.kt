@@ -6,6 +6,7 @@ import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.repository.GameRepository
 import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
+import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
@@ -24,6 +25,10 @@ class GameService (
 
     fun findGame(gameKey: String): Game? {
         return gameRepository.findByGameKey(gameKey)
+    }
+
+    fun findGame(gameId: Int): Game? {
+        return gameRepository.findByIdOrNull(gameId)
     }
 
     fun findGameForMasterKey(masterKey: String): Game? {
