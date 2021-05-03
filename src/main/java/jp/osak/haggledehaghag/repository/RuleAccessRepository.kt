@@ -1,6 +1,7 @@
 package jp.osak.haggledehaghag.repository
 
 import jp.osak.haggledehaghag.model.RuleAccess
+import org.springframework.data.jdbc.repository.query.Modifying
 import org.springframework.data.jdbc.repository.query.Query
 import org.springframework.data.repository.CrudRepository
 
@@ -19,5 +20,7 @@ interface RuleAccessRepository : CrudRepository<RuleAccess, Int> {
 
     fun findByRuleIdAndPlayerId(ruleId: Int, playerId: Int): RuleAccess?
 
-    fun deleteByRuleId(ruleId: Int)
+    @Modifying
+    @Query("DELETE FROM rule_access WHERE rule_id = :ruleId")
+    fun deleteAllByRuleId(ruleId: Int)
 }

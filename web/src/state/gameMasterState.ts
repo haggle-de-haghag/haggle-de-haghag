@@ -5,6 +5,7 @@ import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
 import {FullGameInfo} from "../rest/gameMaster";
+import {retryForever} from "./sagaUtil";
 
 export interface GameMasterState {
     // Model state
@@ -109,7 +110,7 @@ const slice = createSlice({
 
         replaceRule: (state, action: PayloadAction<Rule>) => {
             const rule = action.payload;
-            const index = state.rules.findIndex((r) => r.id = rule.id);
+            const index = state.rules.findIndex((r) => r.id == rule.id);
             if (index == -1) {
                 throw Error(`Rule ${rule.id} does not exist`);
             }
@@ -220,7 +221,7 @@ export const store = configureStore({
     middleware: [sagaMiddleware],
     devTools: process.env.NODE_ENV !== 'production',
 });
-sagaMiddleware.run(createRuleWatcherSaga);
+sagaMiddleware.run(retryForever, createRuleWatcherSaga);
 sagaMiddleware.run(initSaga as any);
 
 export type GMDispatch = typeof store.dispatch;

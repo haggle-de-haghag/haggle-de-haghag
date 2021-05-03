@@ -28,7 +28,4 @@ export interface Rule {
     accessType: AccessType
 }
 
-export enum AccessType {
-    ASSIGNED,
-    SHARED,
-}
+export type AccessType = 'ASSIGNED' | 'SHARED';

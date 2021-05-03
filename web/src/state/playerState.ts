@@ -5,6 +5,7 @@ import * as PlayerApi from "../rest/player";
 import {FullPlayerInfo} from "../rest/player";
 import createSagaMiddleware from "redux-saga";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
+import {retryForever} from "./sagaUtil";
 
 export interface PlayerState {
     // Model state
@@ -82,7 +83,7 @@ export const store = configureStore({
     middleware: [sagaMiddleware],
     devTools: process.env.NODE_ENV !== 'production',
 });
-sagaMiddleware.run(installWatcherSaga);
+sagaMiddleware.run(retryForever, installWatcherSaga);
 sagaMiddleware.run(initSaga as any);
 
 export type PLDispatch = typeof store.dispatch;

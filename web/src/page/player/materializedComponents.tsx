@@ -2,7 +2,7 @@ import React from "react";
 import RuleListComponent from "../../component/RuleList";
 import {actions, usePLDispatch, usePLSelector} from "../../state/playerState";
 import RuleViewComponent from "../../component/RuleView";
-import {ForeignPlayer} from "../../model";
+import {AccessType, ForeignPlayer} from "../../model";
 import ShareRulePaneComponent from "../../component/ShareRulePane";
 
 export function RuleList() {
@@ -41,7 +41,7 @@ export function ShareRulePane() {
     const rule = selectedRuleId == undefined
         ? undefined
         : rules.find((r) => r.id == selectedRuleId);
-    if (rule == undefined) {
+    if (rule == undefined || rule.accessType != 'ASSIGNED') {
         return null;
     }
 

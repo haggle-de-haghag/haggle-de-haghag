@@ -38,7 +38,7 @@ open class RuleService(
             RuleAccess(0, rule.id, it, RuleAccess.Type.ASSIGNED)
         }
         val savedRule = ruleRepository.save(newRule)
-        ruleAccessRepository.deleteByRuleId(rule.id)
+        ruleAccessRepository.deleteAllByRuleId(rule.id)
         ruleAccessRepository.saveAll(newRuleAccesses)
 
         return savedRule

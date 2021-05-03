@@ -4,6 +4,7 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {all, call, takeEvery} from "redux-saga/effects";
 import * as LobbyApi from '../rest/lobby';
 import {Game, Player} from "../model";
+import {retryForever} from "./sagaUtil";
 
 export interface LobbyState {
     gameTitleInput: string;
@@ -77,7 +78,7 @@ export const store = configureStore({
     devTools: process.env.NODE_ENV !== 'production',
 });
 sagaMiddleware.run(initializeSaga);
-sagaMiddleware.run(createWatcherSaga);
+sagaMiddleware.run(retryForever, createWatcherSaga);
 
 export type LobbyDispatch = typeof store.dispatch;
 export const useLobbyDispatch = () => useDispatch<LobbyDispatch>();
