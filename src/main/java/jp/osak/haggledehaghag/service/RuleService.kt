@@ -13,9 +13,9 @@ import org.springframework.transaction.annotation.Transactional
 
 @Service
 open class RuleService(
-        private val playerRepository: PlayerRepository,
-        private val ruleRepository: RuleRepository,
-        private val ruleAccessRepository: RuleAccessRepository
+    private val playerRepository: PlayerRepository,
+    private val ruleRepository: RuleRepository,
+    private val ruleAccessRepository: RuleAccessRepository
 ) {
     fun findRule(ruleId: Int): Rule? {
         return ruleRepository.findByIdOrNull(ruleId)
@@ -31,8 +31,8 @@ open class RuleService(
 
         // Pre-flight check passed. Go forward with the actual updates.
         val newRule = rule.copy(
-                title = title ?: rule.title,
-                text = text ?: rule.text
+            title = title ?: rule.title,
+            text = text ?: rule.text
         )
         val newRuleAccesses = assignedPlayerIds.map {
             RuleAccess(0, rule.id, it, RuleAccess.Type.ASSIGNED)

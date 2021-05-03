@@ -12,13 +12,13 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
-class GameService (
-        private val gameRepository: GameRepository,
-        private val playerService: PlayerService,
-        private val playerRepository: PlayerRepository,
-        private val ruleRepository: RuleRepository,
-        private val ruleAccessRepository: RuleAccessRepository,
-){
+class GameService(
+    private val gameRepository: GameRepository,
+    private val playerService: PlayerService,
+    private val playerRepository: PlayerRepository,
+    private val ruleRepository: RuleRepository,
+    private val ruleAccessRepository: RuleAccessRepository,
+) {
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
         val masterKey = "gm-" + generateKey(title)

@@ -2,14 +2,20 @@ package jp.osak.haggledehaghag.controller
 
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.RuleAccess
+import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.service.PlayerService
-import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -18,31 +24,31 @@ import org.springframework.web.server.ResponseStatusException
 @RequestMapping("/api/players/{playerKey}")
 @RestController
 class PlayerController(
-        private val gameService: GameService,
-        private val playerService: PlayerService
+    private val gameService: GameService,
+    private val playerService: PlayerService
 ) {
     @ModelAttribute
     fun addPlayer(@PathVariable playerKey: String): Player {
         return playerService.findPlayer(playerKey)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid player key: $playerKey")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid player key: $playerKey")
     }
 
     @GetMapping
     fun listFullPlayerInfo(@ModelAttribute player: Player): FullPlayerInfoView {
         val game = gameService.findGame(player.gameId)
-                ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
+            ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
         val players = gameService.listPlayers(game)
-                .filter { it.id != player.id }
-                .map { ForeignPlayerView(it) }
+            .filter { it.id != player.id }
+            .map { ForeignPlayerView(it) }
         val rules = playerService.findAllAccessibleRules(player)
-                .sortedBy { it.rule.ruleNumber }
-                .map { RuleView(it) }
+            .sortedBy { it.rule.ruleNumber }
+            .map { RuleView(it) }
 
         return FullPlayerInfoView(
-                gameTitle = game.title,
-                player = player,
-                players = players,
-                rules = rules
+            gameTitle = game.title,
+            player = player,
+            players = players,
+            rules = rules
         )
     }
 
@@ -54,15 +60,15 @@ class PlayerController(
 
     @PostMapping("/rules/{ruleId}/share")
     fun shareRule(
-            @ModelAttribute player: Player,
-            @PathVariable ruleId: Int,
-            @RequestBody request: ShareRuleRequest
+        @ModelAttribute player: Player,
+        @PathVariable ruleId: Int,
+        @RequestBody request: ShareRuleRequest
     ): ShareRuleResult {
         val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player)
         val rule = rules.find { it.rule.id == ruleId && it.accessType == RuleAccess.Type.ASSIGNED }
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId is not assigned to you")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId is not assigned to you")
         val targetPlayer: Player = playerService.findPlayer(request.playerId)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player " + request.playerId + " does not exist")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player " + request.playerId + " does not exist")
         val success = playerService.shareRule(player, targetPlayer, rule.rule)
         return ShareRuleResult(success)
     }

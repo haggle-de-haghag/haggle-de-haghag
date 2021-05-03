@@ -12,20 +12,27 @@ import jp.osak.haggledehaghag.util.toMultiMap
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullGameInfoView
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PatchMapping
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @RequestMapping("/api/game_master/{masterKey}")
 @RestController
-class GameMasterController (
-        private val gameService: GameService,
-        private val ruleService: RuleService,
-        private val playerService: PlayerService,
-){
+class GameMasterController(
+    private val gameService: GameService,
+    private val ruleService: RuleService,
+    private val playerService: PlayerService,
+) {
     @ModelAttribute
     fun addGame(@PathVariable masterKey: String): Game {
         return gameService.findGameForMasterKey(masterKey)
-                ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game master key: $masterKey")
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game master key: $masterKey")
     }
 
     @GetMapping
@@ -39,24 +46,24 @@ class GameMasterController (
 
     @GetMapping("/rules")
     fun listRules(
-            @ModelAttribute game: Game
+        @ModelAttribute game: Game
     ): List<Rule> {
         return gameService.listRules(game)
     }
 
     @PostMapping("/rules")
     fun createRule(
-            @ModelAttribute game: Game,
-            @RequestBody request: CreateRuleRequest
+        @ModelAttribute game: Game,
+        @RequestBody request: CreateRuleRequest
     ): Rule {
         return gameService.createNewRule(game, request.title, request.text)
     }
 
     @PatchMapping("/rules/{ruleId}")
     fun updateRule(
-            @ModelAttribute game: Game,
-            @PathVariable ruleId: Int,
-            @RequestBody request: UpdateRuleRequest
+        @ModelAttribute game: Game,
+        @PathVariable ruleId: Int,
+        @RequestBody request: UpdateRuleRequest
     ): Rule {
         val rule = ruleService.findRule(ruleId)
         if (rule == null || rule.gameId != game.id) {
@@ -67,9 +74,9 @@ class GameMasterController (
 
     @PostMapping("/rules/{ruleId}/assign")
     fun assignRule(
-            @ModelAttribute game: Game,
-            @PathVariable ruleId: Int,
-            @RequestBody request: AssignRuleRequest
+        @ModelAttribute game: Game,
+        @PathVariable ruleId: Int,
+        @RequestBody request: AssignRuleRequest
     ): RuleAccess {
         val rule = ruleService.findRule(ruleId)
         if (rule == null || rule.gameId != game.id) {
@@ -89,7 +96,7 @@ class GameMasterController (
 
     @GetMapping("/players")
     fun listPlayers(
-            @ModelAttribute game: Game,
+        @ModelAttribute game: Game,
     ): List<Player> {
         return gameService.listPlayers(game)
     }

@@ -1,9 +1,9 @@
 package jp.osak.haggledehaghag.controller
 
 import jp.osak.haggledehaghag.model.RuleAccess
+import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
-import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.viewmodel.RuleView
 import org.springframework.stereotype.Controller
 import org.springframework.ui.Model
@@ -14,15 +14,15 @@ import org.springframework.web.bind.annotation.RequestMapping
 @RequestMapping("/player/{playerId}")
 @Controller
 class PlayerPageController(
-        private val ruleRepository: RuleRepository,
-        private val ruleAccessRepository: RuleAccessRepository
+    private val ruleRepository: RuleRepository,
+    private val ruleAccessRepository: RuleAccessRepository
 ) {
     @GetMapping(value = ["/game/{gameId}", "/game/{gameId}/rule/{ruleNumber}"])
     fun index(
-            @PathVariable playerId: Int,
-            @PathVariable gameId: Int,
-            @PathVariable(required = false) ruleNumber: Int?,
-            model: Model
+        @PathVariable playerId: Int,
+        @PathVariable gameId: Int,
+        @PathVariable(required = false) ruleNumber: Int?,
+        model: Model
     ): String {
         val ruleAccesses: List<RuleAccess> = ruleAccessRepository.findAllByPlayerId(playerId)
         val ruleAccessMap: Map<Int, RuleAccess> = ruleAccesses.map { Pair(it.ruleId, it) }.toMap()
@@ -32,7 +32,7 @@ class PlayerPageController(
         model.addAttribute("rules", ruleViews)
         if (ruleNumber != null) {
             ruleViews.find { it.ruleNumber == ruleNumber }
-                    ?.let { model.addAttribute("selectedRule", it) }
+                ?.let { model.addAttribute("selectedRule", it) }
         }
         return "player"
     }

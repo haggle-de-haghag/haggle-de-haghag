@@ -2,21 +2,22 @@ package jp.osak.haggledehaghag.controller
 
 import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Player
-import jp.osak.haggledehaghag.repository.GameRepository
-import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
-import jp.osak.haggledehaghag.viewmodel.GameView
-import jp.osak.haggledehaghag.viewmodel.PlayerView
-import org.springframework.data.repository.findByIdOrNull
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.*
+import org.springframework.web.bind.annotation.GetMapping
+import org.springframework.web.bind.annotation.ModelAttribute
+import org.springframework.web.bind.annotation.PathVariable
+import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.RequestBody
+import org.springframework.web.bind.annotation.RequestMapping
+import org.springframework.web.bind.annotation.RestController
 import org.springframework.web.server.ResponseStatusException
 
 @RequestMapping("/api/games")
 @RestController
 class GameController(
-        private val gameService: GameService,
+    private val gameService: GameService,
 ) {
     @ModelAttribute
     fun addGame(@PathVariable(required = false) gameKey: String?): Game? {

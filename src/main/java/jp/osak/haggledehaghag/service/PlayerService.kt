@@ -2,23 +2,23 @@ package jp.osak.haggledehaghag.service
 
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.Rule
+import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
-import jp.osak.haggledehaghag.model.RuleWithAccess
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import java.util.stream.Collectors
 
 @Service
 class PlayerService(
-        private val playerRepository: PlayerRepository,
-        private val ruleRepository: RuleRepository,
-        private val ruleAccessRepository: RuleAccessRepository,
-        private val ruleService: RuleService
+    private val playerRepository: PlayerRepository,
+    private val ruleRepository: RuleRepository,
+    private val ruleAccessRepository: RuleAccessRepository,
+    private val ruleService: RuleService
 ) {
     fun createNewPlayer(gameId: Int, displayName: String): Player {
-        val playerKey = generateKey("${gameId}-${displayName}")
+        val playerKey = generateKey("$gameId-$displayName")
         val player = Player(0, gameId, displayName, playerKey)
         playerRepository.save(player)
         return player
@@ -38,8 +38,8 @@ class PlayerService(
         val rules = ruleRepository.findByGameIdAndIdIn(player.gameId, ruleIds)
         val accessMap = ruleAccesses.map { Pair(it.ruleId, it) }.toMap()
         return rules.stream()
-                .map { r: Rule -> RuleWithAccess(r, accessMap[r.id]!!.type) }
-                .collect(Collectors.toList())
+            .map { r: Rule -> RuleWithAccess(r, accessMap[r.id]!!.type) }
+            .collect(Collectors.toList())
     }
 
     /**
