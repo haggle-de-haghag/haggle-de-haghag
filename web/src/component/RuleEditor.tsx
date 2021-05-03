@@ -1,11 +1,11 @@
 import {Box, Button, Chip, Grid, makeStyles, TextField, Typography} from "@material-ui/core/index";
-import {Player, PlayerId} from "../model";
+import {ForeignPlayer, PlayerId} from "../model";
 import DoneIcon from '@material-ui/icons/Done';
 
 interface Props {
     ruleTitle: string;
     ruleText: string;
-    players: Player[];
+    players: ForeignPlayer[];
     assignedPlayerIds: PlayerId[];
     onRuleTitleChange: (value: string) => void;
     onRuleTextChange: (value: string) => void;

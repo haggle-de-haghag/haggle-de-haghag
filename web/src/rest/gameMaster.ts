@@ -1,4 +1,4 @@
-import {Game, Rule} from "../model";
+import {ForeignPlayer, Game, Rule} from "../model";
 import {get, patch, post} from "./common";
 
 interface Config {
@@ -17,7 +17,8 @@ export function configure(gameMasterKey: string, urlBase: string) {
 
 export interface FullGameInfo {
     game: Game,
-    rules: Rule[]
+    rules: Rule[],
+    players: ForeignPlayer[],
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {

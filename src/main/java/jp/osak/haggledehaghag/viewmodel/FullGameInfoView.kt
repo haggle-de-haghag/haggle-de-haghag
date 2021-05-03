@@ -5,5 +5,6 @@ import jp.osak.haggledehaghag.model.Rule
 
 data class FullGameInfoView(
         val game: Game,
-        val rules: List<Rule>
+        val rules: List<Rule>,
+        val players: List<ForeignPlayerView>,
 )

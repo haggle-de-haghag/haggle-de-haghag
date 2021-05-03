@@ -1,4 +1,4 @@
-import {Game, Player, PlayerId, Rule, RuleId} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
@@ -9,7 +9,7 @@ import {FullGameInfo} from "../rest/gameMaster";
 export interface GameMasterState {
     // Model state
     game: Game;
-    players: Player[];
+    players: ForeignPlayer[];
     rules: Rule[];
     ruleAccessList: { [key: number]: PlayerId[] }; // key: RuleId
 
@@ -60,12 +60,10 @@ const inMemoryInitialState: GameMasterState = {
         {
             id: 1,
             displayName: "azusa",
-            playerKey: "abcd1234"
         },
         {
             id: 2,
             displayName: "yui",
-            playerKey: "efgh5678"
         }
     ],
     rules: [],
@@ -178,6 +176,7 @@ const slice = createSlice({
                 ...state,
                 game: info.game,
                 rules: info.rules,
+                players: info.players,
                 ruleTitleInput: '',
                 ruleTextInput: '',
                 selectedRuleId: undefined
