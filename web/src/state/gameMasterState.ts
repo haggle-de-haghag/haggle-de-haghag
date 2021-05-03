@@ -177,6 +177,7 @@ const slice = createSlice({
                 game: info.game,
                 rules: info.rules,
                 players: info.players,
+                ruleAccessList: info.ruleAccessMap,
                 ruleTitleInput: '',
                 ruleTextInput: '',
                 selectedRuleId: undefined

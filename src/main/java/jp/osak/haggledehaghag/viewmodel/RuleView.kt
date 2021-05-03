@@ -1,7 +1,7 @@
 package jp.osak.haggledehaghag.viewmodel
 
 import jp.osak.haggledehaghag.model.RuleAccess
-import jp.osak.haggledehaghag.service.model.RuleWithAccess
+import jp.osak.haggledehaghag.model.RuleWithAccess
 
 data class RuleView(
         val id: Int,

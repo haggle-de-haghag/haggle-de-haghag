@@ -3,8 +3,10 @@ package jp.osak.haggledehaghag.service
 import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.Rule
+import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.repository.GameRepository
 import jp.osak.haggledehaghag.repository.PlayerRepository
+import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
@@ -15,6 +17,7 @@ class GameService (
         private val playerService: PlayerService,
         private val playerRepository: PlayerRepository,
         private val ruleRepository: RuleRepository,
+        private val ruleAccessRepository: RuleAccessRepository,
 ){
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
@@ -51,6 +54,10 @@ class GameService (
 
     fun listRules(game: Game): List<Rule> {
         return ruleRepository.findByGameId(game.id)
+    }
+
+    fun listRuleAccesses(game: Game): List<RuleAccess> {
+        return ruleAccessRepository.findAllByGameId(game.id)
     }
 
     private fun generateKey(base: String): String {

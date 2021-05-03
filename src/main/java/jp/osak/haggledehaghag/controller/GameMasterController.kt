@@ -8,6 +8,7 @@ import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.service.PlayerService
 import jp.osak.haggledehaghag.service.RuleService
 import jp.osak.haggledehaghag.util.Either
+import jp.osak.haggledehaghag.util.toMultiMap
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullGameInfoView
 import org.springframework.http.HttpStatus
@@ -29,11 +30,12 @@ class GameMasterController (
 
     @GetMapping
     fun listFullGameInfo(@ModelAttribute game: Game): FullGameInfoView {
-        val rules = gameService.listRules(game)
-        val players = gameService.listPlayers(game).map { ForeignPlayerView(it) }
-        return FullGameInfoView(game, rules, players)
+        val players = gameService.listPlayers(game).map { ForeignPlayerView(it) }.sortedBy { it.id }
+        val rules = gameService.listRules(game).sortedBy { it.ruleNumber }
+        val ruleAccesses = gameService.listRuleAccesses(game)
+        val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, it.playerId) }.toMultiMap()
+        return FullGameInfoView(game, rules, players, ruleAccessMap)
     }
-
 
     @GetMapping("/rules")
     fun listRules(

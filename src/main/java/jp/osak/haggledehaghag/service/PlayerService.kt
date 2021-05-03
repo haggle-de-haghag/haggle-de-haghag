@@ -2,15 +2,12 @@ package jp.osak.haggledehaghag.service
 
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.Rule
-import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
-import jp.osak.haggledehaghag.service.model.RuleWithAccess
+import jp.osak.haggledehaghag.model.RuleWithAccess
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
-import java.util.*
-import java.util.function.Function
 import java.util.stream.Collectors
 
 @Service
@@ -36,7 +33,7 @@ class PlayerService(
     }
 
     fun findAllAccessibleRules(player: Player): List<RuleWithAccess> {
-        val ruleAccesses = ruleAccessRepository.findAllByGameIdAndPlayerId(player.gameId, player.id)
+        val ruleAccesses = ruleAccessRepository.findAllByPlayerId(player.id)
         val ruleIds = ruleAccesses.map { it.ruleId }
         val rules = ruleRepository.findByGameIdAndIdIn(player.gameId, ruleIds)
         val accessMap = ruleAccesses.map { Pair(it.ruleId, it) }.toMap()

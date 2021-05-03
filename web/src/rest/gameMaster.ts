@@ -19,6 +19,7 @@ export interface FullGameInfo {
     game: Game,
     rules: Rule[],
     players: ForeignPlayer[],
+    ruleAccessMap: { [key: number]: PlayerId[] }
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {

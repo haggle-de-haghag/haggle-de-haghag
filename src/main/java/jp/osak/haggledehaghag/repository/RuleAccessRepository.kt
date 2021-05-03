@@ -9,9 +9,11 @@ interface RuleAccessRepository : CrudRepository<RuleAccess, Int> {
         SELECT ra.*
         FROM rule_access as ra
         JOIN rule as r ON ra.rule_id = r.id
-        WHERE r.game_id = :gameId AND player_id = :playerId
+        WHERE r.game_id = :gameId
     """)
-    fun findAllByGameIdAndPlayerId(gameId: Int, playerId: Int): List<RuleAccess>
+    fun findAllByGameId(gameId: Int): List<RuleAccess>
+
+    fun findAllByPlayerId(playerId: Int): List<RuleAccess>
 
     fun findByRuleIdAndPlayerId(ruleId: Int, playerId: Int): RuleAccess?
 

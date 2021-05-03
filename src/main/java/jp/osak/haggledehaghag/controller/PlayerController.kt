@@ -4,7 +4,7 @@ import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.service.PlayerService
-import jp.osak.haggledehaghag.service.model.RuleWithAccess
+import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
