@@ -23,6 +23,7 @@ interface CreateGame {
 const slice = createSlice({
     name: 'lobby',
     initialState: {
+        gameTitleInput: '',
         gameKeyInput: '',
         playerNameInput: '',
     } as LobbyState,
