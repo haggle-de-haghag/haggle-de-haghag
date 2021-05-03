@@ -3,15 +3,13 @@ import {get, patch, post} from "./common";
 
 interface Config {
     gameMasterKey: string;
-    urlBase: string;
 }
 
 let config: Config;
 
-export function configure(gameMasterKey: string, urlBase: string) {
+export function configure(gameMasterKey: string) {
     config = {
         gameMasterKey,
-        urlBase
     };
 }
 
@@ -23,21 +21,21 @@ export interface FullGameInfo {
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {
-    return get(fullUrl(''));
+    return get(fullApi(''));
 }
 
 export async function listRules(): Promise<Rule[]> {
-    return get(fullUrl('/rules'));
+    return get(fullApi('/rules'));
 }
 
 export async function createRule(title: string, text: string): Promise<Rule> {
-    return post(fullUrl('/rules'), {title, text});
+    return post(fullApi('/rules'), {title, text});
 }
 
 export async function updateRule(ruleId: number, title?: string, text?: string, assignedPlayerIds?: PlayerId[]): Promise<Rule> {
-    return patch(fullUrl(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
+    return patch(fullApi(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
 }
 
-function fullUrl(api: string): string {
-    return `${config.urlBase}/game_master/${config.gameMasterKey}${api}`;
+function fullApi(api: string): string {
+    return `/game_master/${config.gameMasterKey}${api}`;
 }

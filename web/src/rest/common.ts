@@ -1,4 +1,8 @@
-async function baseFetch<T>(url: string, method: string, body?: any): Promise<T> {
+declare global {
+    const API_BASE_URL: string;
+}
+
+async function baseFetch<T>(api: string, method: string, body?: any): Promise<T> {
     const config: RequestInit = {
         method,
         headers: {
@@ -9,23 +13,23 @@ async function baseFetch<T>(url: string, method: string, body?: any): Promise<T>
         config.body = JSON.stringify(body);
     }
 
-    const response = await fetch(url, config);
+    const response = await fetch(`${API_BASE_URL}/${api}`, config);
     if (response.status != 200) {
         throw new HttpStatusError(response.status, response.statusText);
     }
     return await response.json() as T;
 }
 
-export async function get<T>(url: string): Promise<T> {
-    return baseFetch<T>(url, 'GET');
+export async function get<T>(api: string): Promise<T> {
+    return baseFetch<T>(api, 'GET');
 }
 
-export function post<T>(url: string, body?: any): Promise<T> {
-    return baseFetch<T>(url, 'POST', body);
+export function post<T>(api: string, body?: any): Promise<T> {
+    return baseFetch<T>(api, 'POST', body);
 }
 
-export function patch<T>(url: string, body?: any): Promise<T> {
-    return baseFetch<T>(url, 'PATCH', body);
+export function patch<T>(api: string, body?: any): Promise<T> {
+    return baseFetch<T>(api, 'PATCH', body);
 }
 
 class HttpStatusError {

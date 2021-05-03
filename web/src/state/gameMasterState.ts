@@ -209,7 +209,7 @@ function* createRuleWatcherSaga() {
 
 function* initSaga() {
     const key = location.hash.substring(1);
-    yield call(GameMasterRestApi.configure, key, 'http://localhost:8080/api')
+    yield call(GameMasterRestApi.configure, key)
     const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
     yield put(actions.initialize(fullInfo));
 }

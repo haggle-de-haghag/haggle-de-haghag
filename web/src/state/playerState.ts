@@ -71,7 +71,7 @@ function* installWatcherSaga() {
 
 function* initSaga() {
     const key = location.hash.substring(1);
-    yield call(PlayerApi.reconfigure, key, 'http://localhost:8080/api');
+    yield call(PlayerApi.reconfigure, key);
     const fullInfo: FullPlayerInfo = yield call(PlayerApi.listFullInfo);
     yield put(actions.initialize(fullInfo));
 }

@@ -4,7 +4,6 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {all, call, takeEvery} from "redux-saga/effects";
 import * as LobbyApi from '../rest/lobby';
 import {Game, Player} from "../model";
-import {create} from "domain";
 
 export interface LobbyState {
     gameTitleInput: string;
@@ -67,7 +66,7 @@ function* createWatcherSaga() {
 }
 
 function* initializeSaga() {
-    yield call(LobbyApi.configure, 'http://localhost:8080/api');
+    yield call(LobbyApi.configure);
 }
 
 const sagaMiddleware = createSagaMiddleware();
