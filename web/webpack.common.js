@@ -2,7 +2,6 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
     entry: {
         player: './src/index_player.tsx',
         game_master: './src/index_gm.tsx',
@@ -41,7 +40,4 @@ module.exports = {
             chunks: ['lobby']
         }),
     ],
-    devServer: {
-        port: 3000
-    },
 };
