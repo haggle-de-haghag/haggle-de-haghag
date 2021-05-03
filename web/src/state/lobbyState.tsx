@@ -7,6 +7,7 @@ import {Game, Player} from "../model";
 import {create} from "domain";
 
 export interface LobbyState {
+    gameTitleInput: string;
     gameKeyInput: string;
     playerNameInput: string;
 }
@@ -16,6 +17,10 @@ interface JoinGame {
     playerName: string;
 }
 
+interface CreateGame {
+    title: string;
+}
+
 const slice = createSlice({
     name: 'lobby',
     initialState: {
@@ -23,6 +28,10 @@ const slice = createSlice({
         playerNameInput: '',
     } as LobbyState,
     reducers: {
+        setGameTitleInput: (state, action: PayloadAction<string>) => {
+            state.gameTitleInput = action.payload;
+        },
+
         setGameKeyInput: (state, action: PayloadAction<string>) => {
             state.gameKeyInput = action.payload;
         },
@@ -32,7 +41,7 @@ const slice = createSlice({
         },
 
         joinGame: (state, action: PayloadAction<JoinGame>) => {},
-        createGame: (state) => {}
+        createGame: (state, action: PayloadAction<CreateGame>) => {}
     }
 });
 
@@ -45,7 +54,8 @@ function* joinGameSaga(action: ReturnType<typeof actions.joinGame>) {
 }
 
 function* createGameSaga(action: ReturnType<typeof actions.createGame>) {
-    const game: Game = yield call(LobbyApi.createGame, '');
+    const payload = action.payload;
+    const game: Game = yield call(LobbyApi.createGame, payload.title);
     location.assign(`${location.protocol}//${location.host}/game_master.html#${game.masterKey}`);
 }
 

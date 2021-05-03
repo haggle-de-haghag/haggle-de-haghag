@@ -1,13 +1,14 @@
-import {Player, PlayerId, Rule, RuleId} from "../model";
+import {Game, Player, PlayerId, Rule, RuleId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
+import {FullGameInfo} from "../rest/gameMaster";
 
 export interface GameMasterState {
     // Model state
-    gameMasterKey: string;
+    game: Game;
     players: Player[];
     rules: Rule[];
     ruleAccessList: { [key: number]: PlayerId[] }; // key: RuleId
@@ -39,7 +40,12 @@ export interface ChangeRuleAccess {
 }
 
 const initialState: GameMasterState = {
-    gameMasterKey: 'gm-4dd98f02',
+    game: {
+        id: 0,
+        title: '',
+        gameKey: '',
+        masterKey: '',
+    },
     players: [],
     rules: [],
     ruleAccessList: [],
@@ -49,7 +55,7 @@ const initialState: GameMasterState = {
 };
 
 const inMemoryInitialState: GameMasterState = {
-    gameMasterKey: '',
+    ...initialState,
     players: [
         {
             id: 1,
@@ -166,11 +172,16 @@ const slice = createSlice({
             };
         },
 
-        initialize: (state, action: PayloadAction<Rule[]>) => {
-            state.rules = action.payload;
-            state.ruleTitleInput = '';
-            state.ruleTextInput = '';
-            state.selectedRuleId = undefined;
+        initialize: (state, action: PayloadAction<FullGameInfo>) => {
+            const info = action.payload;
+            return {
+                ...state,
+                game: info.game,
+                rules: info.rules,
+                ruleTitleInput: '',
+                ruleTextInput: '',
+                selectedRuleId: undefined
+            };
         }
     }
 });
@@ -199,9 +210,8 @@ function* createRuleWatcherSaga() {
 function* initSaga() {
     const key = location.hash.substring(1);
     yield call(GameMasterRestApi.configure, key, 'http://localhost:8080/api')
-    const rules: Rule[] = yield call(GameMasterRestApi.listRules);
-    rules.sort((a, b) => a.ruleNumber - b.ruleNumber);
-    yield put(actions.initialize(rules));
+    const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
+    yield put(actions.initialize(fullInfo));
 }
 
 const sagaMiddleware = createSagaMiddleware();

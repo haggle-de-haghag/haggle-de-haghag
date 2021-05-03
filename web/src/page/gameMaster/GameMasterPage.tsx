@@ -1,9 +1,13 @@
-import {Box, Button, Grid, Typography} from "@material-ui/core/index";
+import {Box, Button, Grid, Paper, Typography} from "@material-ui/core/index";
 import React from "react";
 import {RuleEditor, RuleList} from "./materializedCompoents";
-import {actions, useGMDispatch} from "../../state/gameMasterState";
+import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export default function GameMasterPage() {
+    const { gameKey, gameTitle } = useGMSelector((state) => ({
+        gameKey: state.game.gameKey,
+        gameTitle: state.game.title,
+    }));
     const dispatch = useGMDispatch();
 
     const onNewRuleClick = () => dispatch(actions.createRule({
@@ -13,8 +17,11 @@ export default function GameMasterPage() {
     }));
 
     return (
-        <Grid container direction="column">
-            <Grid item><Typography variant="h3">ゲームマスター</Typography></Grid>
+        <Grid container direction="column" spacing={4}>
+            <Grid item><Typography variant="h3">ゲームマスター - {gameTitle}</Typography></Grid>
+            <Grid component={Paper} item>
+                <Typography variant="h5">ゲームキー：<b>{gameKey}</b></Typography>
+            </Grid>
             <Grid item container spacing={3}>
                 <Grid item xs={3}>
                     <Box><Typography variant="h6">ルール</Typography></Box>

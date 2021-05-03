@@ -3,12 +3,13 @@ import {Box, Button, Card, CardActions, CardContent, Grid, TextField, Typography
 import {actions, useLobbyDispatch, useLobbySelector} from "../../state/lobbyState";
 
 export function LobbyPage() {
-    const { gameKeyInput, playerNameInput } = useLobbySelector((state) => state);
+    const { gameTitleInput, gameKeyInput, playerNameInput } = useLobbySelector((state) => state);
     const dispatch = useLobbyDispatch();
 
+    const onGameTitleInputChange = (value: string) => dispatch(actions.setGameTitleInput(value));
     const onGameKeyInputChange = (value: string) => dispatch(actions.setGameKeyInput(value));
     const onPlayerNameInputChange = (value: string) => dispatch(actions.setPlayerNameInput(value));
-    const onCreateGame = () => dispatch(actions.createGame());
+    const onCreateGame = () => dispatch(actions.createGame({ title: gameTitleInput }));
     const onJoinGame = () => dispatch(actions.joinGame({ gameKey: gameKeyInput, playerName: playerNameInput }));
 
     return <Box display="flex" justifyContent="space-between">
@@ -17,9 +18,12 @@ export function LobbyPage() {
                 <Box component={CardContent}>
                     <Typography variant="h3">ゲームマスター</Typography>
                 </Box>
-                <Box component={CardActions}>
-                    <Button variant="contained" color="primary" onClick={onCreateGame}>ゲームを作る</Button>
-                </Box>
+                <CardActions>
+                    <Grid container direction="column" spacing={2}>
+                        <Grid item><TextField label="ゲーム名" value={gameTitleInput} onChange={(e) => onGameTitleInputChange(e.target.value)} /></Grid>
+                        <Grid item><Button variant="contained" color="primary" onClick={onCreateGame}>ゲームを作る</Button></Grid>
+                    </Grid>
+                </CardActions>
             </Box>
         </Box>
         <Box component={Card} width={0.45}>
