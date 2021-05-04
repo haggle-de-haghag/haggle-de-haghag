@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, PlayerId, Rule} from "../model";
+import {AccessType, ForeignPlayer, Game, PlayerId, Rule} from "../model";
 import {get, patch, post} from "./common";
 
 interface Config {
@@ -13,11 +13,16 @@ export function configure(gameMasterKey: string) {
     };
 }
 
+export interface PlayerIdWithAccess {
+    playerId: PlayerId;
+    accessType: AccessType;
+}
+
 export interface FullGameInfo {
     game: Game,
     rules: Rule[],
     players: ForeignPlayer[],
-    ruleAccessMap: { [key: number]: PlayerId[] }
+    ruleAccessMap: { [key: number]: PlayerIdWithAccess[] }
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {

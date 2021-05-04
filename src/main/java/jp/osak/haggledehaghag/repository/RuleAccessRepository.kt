@@ -23,4 +23,8 @@ interface RuleAccessRepository : CrudRepository<RuleAccess, Int> {
     @Modifying
     @Query("DELETE FROM rule_access WHERE rule_id = :ruleId")
     fun deleteAllByRuleId(ruleId: Int)
+
+    @Modifying
+    @Query("DELETE FROM rule_access WHERE rule_id = :ruleId AND type = :accessType")
+    fun deleteAllByRuleIdAndType(ruleId: Int, accessType: RuleAccess.Type)
 }

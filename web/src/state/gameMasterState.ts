@@ -4,7 +4,7 @@ import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
-import {FullGameInfo} from "../rest/gameMaster";
+import {FullGameInfo, PlayerIdWithAccess} from "../rest/gameMaster";
 import {retryForever} from "./sagaUtil";
 
 export interface GameMasterState {
@@ -12,13 +12,13 @@ export interface GameMasterState {
     game: Game;
     players: ForeignPlayer[];
     rules: Rule[];
-    ruleAccessList: { [key: number]: PlayerId[] }; // key: RuleId
+    ruleAccessList: { [key: number]: PlayerIdWithAccess[] }; // key: RuleId
 
     // UI state
     ruleTitleInput: string;
     ruleTextInput: string;
     selectedRuleId?: RuleId;
-    ruleAccessListInput: PlayerId[];
+    defaultAssignmentsInput: PlayerId[];
 }
 
 export interface CreateRule {
@@ -31,7 +31,7 @@ export interface UpdateRule {
     ruleId: RuleId;
     title?: string;
     text?: string;
-    accessList?: PlayerId[];
+    defaultAssignments?: PlayerId[];
 }
 
 export interface ChangeRuleAccess {
@@ -52,7 +52,7 @@ const initialState: GameMasterState = {
     ruleAccessList: [],
     ruleTitleInput: '',
     ruleTextInput: '',
-    ruleAccessListInput: [],
+    defaultAssignmentsInput: [],
 };
 
 const inMemoryInitialState: GameMasterState = {
@@ -71,7 +71,7 @@ const inMemoryInitialState: GameMasterState = {
     ruleAccessList: [],
     ruleTitleInput: '',
     ruleTextInput: '',
-    ruleAccessListInput: [],
+    defaultAssignmentsInput: [],
 };
 
 const slice = createSlice({
@@ -117,33 +117,15 @@ const slice = createSlice({
             state.rules[index] = rule;
         },
 
-        updateRule: (state, action: PayloadAction<UpdateRule>) => {
-            const {ruleId, title, text, accessList} = action.payload;
-            const rules = state.rules.map((r) => {
-                if (r.id != ruleId) return r;
-                return {
-                    ...r,
-                    title: title ?? r.title,
-                    text: text ?? r.text,
-                };
-            });
-            return {
-                ...state,
-                rules,
-                ruleAccessList: {
-                    ...state.ruleAccessList,
-                    [ruleId]: accessList ?? state.ruleAccessList[ruleId],
-                }
-            };
-        },
+        updateRule: (state, action: PayloadAction<UpdateRule>) => {},
 
         changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
             const {ruleId, playerId, assigned} = action.payload;
-            const accessList = state.ruleAccessListInput.filter((pid) => pid != playerId);
+            const tempAssignments = state.defaultAssignmentsInput.filter((pid) => pid != playerId);
             if (assigned) {
-                accessList.push(playerId);
+                tempAssignments.push(playerId);
             }
-            state.ruleAccessListInput = accessList;
+            state.defaultAssignmentsInput = tempAssignments;
         },
 
         setRuleTitleInput: (state, action: PayloadAction<string>) => {
@@ -162,13 +144,12 @@ const slice = createSlice({
                 return state;
             }
 
-            return {
-                ...state,
-                selectedRuleId: ruleId,
-                ruleTitleInput: rule.title,
-                ruleTextInput: rule.text,
-                ruleAccessListInput: state.ruleAccessList[ruleId] ?? [],
-            };
+            state.selectedRuleId = ruleId;
+            state.ruleTitleInput = rule.title;
+            state.ruleTextInput = rule.text;
+            state.defaultAssignmentsInput = (state.ruleAccessList[ruleId] ?? [])
+                .filter((pwa) => pwa.accessType == 'ASSIGNED')
+                .map((pwa) => pwa.playerId);
         },
 
         initialize: (state, action: PayloadAction<FullGameInfo>) => {
@@ -197,7 +178,7 @@ function* createRuleSaga(action: ReturnType<typeof actions.createRule>) {
 
 function* updateRuleSaga(action: ReturnType<typeof actions.updateRule>) {
     const payload = action.payload;
-    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.accessList);
+    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.defaultAssignments);
     yield put(actions.replaceRule(updatedRule));
 }
 

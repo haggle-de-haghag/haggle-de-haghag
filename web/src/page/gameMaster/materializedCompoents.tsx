@@ -23,7 +23,7 @@ export function RuleEditor() {
         return null;
     }
 
-    const assignedPlayerIds = state.ruleAccessListInput;
+    const assignedPlayerIds = state.defaultAssignmentsInput;
 
     const onRuleTitleChange = (text: string) => dispatch(actions.setRuleTitleInput(text));
     const onRuleTextChange = (text: string) => dispatch(actions.setRuleTextInput(text));
@@ -31,7 +31,7 @@ export function RuleEditor() {
         ruleId: currentRuleId,
         title: state.ruleTitleInput,
         text: state.ruleTextInput,
-        accessList: assignedPlayerIds,
+        defaultAssignments: assignedPlayerIds,
     }));
     const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.changeRuleAccessListInput({
         playerId,

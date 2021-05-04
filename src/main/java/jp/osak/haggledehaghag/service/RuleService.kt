@@ -34,12 +34,12 @@ open class RuleService(
             title = title ?: rule.title,
             text = text ?: rule.text
         )
-        val newRuleAccesses = assignedPlayerIds.map {
+        val newDefaultRuleAccesses = assignedPlayerIds.map {
             RuleAccess(0, rule.id, it, RuleAccess.Type.ASSIGNED)
         }
         val savedRule = ruleRepository.save(newRule)
-        ruleAccessRepository.deleteAllByRuleId(rule.id)
-        ruleAccessRepository.saveAll(newRuleAccesses)
+        ruleAccessRepository.deleteAllByRuleIdAndType(rule.id, RuleAccess.Type.ASSIGNED)
+        ruleAccessRepository.saveAll(newDefaultRuleAccesses)
 
         return savedRule
     }

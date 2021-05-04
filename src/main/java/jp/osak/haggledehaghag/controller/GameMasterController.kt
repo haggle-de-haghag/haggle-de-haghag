@@ -40,7 +40,7 @@ class GameMasterController(
         val players = gameService.listPlayers(game).map { ForeignPlayerView(it) }.sortedBy { it.id }
         val rules = gameService.listRules(game).sortedBy { it.ruleNumber }
         val ruleAccesses = gameService.listRuleAccesses(game)
-        val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, it.playerId) }.toMultiMap()
+        val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, FullGameInfoView.PlayerIdWithAccess(it.playerId, it.type)) }.toMultiMap()
         return FullGameInfoView(game, rules, players, ruleAccessMap)
     }
 
