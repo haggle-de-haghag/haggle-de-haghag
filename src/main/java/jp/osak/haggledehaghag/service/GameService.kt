@@ -1,13 +1,7 @@
 package jp.osak.haggledehaghag.service
 
-import jp.osak.haggledehaghag.model.Game
-import jp.osak.haggledehaghag.model.Player
-import jp.osak.haggledehaghag.model.Rule
-import jp.osak.haggledehaghag.model.RuleAccess
-import jp.osak.haggledehaghag.repository.GameRepository
-import jp.osak.haggledehaghag.repository.PlayerRepository
-import jp.osak.haggledehaghag.repository.RuleAccessRepository
-import jp.osak.haggledehaghag.repository.RuleRepository
+import jp.osak.haggledehaghag.model.*
+import jp.osak.haggledehaghag.repository.*
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
@@ -18,6 +12,7 @@ class GameService(
     private val playerRepository: PlayerRepository,
     private val ruleRepository: RuleRepository,
     private val ruleAccessRepository: RuleAccessRepository,
+    private val tokenRepository: TokenRepository,
 ) {
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
@@ -48,6 +43,11 @@ class GameService(
         return ruleRepository.save(rule)
     }
 
+    fun createNewToken(game: Game, title: String, text: String): Token {
+        val token = Token(0, game.id, title, text)
+        return tokenRepository.save(token)
+    }
+
     fun listPlayers(game: Game): List<Player> {
         return playerRepository.findByGameId(game.id)
     }
@@ -58,6 +58,10 @@ class GameService(
 
     fun listRuleAccesses(game: Game): List<RuleAccess> {
         return ruleAccessRepository.findAllByGameId(game.id)
+    }
+
+    fun listTokens(game: Game): List<Token> {
+        return tokenRepository.findAllByGameId(game.id)
     }
 
     private fun generateKey(base: String): String {
