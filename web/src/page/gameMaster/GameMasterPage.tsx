@@ -1,6 +1,6 @@
-import {Box, Button, Grid, Paper, Typography} from "@material-ui/core/index";
+import {Box, Button, Divider, Grid, Paper, Typography} from "@material-ui/core/index";
 import React from "react";
-import {RuleEditor, RuleList} from "./materializedCompoents";
+import {RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export default function GameMasterPage() {
@@ -16,6 +16,11 @@ export default function GameMasterPage() {
         accessList: [],
     }));
 
+    const onNewTokenClick = () => dispatch(actions.createToken({
+        title: '（新規トークン）',
+        text: '',
+    }));
+
     return (
         <Grid container direction="column" spacing={4}>
             <Grid item><Typography variant="h3">ゲームマスター - {gameTitle}</Typography></Grid>
@@ -24,11 +29,16 @@ export default function GameMasterPage() {
             </Grid>
             <Grid item container spacing={3}>
                 <Grid item xs={3}>
-                    <Box><Typography variant="h6">ルール</Typography></Box>
                     <Box><RuleList /></Box>
                     <Box><Button variant="contained" onClick={onNewRuleClick}>新規ルール</Button></Box>
+                    <Box mt={2}><Divider /></Box>
+                    <Box><TokenList /></Box>
+                    <Box><Button variant="contained" onClick={onNewTokenClick}>新規トークン</Button></Box>
                 </Grid>
-                <Grid item xs={9}><RuleEditor /></Grid>
+                <Grid item xs={9}>
+                    <RuleEditor />
+                    <TokenEditor />
+                </Grid>
             </Grid>
         </Grid>
     )

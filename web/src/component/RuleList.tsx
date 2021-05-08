@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, List, ListItem} from "@material-ui/core/index";
+import {Box, List, ListItem, ListSubheader} from "@material-ui/core/index";
 import {Rule, RuleId} from "../model";
 
 interface Props {
@@ -11,7 +11,7 @@ interface Props {
 export default function RuleList(props: Props) {
     return (
         <Box>
-            <List>
+            <List subheader={<ListSubheader>ルール</ListSubheader>}>
                 {props.rules.map((rule) =>
                     <ListItem
                         key={rule.id}

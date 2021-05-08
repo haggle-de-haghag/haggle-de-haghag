@@ -1,4 +1,4 @@
-import {AccessType, ForeignPlayer, Game, PlayerId, Rule} from "../model";
+import {AccessType, ForeignPlayer, Game, PlayerId, Rule, Token} from "../model";
 import {get, patch, post} from "./common";
 
 interface Config {
@@ -19,10 +19,11 @@ export interface PlayerIdWithAccess {
 }
 
 export interface FullGameInfo {
-    game: Game,
-    rules: Rule[],
-    players: ForeignPlayer[],
-    ruleAccessMap: { [key: number]: PlayerIdWithAccess[] }
+    game: Game;
+    rules: Rule[];
+    players: ForeignPlayer[];
+    ruleAccessMap: { [key: number]: PlayerIdWithAccess[] };
+    tokens: Token[];
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {
@@ -39,6 +40,18 @@ export async function createRule(title: string, text: string): Promise<Rule> {
 
 export async function updateRule(ruleId: number, title?: string, text?: string, assignedPlayerIds?: PlayerId[]): Promise<Rule> {
     return patch(fullApi(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
+}
+
+export async function listTokens(): Promise<Token[]> {
+    return get(fullApi('/tokens'));
+}
+
+export async function createToken(title: string, text: string): Promise<Token> {
+    return post(fullApi('/tokens'), {title, text});
+}
+
+export async function updateToken(tokenId: number, title?: string, text?: string): Promise<Token> {
+    return patch(fullApi(`/tokens/${tokenId}`), {title, text});
 }
 
 function fullApi(api: string): string {

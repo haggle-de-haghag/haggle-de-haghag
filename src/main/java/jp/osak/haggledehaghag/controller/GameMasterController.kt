@@ -40,7 +40,8 @@ class GameMasterController(
         val rules = gameService.listRules(game).sortedBy { it.ruleNumber }
         val ruleAccesses = gameService.listRuleAccesses(game)
         val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, FullGameInfoView.PlayerIdWithAccess(it.playerId, it.type)) }.toMultiMap()
-        return FullGameInfoView(game, rules, players, ruleAccessMap)
+        val tokens = gameService.listTokens(game).sortedBy { it.id }
+        return FullGameInfoView(game, rules, players, ruleAccessMap, tokens)
     }
 
     @GetMapping("/rules")
@@ -108,7 +109,7 @@ class GameMasterController(
         return gameService.createNewToken(game, request.title, request.text)
     }
 
-    @PostMapping("/tokens/{tokenId}")
+    @PatchMapping("/tokens/{tokenId}")
     fun updateToken(
         @ModelAttribute game: Game,
         @PathVariable tokenId: Int,

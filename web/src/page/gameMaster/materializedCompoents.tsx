@@ -1,6 +1,8 @@
 import React from 'react';
 import RuleListComponent from '../../component/RuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
+import TokenListComponent from '../../component/TokenList';
+import TokenEditorComponent from '../../component/TokenEditor';
 import {PlayerId} from "../../model";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
@@ -48,5 +50,41 @@ export function RuleEditor() {
         onRuleTextChange={onRuleTextChange}
         onSaveButtonClick={onSaveButtonClick}
         onAssignmentChange={onAssignmentChange}
+    />;
+}
+
+export function TokenList() {
+    const { tokens, selectedTokenId } = useGMSelector((state) => state);
+    const dispatch = useGMDispatch();
+
+    return <TokenListComponent
+        tokens={tokens}
+        selectedTokenId={selectedTokenId}
+        onTokenClick={(t) => dispatch(actions.changeSelectedToken(t.id))}/>;
+}
+
+export function TokenEditor() {
+    const state = useGMSelector((state) => state);
+    const dispatch = useGMDispatch();
+
+    const currentTokenId = state.selectedTokenId;
+    if (currentTokenId == undefined) {
+        return null;
+    }
+
+    const onTokenTitleChange = (text: string) => dispatch(actions.setTokenTitleInput(text));
+    const onTokenTextChange = (text: string) => dispatch(actions.setTokenTextInput(text));
+    const onSaveButtonClick = () => dispatch(actions.updateToken({
+        tokenId: currentTokenId,
+        title: state.tokenTitleInput,
+        text: state.tokenTextInput,
+    }));
+    
+    return <TokenEditorComponent
+        tokenTitle={state.tokenTitleInput}
+        tokenText={state.tokenTextInput}
+        onTokenTitleChange={onTokenTitleChange}
+        onTokenTextChange={onTokenTextChange}
+        onSaveButtonClick={onSaveButtonClick}
     />;
 }
