@@ -1,13 +1,17 @@
 package jp.osak.haggledehaghag.service
 
 import jp.osak.haggledehaghag.model.Player
+import jp.osak.haggledehaghag.model.PlayerToken
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleWithAccess
+import jp.osak.haggledehaghag.model.Token
 import jp.osak.haggledehaghag.repository.PlayerRepository
+import jp.osak.haggledehaghag.repository.PlayerTokenRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.annotation.Transactional
 import java.util.stream.Collectors
 
 @Service
@@ -15,7 +19,8 @@ class PlayerService(
     private val playerRepository: PlayerRepository,
     private val ruleRepository: RuleRepository,
     private val ruleAccessRepository: RuleAccessRepository,
-    private val ruleService: RuleService
+    private val ruleService: RuleService,
+    private val playerTokenRepository: PlayerTokenRepository,
 ) {
     fun createNewPlayer(gameId: Int, displayName: String): Player {
         val playerKey = generateKey("$gameId-$displayName")
@@ -40,6 +45,35 @@ class PlayerService(
         return rules.stream()
             .map { r: Rule -> RuleWithAccess(r, accessMap[r.id]!!.type) }
             .collect(Collectors.toList())
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun setToken(player: Player, token: Token, amount: Int): PlayerToken {
+        require(player.gameId == token.gameId) { "Game ID of player ${player.id} and token ${token.id} doesn't match" }
+        require(amount >= 0) { "Token amount must be nonnegative, but got ${amount}" }
+
+        var playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, token.id)
+        if (playerToken == null) {
+            playerToken = PlayerToken(0, player.id, token.id, 0)
+        }
+        playerToken = playerToken.copy(amount = amount)
+        return playerTokenRepository.save(playerToken)
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun addToken(player: Player, token: Token, amount: Int): PlayerToken {
+        require(player.gameId == token.gameId) { "Game ID of player ${player.id} and token ${token.id} doesn't match" }
+
+        var playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, token.id)
+        if (playerToken == null) {
+            playerToken = PlayerToken(0, player.id, token.id, 0)
+        }
+        val newAmount = playerToken.amount + amount
+        if (newAmount < 0) {
+            throw IllegalArgumentException("New amount must not be negative. Current amount: ${playerToken.amount}")
+        }
+        playerToken = playerToken.copy(amount = newAmount)
+        return playerTokenRepository.save(playerToken)
     }
 
     /**
