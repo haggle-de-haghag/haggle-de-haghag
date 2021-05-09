@@ -8,4 +8,6 @@ interface PlayerTokenRepository : CrudRepository<PlayerToken, Int> {
     fun findByPlayerIdAndTokenId(playerId: Int, tokenId: Int): PlayerToken?
 
     fun findAllByPlayerId(playerId: Int): List<PlayerToken>
+
+    fun findAllByPlayerIdIn(playerIds: Collection<Int>): List<PlayerToken>
 }

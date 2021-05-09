@@ -76,6 +76,26 @@ class PlayerService(
         return playerTokenRepository.save(playerToken)
     }
 
+    @Transactional(rollbackFor = [Exception::class])
+    fun bulkSetTokenAmounts(allocation: Map<Int, Int>, token: Token): List<PlayerToken> {
+        val players = playerRepository.findAllByIdIn(allocation.keys)
+        if (players.any { it.gameId != token.gameId }) {
+            throw IllegalArgumentException("Some playerIds don't belong to the same game as the given token")
+        }
+
+        val playerTokens = playerTokenRepository.findAllByPlayerIdIn(players.map { it.id }).toMutableList()
+        for ((playerId, amount) in allocation) {
+            val index = playerTokens.indexOfFirst { it.playerId == playerId }
+            if (index == -1) {
+                playerTokens.add(PlayerToken(0, playerId, token.id, amount))
+            } else {
+                playerTokens[index] = playerTokens[index].copy(amount = amount)
+            }
+        }
+        require(playerTokens.size == allocation.size) { "playerTokens.size (${playerTokens.size}) should have matched to allocations.size (${allocation.size})" }
+        return playerTokenRepository.saveAll(playerTokens).toList()
+    }
+
     /**
      * Share a rule with specified player.
      *

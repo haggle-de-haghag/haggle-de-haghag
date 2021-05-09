@@ -114,13 +114,15 @@ class GameMasterController(
         @ModelAttribute game: Game,
         @PathVariable tokenId: Int,
         @RequestBody request: UpdateTokenRequest,
-    ): Token {
+    ): UpdateTokenResponse {
         val token = tokenService.findToken(tokenId)
         if (token == null || token.gameId != game.id) {
             throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the game ${game.id}")
         }
 
-        return tokenService.updateToken(token, request.title, request.text)
+        val updatedToken = tokenService.updateToken(token, request.title, request.text)
+        val playerTokens = playerService.bulkSetTokenAmounts(request.allocation, updatedToken)
+        return UpdateTokenResponse(updatedToken, playerTokens)
     }
 
     @GetMapping("/players")
@@ -134,5 +136,10 @@ class GameMasterController(
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class AssignRuleRequest(val playerId: Int)
     data class CreateTokenRequest(val title: String, val text: String)
-    data class UpdateTokenRequest(val title: String?, val text: String?)
+
+    /**
+     * @property allocation map from playerId to the number of the tokens that player will own
+     */
+    data class UpdateTokenRequest(val tokenId: Int, val title: String?, val text: String?, val allocation: Map<Int, Int>)
+    data class UpdateTokenResponse(val token: Token, val playerTokens: List<PlayerToken>)
 }
