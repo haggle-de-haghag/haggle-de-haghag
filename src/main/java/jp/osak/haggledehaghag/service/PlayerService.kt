@@ -5,10 +5,12 @@ import jp.osak.haggledehaghag.model.PlayerToken
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.model.Token
+import jp.osak.haggledehaghag.model.TokenWithAmount
 import jp.osak.haggledehaghag.repository.PlayerRepository
 import jp.osak.haggledehaghag.repository.PlayerTokenRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
+import jp.osak.haggledehaghag.repository.TokenRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 import org.springframework.transaction.annotation.Transactional
@@ -20,6 +22,7 @@ class PlayerService(
     private val ruleRepository: RuleRepository,
     private val ruleAccessRepository: RuleAccessRepository,
     private val ruleService: RuleService,
+    private val tokenRepository: TokenRepository,
     private val playerTokenRepository: PlayerTokenRepository,
 ) {
     fun createNewPlayer(gameId: Int, displayName: String): Player {
@@ -45,6 +48,14 @@ class PlayerService(
         return rules.stream()
             .map { r: Rule -> RuleWithAccess(r, accessMap[r.id]!!.type) }
             .collect(Collectors.toList())
+    }
+
+    fun findAllTokens(player: Player): List<TokenWithAmount> {
+        val playerTokens = playerTokenRepository.findAllByPlayerId(player.id)
+        val tokenIds = playerTokens.map { it.tokenId }
+        val tokens = tokenRepository.findAllByIdIn(tokenIds)
+        val amountMap = playerTokens.map { Pair(it.tokenId, it.amount) }.toMap()
+        return tokens.map { TokenWithAmount(it, amountMap[it.id]!!) }
     }
 
     @Transactional(rollbackFor = [Exception::class])

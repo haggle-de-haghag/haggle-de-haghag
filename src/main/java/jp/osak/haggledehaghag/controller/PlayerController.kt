@@ -5,9 +5,11 @@ import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.service.PlayerService
+import jp.osak.haggledehaghag.service.TokenService
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
+import jp.osak.haggledehaghag.viewmodel.TokenView
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -25,7 +27,8 @@ import org.springframework.web.server.ResponseStatusException
 @RestController
 class PlayerController(
     private val gameService: GameService,
-    private val playerService: PlayerService
+    private val playerService: PlayerService,
+    private val tokenService: TokenService,
 ) {
     @ModelAttribute
     fun addPlayer(@PathVariable playerKey: String): Player {
@@ -43,12 +46,16 @@ class PlayerController(
         val rules = playerService.findAllAccessibleRules(player)
             .sortedBy { it.rule.ruleNumber }
             .map { RuleView(it) }
+        val tokens = playerService.findAllTokens(player)
+            .sortedBy { it.token.id }
+            .map { TokenView(it) }
 
         return FullPlayerInfoView(
             gameTitle = game.title,
             player = player,
             players = players,
-            rules = rules
+            rules = rules,
+            tokens = tokens,
         )
     }
 
@@ -56,6 +63,11 @@ class PlayerController(
     fun findAllAccessibleRules(@ModelAttribute player: Player): List<RuleView> {
         val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player)
         return rules.map { RuleView(it) }
+    }
+
+    @GetMapping("/tokens")
+    fun listTokens(@ModelAttribute player: Player): List<TokenView> {
+        return playerService.findAllTokens(player).map { TokenView(it) }
     }
 
     @PostMapping("/rules/{ruleId}/share")

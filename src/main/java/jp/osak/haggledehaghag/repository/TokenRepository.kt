@@ -5,4 +5,6 @@ import org.springframework.data.repository.CrudRepository
 
 interface TokenRepository : CrudRepository<Token, Int> {
     fun findAllByGameId(gameId: Int): List<Token>
+
+    fun findAllByIdIn(tokenIds: Collection<Int>): List<Token>
 }

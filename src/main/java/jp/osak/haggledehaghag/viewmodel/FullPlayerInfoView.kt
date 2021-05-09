@@ -7,4 +7,5 @@ data class FullPlayerInfoView(
     val player: Player,
     val players: List<ForeignPlayerView>,
     val rules: List<RuleView>,
+    val tokens: List<TokenView>,
 )
