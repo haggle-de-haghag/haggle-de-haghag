@@ -7,7 +7,7 @@ export interface Props {
     token: Token;
 }
 
-export function TokenView(props: Props) {
+export default function TokenView(props: Props) {
     const { token } = props;
     return <Grid container direction="column" spacing={2}>
         <Grid item container spacing={2} alignItems="center">
@@ -17,5 +17,4 @@ export function TokenView(props: Props) {
             <Typography>{token.text}</Typography>
         </Grid>
     </Grid>
-    return
 }

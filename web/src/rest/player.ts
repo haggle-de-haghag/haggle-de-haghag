@@ -1,5 +1,5 @@
 import {get, post} from "./common";
-import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token} from "../model";
 
 interface Config {
     playerKey: string;
@@ -20,6 +20,7 @@ export interface FullPlayerInfo {
     player: Player;
     players: ForeignPlayer[];
     rules: Rule[];
+    tokens: Token[];
 }
 
 export async function listFullInfo(): Promise<FullPlayerInfo> {

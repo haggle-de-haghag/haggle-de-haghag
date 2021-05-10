@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, Player, Rule, RuleId} from "../model";
+import {ForeignPlayer, Game, Player, Rule, RuleId, Token, TokenId} from "../model";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {all, call, put, takeEvery} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
@@ -13,9 +13,11 @@ export interface PlayerState {
     player: Player;
     players: ForeignPlayer[];
     rules: Rule[];
+    tokens: Token[];
 
     // UI state
     selectedRuleId?: RuleId,
+    selectedTokenId?: TokenId;
 }
 
 export interface ShareRule {
@@ -34,6 +36,7 @@ const slice = createSlice({
         },
         players: [],
         rules: [],
+        tokens: [],
         selectedRuleId: undefined,
     } as PlayerState,
     reducers: {
@@ -41,6 +44,10 @@ const slice = createSlice({
 
         setSelectedRuleId: (state, action: PayloadAction<RuleId>) => {
             state.selectedRuleId = action.payload;
+        },
+
+        setSelectedTokenId: (state, action: PayloadAction<TokenId>) => {
+            state.selectedTokenId = action.payload;
         },
 
         initialize: (state, action: PayloadAction<FullPlayerInfo>) => {
@@ -51,6 +58,7 @@ const slice = createSlice({
                 player: info.player,
                 players: info.players,
                 rules: info.rules,
+                tokens: info.tokens,
                 selectedRuleId: undefined,
             };
         }

@@ -2,7 +2,9 @@ import React from "react";
 import RuleListComponent from "../../component/RuleList";
 import {actions, usePLDispatch, usePLSelector} from "../../state/playerState";
 import RuleViewComponent from "../../component/RuleView";
-import {AccessType, ForeignPlayer} from "../../model";
+import TokenListComponent from "../../component/TokenList";
+import TokenViewComponent from "../../component/TokenView";
+import {AccessType, ForeignPlayer, Token} from "../../model";
 import ShareRulePaneComponent from "../../component/ShareRulePane";
 
 export function RuleList() {
@@ -48,4 +50,29 @@ export function ShareRulePane() {
     const handleShareButton = (p: ForeignPlayer) => dispatch(actions.shareRule({ rule, player: p }));
 
     return <ShareRulePaneComponent players={players} onShareButtonClick={handleShareButton} />;
+}
+
+export function TokenList() {
+    const { tokens, selectedTokenId } = usePLSelector((state) => ({
+        tokens: state.tokens,
+        selectedTokenId: state.selectedTokenId,
+    }));
+    const dispatch = usePLDispatch();
+
+    const onTokenClick = (t: Token) => dispatch(actions.setSelectedTokenId(t.id));
+    return <TokenListComponent tokens={tokens} selectedTokenId={selectedTokenId} onTokenClick={onTokenClick}/>;
+}
+
+export function TokenView() {
+    const { tokens, selectedTokenId } = usePLSelector((state) => ({
+        tokens: state.tokens,
+        selectedTokenId: state.selectedTokenId,
+    }));
+
+    const token = tokens.find((t) => t.id == selectedTokenId);
+    if (token === undefined) {
+        return null;
+    }
+
+    return <TokenViewComponent token={token} />;
 }
