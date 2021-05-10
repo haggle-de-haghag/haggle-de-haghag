@@ -1,6 +1,7 @@
-import { Box, List, ListItem, ListSubheader } from "@material-ui/core";
+import {Box, List, ListItem, ListItemAvatar, ListSubheader} from "@material-ui/core";
 import React from "react";
 import { Token } from "../model";
+import {Avatar} from "@material-ui/core/index";
 
 export interface Props {
     tokens: Token[];
@@ -20,6 +21,9 @@ export default function TokenList(props: Props) {
                         selected={token.id == props.selectedTokenId}
                         onClick={() => props.onTokenClick(token)}
                     >
+                        <ListItemAvatar>
+                            <Avatar>{ token.amount }</Avatar>
+                        </ListItemAvatar>
                         {token.title}
                     </ListItem>
                 )}

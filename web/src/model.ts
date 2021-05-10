@@ -33,6 +33,7 @@ export interface Token {
     id: TokenId;
     title: string;
     text: string;
+    amount: number;
 }
 
 export type AccessType = 'ASSIGNED' | 'SHARED';
