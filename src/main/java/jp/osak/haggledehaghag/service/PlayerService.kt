@@ -69,7 +69,7 @@ class PlayerService(
     @Transactional(rollbackFor = [Exception::class])
     fun setToken(player: Player, token: Token, amount: Int): PlayerToken {
         require(player.gameId == token.gameId) { "Game ID of player ${player.id} and token ${token.id} doesn't match" }
-        require(amount >= 0) { "Token amount must be nonnegative, but got ${amount}" }
+        require(amount >= 0) { "Token amount must be nonnegative, but got $amount" }
 
         var playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, token.id)
         if (playerToken == null) {
@@ -117,9 +117,9 @@ class PlayerService(
 
     @Transactional(rollbackFor = [Exception::class])
     fun giveToken(player: Player, targetPlayer: Player, token: Token, amount: Int) {
-        require (player.gameId == targetPlayer.gameId) { "Player ${player.id} and target player ${targetPlayer.id} must belong to the same game" }
-        require (player.gameId == token.gameId) { "Player ${player.id} and token ${token.id} must belong to the same game"}
-        require (amount > 0) { "Cannot give non-positive number of tokens: $amount" }
+        require(player.gameId == targetPlayer.gameId) { "Player ${player.id} and target player ${targetPlayer.id} must belong to the same game" }
+        require(player.gameId == token.gameId) { "Player ${player.id} and token ${token.id} must belong to the same game" }
+        require(amount > 0) { "Cannot give non-positive number of tokens: $amount" }
 
         val playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, token.id)
             ?: throw IllegalArgumentException("Player ${player.id} doesn't have ${token.id}")

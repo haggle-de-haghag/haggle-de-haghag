@@ -6,9 +6,9 @@ import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
 @Service
-class TokenService (
+class TokenService(
     private val tokenRepository: TokenRepository,
-){
+) {
     fun findToken(tokenId: Int): Token? {
         return tokenRepository.findByIdOrNull(tokenId)
     }

@@ -10,7 +10,6 @@ import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
 import jp.osak.haggledehaghag.viewmodel.TokenView
-import org.apache.coyote.Response
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -76,7 +75,7 @@ class PlayerController(
         @ModelAttribute player: Player,
         @PathVariable tokenId: Int,
         @RequestBody request: GiveTokenRequest
-    ) : GiveTokenResponse {
+    ): GiveTokenResponse {
         val targetPlayer = playerService.findPlayer(request.playerId)
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player ${request.playerId} doesn't belong to the same game")
         val token = playerService.findToken(player, tokenId)?.token

@@ -3,7 +3,6 @@ package jp.osak.haggledehaghag.viewmodel
 import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
-import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.model.Token
 
 data class FullGameInfoView(

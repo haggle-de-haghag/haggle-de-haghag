@@ -1,7 +1,15 @@
 package jp.osak.haggledehaghag.service
 
-import jp.osak.haggledehaghag.model.*
-import jp.osak.haggledehaghag.repository.*
+import jp.osak.haggledehaghag.model.Game
+import jp.osak.haggledehaghag.model.Player
+import jp.osak.haggledehaghag.model.Rule
+import jp.osak.haggledehaghag.model.RuleAccess
+import jp.osak.haggledehaghag.model.Token
+import jp.osak.haggledehaghag.repository.GameRepository
+import jp.osak.haggledehaghag.repository.PlayerRepository
+import jp.osak.haggledehaghag.repository.RuleAccessRepository
+import jp.osak.haggledehaghag.repository.RuleRepository
+import jp.osak.haggledehaghag.repository.TokenRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
 
