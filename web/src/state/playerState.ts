@@ -27,6 +27,12 @@ export interface ShareRule {
     player: ForeignPlayer;
 }
 
+export interface GiveToken {
+    playerId: PlayerId;
+    tokenId: TokenId;
+    amount: number;
+}
+
 const slice = createSlice({
     name: 'player',
     initialState: {
@@ -45,7 +51,7 @@ const slice = createSlice({
     } as PlayerState,
     reducers: {
         shareRule: (state, action: PayloadAction<ShareRule>) => state,
-        giveToken: (state, action: PayloadAction<void>) => state,
+        giveToken: (state, action: PayloadAction<GiveToken>) => state,
 
         setSelectedRuleId: (state, action: PayloadAction<RuleId>) => {
             state.selectedRuleId = action.payload;
@@ -89,9 +95,16 @@ function* shareRuleSaga(action: ReturnType<typeof actions.shareRule>) {
     // TODO: Show success message
 }
 
+function* giveTokenSaga(action: ReturnType<typeof actions.giveToken>) {
+    const payload = action.payload;
+    const success: boolean = yield call(PlayerApi.giveToken, payload.tokenId, payload.playerId, payload.amount);
+    // TODO: Show success message
+}
+
 function* installWatcherSaga() {
     yield all([
-        takeEvery(actions.shareRule, shareRuleSaga)
+        takeEvery(actions.shareRule, shareRuleSaga),
+        takeEvery(actions.giveToken, giveTokenSaga),
     ])
 }
 

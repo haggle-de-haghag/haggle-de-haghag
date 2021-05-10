@@ -96,7 +96,11 @@ export function GiveTokenPane() {
 
     const onAmountChange = (amount: number) => dispatch(actions.setAmountInput(amount));
     const onPlayerSelect = (playerId: PlayerId) => dispatch(actions.setSelectedPlayerId(playerId));
-    const onGiveButtonClick = () => dispatch(actions.giveToken());
+    const onGiveButtonClick = () => dispatch(actions.giveToken({
+        tokenId: token.id,
+        playerId: state.selectedPlayerId,
+        amount: state.amountInput,
+    }));
 
     return <GiveTokenComponent
         token={token}

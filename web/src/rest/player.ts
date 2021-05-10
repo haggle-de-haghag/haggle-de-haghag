@@ -1,5 +1,5 @@
 import {get, post} from "./common";
-import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 
 interface Config {
     playerKey: string;
@@ -29,5 +29,10 @@ export async function listFullInfo(): Promise<FullPlayerInfo> {
 
 export async function shareRule(ruleId: RuleId, playerId: PlayerId): Promise<boolean> {
     const result = await post<{success: boolean}>(`/players/${config.playerKey}/rules/${ruleId}/share`, { playerId });
+    return result.success;
+}
+
+export async function giveToken(tokenId: TokenId, playerId: PlayerId, amount: number): Promise<boolean> {
+    const result = await post<{success: boolean}>(`/players/${config.playerKey}/tokens/${tokenId}/give`, { playerId, amount });
     return result.success;
 }

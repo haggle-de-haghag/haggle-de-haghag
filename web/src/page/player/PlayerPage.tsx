@@ -15,7 +15,6 @@ export default function PlayerPage() {
     const { gameTitle } = usePLSelector((state) => ({
         gameTitle: state.gameTitle,
     }));
-    const { token: selectedToken } = useSelectedToken();
 
     return <Grid container direction="column" spacing={2}>
         <Grid item><Typography variant="h3">{gameTitle}</Typography></Grid>
