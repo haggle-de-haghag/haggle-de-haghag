@@ -4,8 +4,21 @@ import {actions, usePLDispatch, usePLSelector} from "../../state/playerState";
 import RuleViewComponent from "../../component/RuleView";
 import TokenListComponent from "../../component/TokenList";
 import TokenViewComponent from "../../component/TokenView";
-import {AccessType, ForeignPlayer, Token} from "../../model";
+import GiveTokenComponent from "../../component/GiveTokenPane";
+import {AccessType, ForeignPlayer, PlayerId, Token} from "../../model";
 import ShareRulePaneComponent from "../../component/ShareRulePane";
+
+export interface UseSelectedToken {
+    token?: Token;
+    selectedTokenId?: number;
+}
+
+export function useSelectedToken() {
+    return usePLSelector((state) => ({
+        token: state.tokens.find((t) => t.id == state.selectedTokenId),
+        selectedTokenId: state.selectedTokenId,
+    }));
+}
 
 export function RuleList() {
     const { rules } = usePLSelector((state) => ({
@@ -64,15 +77,33 @@ export function TokenList() {
 }
 
 export function TokenView() {
-    const { tokens, selectedTokenId } = usePLSelector((state) => ({
-        tokens: state.tokens,
-        selectedTokenId: state.selectedTokenId,
-    }));
-
-    const token = tokens.find((t) => t.id == selectedTokenId);
+    const { token } = useSelectedToken();
     if (token === undefined) {
         return null;
     }
 
     return <TokenViewComponent token={token} />;
+}
+
+export function GiveTokenPane() {
+    const state = usePLSelector((state) => state);
+    const dispatch = usePLDispatch();
+
+    const { token } = useSelectedToken();
+    if (token === undefined) {
+        return null;
+    }
+
+    const onAmountChange = (amount: number) => dispatch(actions.setAmountInput(amount));
+    const onPlayerSelect = (playerId: PlayerId) => dispatch(actions.setSelectedPlayerId(playerId));
+    const onGiveButtonClick = () => dispatch(actions.giveToken());
+
+    return <GiveTokenComponent
+        token={token}
+        players={state.players}
+        selectedPlayerId={state.selectedPlayerId}
+        amountInput={state.amountInput}
+        onAmountChange={onAmountChange}
+        onPlayerSelect={onPlayerSelect}
+        onGiveButtonClick={onGiveButtonClick} />;
 }

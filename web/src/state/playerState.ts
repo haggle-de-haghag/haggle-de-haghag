@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, Player, Rule, RuleId, Token, TokenId} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {all, call, put, takeEvery} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
@@ -18,6 +18,8 @@ export interface PlayerState {
     // UI state
     selectedRuleId?: RuleId,
     selectedTokenId?: TokenId;
+    amountInput: number,
+    selectedPlayerId: PlayerId;
 }
 
 export interface ShareRule {
@@ -38,16 +40,31 @@ const slice = createSlice({
         rules: [],
         tokens: [],
         selectedRuleId: undefined,
+        amountInput: 1,
+        selectedPlayerId: 0,
     } as PlayerState,
     reducers: {
-        shareRule: (state, action: PayloadAction<ShareRule>) => {},
+        shareRule: (state, action: PayloadAction<ShareRule>) => state,
+        giveToken: (state, action: PayloadAction<void>) => state,
 
         setSelectedRuleId: (state, action: PayloadAction<RuleId>) => {
             state.selectedRuleId = action.payload;
+            state.selectedTokenId = undefined;
         },
 
         setSelectedTokenId: (state, action: PayloadAction<TokenId>) => {
             state.selectedTokenId = action.payload;
+            state.selectedPlayerId = state.players.length > 0 ? state.players[0].id : 0;
+            state.amountInput = 1;
+            state.selectedRuleId = undefined;
+        },
+
+        setSelectedPlayerId: (state, action: PayloadAction<PlayerId>) => {
+            state.selectedPlayerId = action.payload;
+        },
+
+        setAmountInput: (state, action: PayloadAction<number>) => {
+            state.amountInput = action.payload;
         },
 
         initialize: (state, action: PayloadAction<FullPlayerInfo>) => {
