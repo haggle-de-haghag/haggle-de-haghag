@@ -11,6 +11,8 @@ data class FullGameInfoView(
     val players: List<ForeignPlayerView>,
     val ruleAccessMap: Map<Int, List<PlayerIdWithAccess>>,
     val tokens: List<Token>,
+    val tokenAllocationMap: Map<Int, List<PlayerIdWithAmount>>,
 ) {
     data class PlayerIdWithAccess(val playerId: Int, val accessType: RuleAccess.Type)
+    data class PlayerIdWithAmount(val playerId: Int, val amount: Int)
 }

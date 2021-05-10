@@ -2,11 +2,13 @@ package jp.osak.haggledehaghag.service
 
 import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Player
+import jp.osak.haggledehaghag.model.PlayerToken
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.model.Token
 import jp.osak.haggledehaghag.repository.GameRepository
 import jp.osak.haggledehaghag.repository.PlayerRepository
+import jp.osak.haggledehaghag.repository.PlayerTokenRepository
 import jp.osak.haggledehaghag.repository.RuleAccessRepository
 import jp.osak.haggledehaghag.repository.RuleRepository
 import jp.osak.haggledehaghag.repository.TokenRepository
@@ -21,6 +23,7 @@ class GameService(
     private val ruleRepository: RuleRepository,
     private val ruleAccessRepository: RuleAccessRepository,
     private val tokenRepository: TokenRepository,
+    private val playerTokenRepository: PlayerTokenRepository,
 ) {
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
@@ -70,6 +73,10 @@ class GameService(
 
     fun listTokens(game: Game): List<Token> {
         return tokenRepository.findAllByGameId(game.id)
+    }
+
+    fun listPlayerTokens(game: Game): List<PlayerToken> {
+        return playerTokenRepository.findAllByGameId(game.id)
     }
 
     private fun generateKey(base: String): String {

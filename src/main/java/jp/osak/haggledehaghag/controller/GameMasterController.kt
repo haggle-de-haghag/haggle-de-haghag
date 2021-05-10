@@ -46,7 +46,10 @@ class GameMasterController(
         val ruleAccesses = gameService.listRuleAccesses(game)
         val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, FullGameInfoView.PlayerIdWithAccess(it.playerId, it.type)) }.toMultiMap()
         val tokens = gameService.listTokens(game).sortedBy { it.id }
-        return FullGameInfoView(game, rules, players, ruleAccessMap, tokens)
+        val tokenAllocationMap = gameService.listPlayerTokens(game)
+            .map { Pair(it.tokenId, FullGameInfoView.PlayerIdWithAmount(it.playerId, it.amount)) }
+            .toMultiMap()
+        return FullGameInfoView(game, rules, players, ruleAccessMap, tokens, tokenAllocationMap)
     }
 
     @GetMapping("/rules")
