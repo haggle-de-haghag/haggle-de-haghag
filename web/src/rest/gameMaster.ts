@@ -32,6 +32,11 @@ export interface FullGameInfo {
     tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: tokenId
 }
 
+export interface UpdateTokenResponse {
+    token: Token;
+    playerTokens: PlayerIdWithAmount[];
+}
+
 export async function listFullInfo(): Promise<FullGameInfo> {
     return get(fullApi(''));
 }
@@ -56,9 +61,8 @@ export async function createToken(title: string, text: string): Promise<Token> {
     return post(fullApi('/tokens'), {title, text});
 }
 
-export async function updateToken(tokenId: number, title?: string, text?: string, allocation?: {[playerId: number]: number}): Promise<Token> {
-    const response = await patch<{token: Token}>(fullApi(`/tokens/${tokenId}`), {title, text, allocation});
-    return response.token;
+export async function updateToken(tokenId: number, title?: string, text?: string, allocation?: {[playerId: number]: number}): Promise<UpdateTokenResponse> {
+    return await patch(fullApi(`/tokens/${tokenId}`), {title, text, allocation});
 }
 
 function fullApi(api: string): string {

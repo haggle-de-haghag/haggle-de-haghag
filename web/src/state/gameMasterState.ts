@@ -4,7 +4,7 @@ import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
-import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount} from '../rest/gameMaster';
+import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 
 export interface GameMasterState {
@@ -63,6 +63,11 @@ export interface UpdateToken {
 export interface SetAllocation {
     playerId: number;
     amount: number;
+}
+
+export interface ReplaceAllocation {
+    tokenId: number;
+    allocation: PlayerIdWithAmount[];
 }
 
 const initialState: GameMasterState = {
@@ -197,7 +202,12 @@ const slice = createSlice({
                 console.error(`Token ${token.id} doesn't exist`);
                 return state;
             }
-            state.tokens.splice(index, 1, token);
+            state.tokens[index] = token;
+        },
+
+        replaceAllocation: (state, action: PayloadAction<ReplaceAllocation>) => {
+            const payload = action.payload;
+            state.tokenAllocationMap[payload.tokenId] = payload.allocation;
         },
 
         changeSelectedToken: (state, action: PayloadAction<TokenId>) => {
@@ -278,8 +288,9 @@ function* createTokenSaga(action: ReturnType<typeof actions.createToken>) {
 
 function* updateTokenSaga(action: ReturnType<typeof actions.updateToken>) {
     const payload = action.payload;
-    const updatedToken: Token = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
-    yield put(actions.replaceToken(updatedToken));
+    const response: UpdateTokenResponse = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
+    yield put(actions.replaceToken(response.token));
+    yield put(actions.replaceAllocation({ tokenId: response.token.id, allocation: response.playerTokens } ));
 }
 
 function* createWatcherSaga() {

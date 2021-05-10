@@ -9,7 +9,7 @@ interface PlayerTokenRepository : CrudRepository<PlayerToken, Int> {
 
     fun findAllByPlayerId(playerId: Int): List<PlayerToken>
 
-    fun findAllByPlayerIdIn(playerIds: Collection<Int>): List<PlayerToken>
+    fun findAllByPlayerIdInAndTokenId(playerIds: Collection<Int>, tokenId: Int): List<PlayerToken>
 
     @Query(
         """

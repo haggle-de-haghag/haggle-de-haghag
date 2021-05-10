@@ -102,7 +102,7 @@ class PlayerService(
             throw IllegalArgumentException("Some playerIds don't belong to the same game as the given token")
         }
 
-        val playerTokens = playerTokenRepository.findAllByPlayerIdIn(players.map { it.id }).toMutableList()
+        val playerTokens = playerTokenRepository.findAllByPlayerIdInAndTokenId(players.map { it.id }, token.id).toMutableList()
         for ((playerId, amount) in allocation) {
             val index = playerTokens.indexOfFirst { it.playerId == playerId }
             if (index == -1) {
