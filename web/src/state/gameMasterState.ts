@@ -1,10 +1,10 @@
-import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
+import {ForeignPlayer, Game, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
-import {FullGameInfo, PlayerIdWithAccess} from "../rest/gameMaster";
+import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 
 export interface GameMasterState {
@@ -14,6 +14,7 @@ export interface GameMasterState {
     rules: Rule[];
     ruleAccessList: { [key: number]: PlayerIdWithAccess[] }; // key: RuleId
     tokens: Token[];
+    tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: TokenId
 
     // UI state (Rule)
     ruleTitleInput: string;
@@ -68,6 +69,7 @@ const initialState: GameMasterState = {
     rules: [],
     ruleAccessList: [],
     tokens: [],
+    tokenAllocationMap: {},
     ruleTitleInput: '',
     ruleTextInput: '',
     defaultAssignmentsInput: [],
@@ -137,7 +139,7 @@ const slice = createSlice({
             state.rules[index] = rule;
         },
 
-        updateRule: (state, action: PayloadAction<UpdateRule>) => {},
+        updateRule: (state, action: PayloadAction<UpdateRule>) => state,
 
         changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
             const {ruleId, playerId, assigned} = action.payload;
@@ -173,8 +175,8 @@ const slice = createSlice({
             state.selectedTokenId = undefined;
         },
 
-        createToken: (state, action: PayloadAction<CreateToken>) => {},
-        updateToken: (state, action: PayloadAction<UpdateToken>) => {},
+        createToken: (state, action: PayloadAction<CreateToken>) => state,
+        updateToken: (state, action: PayloadAction<UpdateToken>) => state,
 
         addToken: (state, action: PayloadAction<Token>) => {
             state.tokens.push(action.payload);
@@ -221,6 +223,7 @@ const slice = createSlice({
                 players: info.players,
                 ruleAccessList: info.ruleAccessMap,
                 tokens: info.tokens,
+                tokenAllocationMap: info.tokenAllocationMap,
                 ruleTitleInput: '',
                 ruleTextInput: '',
                 selectedRuleId: undefined,

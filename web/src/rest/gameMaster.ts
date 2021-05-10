@@ -18,12 +18,18 @@ export interface PlayerIdWithAccess {
     accessType: AccessType;
 }
 
+export interface PlayerIdWithAmount {
+    playerId: PlayerId;
+    amount: number;
+}
+
 export interface FullGameInfo {
     game: Game;
     rules: Rule[];
     players: ForeignPlayer[];
     ruleAccessMap: { [key: number]: PlayerIdWithAccess[] };
     tokens: Token[];
+    tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: tokenId
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {
