@@ -56,6 +56,7 @@ class PlayerService(
         val tokens = tokenRepository.findAllByIdIn(tokenIds)
         val amountMap = playerTokens.map { Pair(it.tokenId, it.amount) }.toMap()
         return tokens.map { TokenWithAmount(it, amountMap[it.id]!!) }
+            .filter { it.amount > 0 }
     }
 
     fun findToken(player: Player, tokenId: Int): TokenWithAmount? {
