@@ -10,6 +10,7 @@ import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
 import jp.osak.haggledehaghag.viewmodel.TokenView
+import org.apache.coyote.Response
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
@@ -70,6 +71,20 @@ class PlayerController(
         return playerService.findAllTokens(player).map { TokenView(it) }
     }
 
+    @PostMapping("/tokens/{tokenId}/give")
+    fun giveToken(
+        @ModelAttribute player: Player,
+        @PathVariable tokenId: Int,
+        @RequestBody request: GiveTokenRequest
+    ) : GiveTokenResponse {
+        val targetPlayer = playerService.findPlayer(request.playerId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player ${request.playerId} doesn't belong to the same game")
+        val token = playerService.findToken(player, tokenId)?.token
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the player")
+        playerService.giveToken(player, targetPlayer, token, request.amount)
+        return GiveTokenResponse(true)
+    }
+
     @PostMapping("/rules/{ruleId}/share")
     fun shareRule(
         @ModelAttribute player: Player,
@@ -87,4 +102,6 @@ class PlayerController(
 
     data class ShareRuleRequest(val playerId: Int)
     data class ShareRuleResult(val success: Boolean)
+    data class GiveTokenRequest(val playerId: Int, val amount: Int)
+    data class GiveTokenResponse(val success: Boolean)
 }

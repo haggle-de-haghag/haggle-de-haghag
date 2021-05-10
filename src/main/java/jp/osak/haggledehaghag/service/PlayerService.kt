@@ -58,6 +58,14 @@ class PlayerService(
         return tokens.map { TokenWithAmount(it, amountMap[it.id]!!) }
     }
 
+    fun findToken(player: Player, tokenId: Int): TokenWithAmount? {
+        val playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, tokenId)
+            ?: return null
+        val token = tokenRepository.findByIdOrNull(tokenId)
+            ?: return null
+        return TokenWithAmount(token, playerToken.amount)
+    }
+
     @Transactional(rollbackFor = [Exception::class])
     fun setToken(player: Player, token: Token, amount: Int): PlayerToken {
         require(player.gameId == token.gameId) { "Game ID of player ${player.id} and token ${token.id} doesn't match" }
@@ -105,6 +113,22 @@ class PlayerService(
         }
         require(playerTokens.size == allocation.size) { "playerTokens.size (${playerTokens.size}) should have matched to allocations.size (${allocation.size})" }
         return playerTokenRepository.saveAll(playerTokens).toList()
+    }
+
+    @Transactional(rollbackFor = [Exception::class])
+    fun giveToken(player: Player, targetPlayer: Player, token: Token, amount: Int) {
+        require (player.gameId == targetPlayer.gameId) { "Player ${player.id} and target player ${targetPlayer.id} must belong to the same game" }
+        require (player.gameId == token.gameId) { "Player ${player.id} and token ${token.id} must belong to the same game"}
+        require (amount > 0) { "Cannot give non-positive number of tokens: $amount" }
+
+        val playerToken = playerTokenRepository.findByPlayerIdAndTokenId(player.id, token.id)
+            ?: throw IllegalArgumentException("Player ${player.id} doesn't have ${token.id}")
+        if (playerToken.amount < amount) {
+            throw IllegalArgumentException("Player ${player.id} does not have enough token ${token.id}: has ${playerToken.amount} but attempted to give $amount")
+        }
+
+        addToken(player, token, -amount)
+        addToken(targetPlayer, token, amount)
     }
 
     /**
