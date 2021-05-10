@@ -73,7 +73,7 @@ export function TokenList() {
     const dispatch = usePLDispatch();
 
     const onTokenClick = (t: Token) => dispatch(actions.setSelectedTokenId(t.id));
-    return <TokenListComponent tokens={tokens} selectedTokenId={selectedTokenId} onTokenClick={onTokenClick}/>;
+    return <TokenListComponent tokens={tokens} selectedTokenId={selectedTokenId} onTokenClick={onTokenClick} showAmount/>;
 }
 
 export function TokenView() {

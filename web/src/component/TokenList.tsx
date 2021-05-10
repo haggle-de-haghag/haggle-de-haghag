@@ -6,6 +6,7 @@ import {Avatar} from "@material-ui/core/index";
 export interface Props {
     tokens: Token[];
     selectedTokenId?: number;
+    showAmount?: boolean;
     onTokenClick: (t: Token) => void;
 }
 
@@ -21,9 +22,7 @@ export default function TokenList(props: Props) {
                         selected={token.id == props.selectedTokenId}
                         onClick={() => props.onTokenClick(token)}
                     >
-                        <ListItemAvatar>
-                            <Avatar>{ token.amount }</Avatar>
-                        </ListItemAvatar>
+                        {props.showAmount && <ListItemAvatar><Avatar>{ token.amount }</Avatar></ListItemAvatar>}
                         {token.title}
                     </ListItem>
                 )}
