@@ -12,9 +12,9 @@ export interface GameMasterState {
     game: Game;
     players: ForeignPlayer[];
     rules: Rule[];
-    ruleAccessList: { [key: number]: PlayerIdWithAccess[] }; // key: RuleId
+    ruleAccessList: { [ruleId: number]: PlayerIdWithAccess[] };
     tokens: Token[];
-    tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: TokenId
+    tokenAllocationMap: { [tokenId: number]: PlayerIdWithAmount[] };
 
     // UI state (Rule)
     ruleTitleInput: string;
@@ -26,6 +26,7 @@ export interface GameMasterState {
     tokenTitleInput: string;
     tokenTextInput: string;
     selectedTokenId?: TokenId;
+    allocationInputs: { [playerId: number]: number };
 }
 
 export interface CreateRule {
@@ -56,6 +57,12 @@ export interface UpdateToken {
     tokenId: TokenId;
     title?: string;
     text?: string;
+    allocation?: {[playerId: number]: number};
+}
+
+export interface SetAllocation {
+    playerId: number;
+    amount: number;
 }
 
 const initialState: GameMasterState = {
@@ -75,6 +82,7 @@ const initialState: GameMasterState = {
     defaultAssignmentsInput: [],
     tokenTitleInput: '',
     tokenTextInput: '',
+    allocationInputs: [],
 };
 
 const inMemoryInitialState: GameMasterState = {
@@ -200,10 +208,18 @@ const slice = createSlice({
                 return state;
             }
 
+            const allocation: {[playerId: number]: number} = {};
+            const allocationMap = state.tokenAllocationMap[tokenId] ?? [];
+            state.players.forEach((p) => {
+                const playerIdWithAmount = allocationMap.find((pwa) => pwa.playerId == p.id);
+                allocation[p.id] = playerIdWithAmount?.amount ?? 0;
+            });
+
             state.selectedTokenId = tokenId;
             state.tokenTitleInput = token.title;
             state.tokenTextInput = token.text;
             state.selectedRuleId = undefined;
+            state.allocationInputs = allocation;
         },
 
         setTokenTitleInput: (state, action: PayloadAction<string>) => {
@@ -212,6 +228,11 @@ const slice = createSlice({
 
         setTokenTextInput: (state, action: PayloadAction<string>) => {
             state.tokenTextInput = action.payload;
+        },
+
+        setAllocation: (state, action: PayloadAction<SetAllocation>) => {
+            const payload = action.payload;
+            state.allocationInputs[payload.playerId] = payload.amount;
         },
 
         initialize: (state, action: PayloadAction<FullGameInfo>) => {
@@ -257,7 +278,7 @@ function* createTokenSaga(action: ReturnType<typeof actions.createToken>) {
 
 function* updateTokenSaga(action: ReturnType<typeof actions.updateToken>) {
     const payload = action.payload;
-    const updatedToken: Token = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text);
+    const updatedToken: Token = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
     yield put(actions.replaceToken(updatedToken));
 }
 

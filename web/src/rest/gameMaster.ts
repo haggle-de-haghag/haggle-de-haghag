@@ -56,8 +56,9 @@ export async function createToken(title: string, text: string): Promise<Token> {
     return post(fullApi('/tokens'), {title, text});
 }
 
-export async function updateToken(tokenId: number, title?: string, text?: string): Promise<Token> {
-    return patch(fullApi(`/tokens/${tokenId}`), {title, text});
+export async function updateToken(tokenId: number, title?: string, text?: string, allocation?: {[playerId: number]: number}): Promise<Token> {
+    const response = await patch<{token: Token}>(fullApi(`/tokens/${tokenId}`), {title, text, allocation});
+    return response.token;
 }
 
 function fullApi(api: string): string {

@@ -74,28 +74,22 @@ export function TokenEditor() {
 
     const onTokenTitleChange = (text: string) => dispatch(actions.setTokenTitleInput(text));
     const onTokenTextChange = (text: string) => dispatch(actions.setTokenTextInput(text));
+    const onAllocationChange = (playerId: number, amount: number) => dispatch(actions.setAllocation({ playerId, amount }));
     const onSaveButtonClick = () => dispatch(actions.updateToken({
         tokenId: currentTokenId,
         title: state.tokenTitleInput,
         text: state.tokenTextInput,
+        allocation: state.allocationInputs,
     }));
-    const allocation: {[key: number]: number} = {};
-    state.players.forEach((p) => {
-        const playerIdWithAmount = state.tokenAllocationMap[currentTokenId]?.find((t) => t.playerId == p.id);
-        if (playerIdWithAmount === undefined) {
-            allocation[p.id] = 0;
-        } else {
-            allocation[p.id] = playerIdWithAmount.amount;
-        }
-    });
 
     return <TokenEditorComponent
         tokenTitle={state.tokenTitleInput}
         tokenText={state.tokenTextInput}
         players={state.players}
-        allocation={allocation}
+        allocation={state.allocationInputs}
         onTokenTitleChange={onTokenTitleChange}
         onTokenTextChange={onTokenTextChange}
+        onAllocationChange={onAllocationChange}
         onSaveButtonClick={onSaveButtonClick}
     />;
 }

@@ -20,6 +20,7 @@ interface Props {
     allocation: {[key: number]: number}; // key: playerId
     onTokenTitleChange: (value: string) => void;
     onTokenTextChange: (value: string) => void;
+    onAllocationChange: (playerId: number, amount: number) => void;
     onSaveButtonClick: () => void;
 }
 
@@ -58,7 +59,13 @@ export default function TokenEditor(props: Props) {
                         {props.players.map((p) =>
                             <TableRow key={p.id}>
                                 <TableCell>{p.displayName}</TableCell>
-                                <TableCell><TextField value={props.allocation[p.id] ?? 0} /></TableCell>
+                                <TableCell>
+                                    <TextField
+                                        type="number"
+                                        value={props.allocation[p.id] ?? 0}
+                                        onChange={(e) => props.onAllocationChange(p.id, parseInt(e.target.value))}
+                                    />
+                                </TableCell>
                             </TableRow>
                         )}
                     </TableBody>
