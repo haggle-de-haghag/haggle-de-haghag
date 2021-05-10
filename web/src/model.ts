@@ -1,6 +1,7 @@
 export type GameId = number;
 export type PlayerId = number;
 export type RuleId = number;
+export type TokenId = number;
 
 export interface Game {
     id: GameId;
@@ -26,6 +27,13 @@ export interface Rule {
     title: string;
     text: string;
     accessType: AccessType
+}
+
+export interface Token {
+    id: TokenId;
+    title: string;
+    text: string;
+    amount: number;
 }
 
 export type AccessType = 'ASSIGNED' | 'SHARED';

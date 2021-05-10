@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, Player, Rule, RuleId} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import {all, call, put, takeEvery} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
@@ -13,14 +13,24 @@ export interface PlayerState {
     player: Player;
     players: ForeignPlayer[];
     rules: Rule[];
+    tokens: Token[];
 
     // UI state
     selectedRuleId?: RuleId,
+    selectedTokenId?: TokenId;
+    amountInput: number,
+    selectedPlayerId: PlayerId;
 }
 
 export interface ShareRule {
     rule: Rule;
     player: ForeignPlayer;
+}
+
+export interface GiveToken {
+    playerId: PlayerId;
+    tokenId: TokenId;
+    amount: number;
 }
 
 const slice = createSlice({
@@ -34,13 +44,33 @@ const slice = createSlice({
         },
         players: [],
         rules: [],
+        tokens: [],
         selectedRuleId: undefined,
+        amountInput: 1,
+        selectedPlayerId: 0,
     } as PlayerState,
     reducers: {
-        shareRule: (state, action: PayloadAction<ShareRule>) => {},
+        shareRule: (state, action: PayloadAction<ShareRule>) => state,
+        giveToken: (state, action: PayloadAction<GiveToken>) => state,
 
         setSelectedRuleId: (state, action: PayloadAction<RuleId>) => {
             state.selectedRuleId = action.payload;
+            state.selectedTokenId = undefined;
+        },
+
+        setSelectedTokenId: (state, action: PayloadAction<TokenId>) => {
+            state.selectedTokenId = action.payload;
+            state.selectedPlayerId = state.players.length > 0 ? state.players[0].id : 0;
+            state.amountInput = 1;
+            state.selectedRuleId = undefined;
+        },
+
+        setSelectedPlayerId: (state, action: PayloadAction<PlayerId>) => {
+            state.selectedPlayerId = action.payload;
+        },
+
+        setAmountInput: (state, action: PayloadAction<number>) => {
+            state.amountInput = action.payload;
         },
 
         initialize: (state, action: PayloadAction<FullPlayerInfo>) => {
@@ -51,6 +81,7 @@ const slice = createSlice({
                 player: info.player,
                 players: info.players,
                 rules: info.rules,
+                tokens: info.tokens,
                 selectedRuleId: undefined,
             };
         }
@@ -64,9 +95,16 @@ function* shareRuleSaga(action: ReturnType<typeof actions.shareRule>) {
     // TODO: Show success message
 }
 
+function* giveTokenSaga(action: ReturnType<typeof actions.giveToken>) {
+    const payload = action.payload;
+    const success: boolean = yield call(PlayerApi.giveToken, payload.tokenId, payload.playerId, payload.amount);
+    // TODO: Show success message
+}
+
 function* installWatcherSaga() {
     yield all([
-        takeEvery(actions.shareRule, shareRuleSaga)
+        takeEvery(actions.shareRule, shareRuleSaga),
+        takeEvery(actions.giveToken, giveTokenSaga),
     ])
 }
 

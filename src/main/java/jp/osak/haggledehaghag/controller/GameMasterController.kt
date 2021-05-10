@@ -2,11 +2,14 @@ package jp.osak.haggledehaghag.controller
 
 import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Player
+import jp.osak.haggledehaghag.model.PlayerToken
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
+import jp.osak.haggledehaghag.model.Token
 import jp.osak.haggledehaghag.service.GameService
 import jp.osak.haggledehaghag.service.PlayerService
 import jp.osak.haggledehaghag.service.RuleService
+import jp.osak.haggledehaghag.service.TokenService
 import jp.osak.haggledehaghag.util.Either
 import jp.osak.haggledehaghag.util.toMultiMap
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
@@ -28,6 +31,7 @@ class GameMasterController(
     private val gameService: GameService,
     private val ruleService: RuleService,
     private val playerService: PlayerService,
+    private val tokenService: TokenService,
 ) {
     @ModelAttribute
     fun addGame(@PathVariable masterKey: String): Game {
@@ -41,7 +45,11 @@ class GameMasterController(
         val rules = gameService.listRules(game).sortedBy { it.ruleNumber }
         val ruleAccesses = gameService.listRuleAccesses(game)
         val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, FullGameInfoView.PlayerIdWithAccess(it.playerId, it.type)) }.toMultiMap()
-        return FullGameInfoView(game, rules, players, ruleAccessMap)
+        val tokens = gameService.listTokens(game).sortedBy { it.id }
+        val tokenAllocationMap = gameService.listPlayerTokens(game)
+            .map { Pair(it.tokenId, FullGameInfoView.PlayerIdWithAmount(it.playerId, it.amount)) }
+            .toMultiMap()
+        return FullGameInfoView(game, rules, players, ruleAccessMap, tokens, tokenAllocationMap)
     }
 
     @GetMapping("/rules")
@@ -94,6 +102,37 @@ class GameMasterController(
         }
     }
 
+    @GetMapping("/tokens")
+    fun listTokens(
+        @ModelAttribute game: Game
+    ): List<Token> {
+        return gameService.listTokens(game)
+    }
+
+    @PostMapping("/tokens")
+    fun createToken(
+        @ModelAttribute game: Game,
+        @RequestBody request: CreateTokenRequest,
+    ): Token {
+        return gameService.createNewToken(game, request.title, request.text)
+    }
+
+    @PatchMapping("/tokens/{tokenId}")
+    fun updateToken(
+        @ModelAttribute game: Game,
+        @PathVariable tokenId: Int,
+        @RequestBody request: UpdateTokenRequest,
+    ): UpdateTokenResponse {
+        val token = tokenService.findToken(tokenId)
+        if (token == null || token.gameId != game.id) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the game ${game.id}")
+        }
+
+        val updatedToken = tokenService.updateToken(token, request.title, request.text)
+        val playerTokens = playerService.bulkSetTokenAmounts(request.allocation, updatedToken)
+        return UpdateTokenResponse(updatedToken, playerTokens)
+    }
+
     @GetMapping("/players")
     fun listPlayers(
         @ModelAttribute game: Game,
@@ -104,4 +143,11 @@ class GameMasterController(
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class AssignRuleRequest(val playerId: Int)
+    data class CreateTokenRequest(val title: String, val text: String)
+
+    /**
+     * @property allocation map from playerId to the number of the tokens that player will own
+     */
+    data class UpdateTokenRequest(val tokenId: Int, val title: String?, val text: String?, val allocation: Map<Int, Int>)
+    data class UpdateTokenResponse(val token: Token, val playerTokens: List<PlayerToken>)
 }

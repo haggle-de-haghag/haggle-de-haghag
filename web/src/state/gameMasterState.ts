@@ -1,10 +1,10 @@
-import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId} from "../model";
+import {ForeignPlayer, Game, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
 import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
-import {FullGameInfo, PlayerIdWithAccess} from "../rest/gameMaster";
+import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 
 export interface GameMasterState {
@@ -12,13 +12,21 @@ export interface GameMasterState {
     game: Game;
     players: ForeignPlayer[];
     rules: Rule[];
-    ruleAccessList: { [key: number]: PlayerIdWithAccess[] }; // key: RuleId
+    ruleAccessList: { [ruleId: number]: PlayerIdWithAccess[] };
+    tokens: Token[];
+    tokenAllocationMap: { [tokenId: number]: PlayerIdWithAmount[] };
 
-    // UI state
+    // UI state (Rule)
     ruleTitleInput: string;
     ruleTextInput: string;
     selectedRuleId?: RuleId;
     defaultAssignmentsInput: PlayerId[];
+
+    // UI state (Token)
+    tokenTitleInput: string;
+    tokenTextInput: string;
+    selectedTokenId?: TokenId;
+    allocationInputs: { [playerId: number]: number };
 }
 
 export interface CreateRule {
@@ -40,6 +48,28 @@ export interface ChangeRuleAccess {
     assigned: boolean;
 }
 
+export interface CreateToken {
+    title: string;
+    text: string;
+}
+
+export interface UpdateToken {
+    tokenId: TokenId;
+    title?: string;
+    text?: string;
+    allocation?: {[playerId: number]: number};
+}
+
+export interface SetAllocation {
+    playerId: number;
+    amount: number;
+}
+
+export interface ReplaceAllocation {
+    tokenId: number;
+    allocation: PlayerIdWithAmount[];
+}
+
 const initialState: GameMasterState = {
     game: {
         id: 0,
@@ -50,9 +80,14 @@ const initialState: GameMasterState = {
     players: [],
     rules: [],
     ruleAccessList: [],
+    tokens: [],
+    tokenAllocationMap: {},
     ruleTitleInput: '',
     ruleTextInput: '',
     defaultAssignmentsInput: [],
+    tokenTitleInput: '',
+    tokenTextInput: '',
+    allocationInputs: [],
 };
 
 const inMemoryInitialState: GameMasterState = {
@@ -117,7 +152,7 @@ const slice = createSlice({
             state.rules[index] = rule;
         },
 
-        updateRule: (state, action: PayloadAction<UpdateRule>) => {},
+        updateRule: (state, action: PayloadAction<UpdateRule>) => state,
 
         changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
             const {ruleId, playerId, assigned} = action.payload;
@@ -150,6 +185,64 @@ const slice = createSlice({
             state.defaultAssignmentsInput = (state.ruleAccessList[ruleId] ?? [])
                 .filter((pwa) => pwa.accessType == 'ASSIGNED')
                 .map((pwa) => pwa.playerId);
+            state.selectedTokenId = undefined;
+        },
+
+        createToken: (state, action: PayloadAction<CreateToken>) => state,
+        updateToken: (state, action: PayloadAction<UpdateToken>) => state,
+
+        addToken: (state, action: PayloadAction<Token>) => {
+            state.tokens.push(action.payload);
+        },
+
+        replaceToken: (state, action: PayloadAction<Token>) => {
+            const token = action.payload;
+            const index = state.tokens.findIndex((t) => t.id == token.id);
+            if (index == -1) {
+                console.error(`Token ${token.id} doesn't exist`);
+                return state;
+            }
+            state.tokens[index] = token;
+        },
+
+        replaceAllocation: (state, action: PayloadAction<ReplaceAllocation>) => {
+            const payload = action.payload;
+            state.tokenAllocationMap[payload.tokenId] = payload.allocation;
+        },
+
+        changeSelectedToken: (state, action: PayloadAction<TokenId>) => {
+            const tokenId = action.payload;
+            const token = state.tokens.find((t) => t.id == tokenId);
+            if (token == undefined) {
+                console.error(`Token ${tokenId} doesn't exist. Action: ${action}`);
+                return state;
+            }
+
+            const allocation: {[playerId: number]: number} = {};
+            const allocationMap = state.tokenAllocationMap[tokenId] ?? [];
+            state.players.forEach((p) => {
+                const playerIdWithAmount = allocationMap.find((pwa) => pwa.playerId == p.id);
+                allocation[p.id] = playerIdWithAmount?.amount ?? 0;
+            });
+
+            state.selectedTokenId = tokenId;
+            state.tokenTitleInput = token.title;
+            state.tokenTextInput = token.text;
+            state.selectedRuleId = undefined;
+            state.allocationInputs = allocation;
+        },
+
+        setTokenTitleInput: (state, action: PayloadAction<string>) => {
+            state.tokenTitleInput = action.payload;
+        },
+
+        setTokenTextInput: (state, action: PayloadAction<string>) => {
+            state.tokenTextInput = action.payload;
+        },
+
+        setAllocation: (state, action: PayloadAction<SetAllocation>) => {
+            const payload = action.payload;
+            state.allocationInputs[payload.playerId] = payload.amount;
         },
 
         initialize: (state, action: PayloadAction<FullGameInfo>) => {
@@ -160,9 +253,14 @@ const slice = createSlice({
                 rules: info.rules,
                 players: info.players,
                 ruleAccessList: info.ruleAccessMap,
+                tokens: info.tokens,
+                tokenAllocationMap: info.tokenAllocationMap,
                 ruleTitleInput: '',
                 ruleTextInput: '',
-                selectedRuleId: undefined
+                selectedRuleId: undefined,
+                tokenTitleInput: '',
+                tokenTextInput: '',
+                selectedTokenId: undefined,
             };
         }
     }
@@ -182,10 +280,25 @@ function* updateRuleSaga(action: ReturnType<typeof actions.updateRule>) {
     yield put(actions.replaceRule(updatedRule));
 }
 
-function* createRuleWatcherSaga() {
+function* createTokenSaga(action: ReturnType<typeof actions.createToken>) {
+    const payload = action.payload;
+    const createdToken: Token = yield call(GameMasterRestApi.createToken, payload.title, payload.text);
+    yield put(actions.addToken(createdToken));
+}
+
+function* updateTokenSaga(action: ReturnType<typeof actions.updateToken>) {
+    const payload = action.payload;
+    const response: UpdateTokenResponse = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
+    yield put(actions.replaceToken(response.token));
+    yield put(actions.replaceAllocation({ tokenId: response.token.id, allocation: response.playerTokens } ));
+}
+
+function* createWatcherSaga() {
     yield all([
         takeEvery(actions.createRule, createRuleSaga),
         takeEvery(actions.updateRule, updateRuleSaga),
+        takeEvery(actions.createToken, createTokenSaga),
+        takeEvery(actions.updateToken, updateTokenSaga),
     ]);
 }
 
@@ -202,7 +315,7 @@ export const store = configureStore({
     middleware: [sagaMiddleware],
     devTools: process.env.NODE_ENV !== 'production',
 });
-sagaMiddleware.run(retryForever, createRuleWatcherSaga);
+sagaMiddleware.run(retryForever, createWatcherSaga);
 sagaMiddleware.run(initSaga as any);
 
 export type GMDispatch = typeof store.dispatch;
