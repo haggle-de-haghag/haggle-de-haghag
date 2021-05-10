@@ -23,7 +23,7 @@ export default function PlayerPage() {
                 <Box><RuleList /></Box>
                 <Box><TokenList /></Box>
             </Grid>
-            <Grid item xs={6} container direction="column" spacing={2}>
+            <Grid item xs={6} container direction="column" spacing={4}>
                 <Grid item><RuleView /></Grid>
                 <IfTokenSelected>
                     <Grid item><TokenView /></Grid>
