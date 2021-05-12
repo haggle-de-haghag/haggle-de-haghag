@@ -1,6 +1,7 @@
 package jp.osak.haggledehaghag.viewmodel
 
 import jp.osak.haggledehaghag.model.Game
+import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.Rule
 import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.model.Token
@@ -8,7 +9,7 @@ import jp.osak.haggledehaghag.model.Token
 data class FullGameInfoView(
     val game: Game,
     val rules: List<Rule>,
-    val players: List<ForeignPlayerView>,
+    val players: List<Player>,
     val ruleAccessMap: Map<Int, List<PlayerIdWithAccess>>,
     val tokens: List<Token>,
     val tokenAllocationMap: Map<Int, List<PlayerIdWithAmount>>,

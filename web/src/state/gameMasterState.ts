@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
+import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
@@ -10,7 +10,7 @@ import {retryForever} from "./sagaUtil";
 export interface GameMasterState {
     // Model state
     game: Game;
-    players: ForeignPlayer[];
+    players: Player[];
     rules: Rule[];
     ruleAccessList: { [ruleId: number]: PlayerIdWithAccess[] };
     tokens: Token[];
@@ -90,51 +90,11 @@ const initialState: GameMasterState = {
     allocationInputs: [],
 };
 
-const inMemoryInitialState: GameMasterState = {
-    ...initialState,
-    players: [
-        {
-            id: 1,
-            displayName: "azusa",
-        },
-        {
-            id: 2,
-            displayName: "yui",
-        }
-    ],
-    rules: [],
-    ruleAccessList: [],
-    ruleTitleInput: '',
-    ruleTextInput: '',
-    defaultAssignmentsInput: [],
-};
-
 const slice = createSlice({
     name: 'state',
     initialState: initialState,
     reducers: {
-        createRule: (state, action: PayloadAction<CreateRule>) => {
-            /*
-            const {title, text, accessList} = action.payload;
-            const ruleNumber = state.rules.length + 1;
-            const rule: Rule = {
-                id: ruleNumber,
-                title,
-                text,
-                ruleNumber,
-                accessType: AccessType.ASSIGNED
-            };
-            const ruleAccessList = {
-                ...state.ruleAccessList,
-                [rule.id]: accessList,
-            };
-            return {
-                ...state,
-                rules: [...state.rules, rule],
-                ruleAccessList: ruleAccessList,
-            };
-             */
-        },
+        createRule: (state, action: PayloadAction<CreateRule>) => state,
 
         addRule: (state, action: PayloadAction<Rule>) => {
             return {

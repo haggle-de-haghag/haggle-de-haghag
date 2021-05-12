@@ -41,7 +41,7 @@ class GameMasterController(
 
     @GetMapping
     fun listFullGameInfo(@ModelAttribute game: Game): FullGameInfoView {
-        val players = gameService.listPlayers(game).map { ForeignPlayerView(it) }.sortedBy { it.id }
+        val players = gameService.listPlayers(game).sortedBy { it.id }
         val rules = gameService.listRules(game).sortedBy { it.ruleNumber }
         val ruleAccesses = gameService.listRuleAccesses(game)
         val ruleAccessMap = ruleAccesses.map { Pair(it.ruleId, FullGameInfoView.PlayerIdWithAccess(it.playerId, it.type)) }.toMultiMap()

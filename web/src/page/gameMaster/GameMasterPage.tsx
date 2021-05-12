@@ -1,6 +1,6 @@
 import {Box, Button, Divider, Grid, Paper, Typography} from "@material-ui/core/index";
 import React from "react";
-import {RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
+import {PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export default function GameMasterPage() {
@@ -35,9 +35,12 @@ export default function GameMasterPage() {
                     <Box><TokenList /></Box>
                     <Box><Button variant="contained" onClick={onNewTokenClick}>新規トークン</Button></Box>
                 </Grid>
-                <Grid item xs={9}>
+                <Grid item xs={7}>
                     <RuleEditor />
                     <TokenEditor />
+                </Grid>
+                <Grid item xs={2}>
+                    <PlayerList />
                 </Grid>
             </Grid>
         </Grid>

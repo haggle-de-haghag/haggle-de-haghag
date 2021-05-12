@@ -3,6 +3,7 @@ import RuleListComponent from '../../component/RuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
 import TokenListComponent from '../../component/TokenList';
 import TokenEditorComponent from '../../component/TokenEditor';
+import PlayerListComponent from '../../component/PlayerList';
 import {PlayerId} from "../../model";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
@@ -92,4 +93,11 @@ export function TokenEditor() {
         onAllocationChange={onAllocationChange}
         onSaveButtonClick={onSaveButtonClick}
     />;
+}
+
+export function PlayerList() {
+    const { players } = useGMSelector((state) => ({
+        players: state.players
+    }));
+    return <PlayerListComponent players={players} />;
 }

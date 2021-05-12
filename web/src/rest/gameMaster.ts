@@ -1,4 +1,4 @@
-import {AccessType, ForeignPlayer, Game, PlayerId, Rule, Token} from "../model";
+import {AccessType, ForeignPlayer, Game, Player, PlayerId, Rule, Token} from "../model";
 import {get, patch, post} from "./common";
 
 interface Config {
@@ -26,7 +26,7 @@ export interface PlayerIdWithAmount {
 export interface FullGameInfo {
     game: Game;
     rules: Rule[];
-    players: ForeignPlayer[];
+    players: Player[];
     ruleAccessMap: { [key: number]: PlayerIdWithAccess[] };
     tokens: Token[];
     tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: tokenId
