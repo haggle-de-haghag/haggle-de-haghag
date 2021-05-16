@@ -28,7 +28,7 @@ export function RuleList() {
 
     return <RuleListComponent
         rules={rules}
-        onRuleClick={(rule) => dispatch(actions.setSelectedRuleId(rule.id))}
+        onRuleClick={(rule) => dispatch(actions.default.setSelectedRuleId(rule.id))}
     />;
 }
 
@@ -60,7 +60,7 @@ export function ShareRulePane() {
         return null;
     }
 
-    const handleShareButton = (p: ForeignPlayer) => dispatch(actions.shareRule({ rule, player: p }));
+    const handleShareButton = (p: ForeignPlayer) => dispatch(actions.default.shareRule({ rule, player: p }));
 
     return <ShareRulePaneComponent players={players} onShareButtonClick={handleShareButton} />;
 }
@@ -72,7 +72,7 @@ export function TokenList() {
     }));
     const dispatch = usePLDispatch();
 
-    const onTokenClick = (t: Token) => dispatch(actions.setSelectedTokenId(t.id));
+    const onTokenClick = (t: Token) => dispatch(actions.default.setSelectedTokenId(t.id));
     return <TokenListComponent tokens={tokens} selectedTokenId={selectedTokenId} onTokenClick={onTokenClick} showAmount/>;
 }
 
@@ -94,9 +94,9 @@ export function GiveTokenPane() {
         return null;
     }
 
-    const onAmountChange = (amount: number) => dispatch(actions.setAmountInput(amount));
-    const onPlayerSelect = (playerId: PlayerId) => dispatch(actions.setSelectedPlayerId(playerId));
-    const onGiveButtonClick = () => dispatch(actions.giveToken({
+    const onAmountChange = (amount: number) => dispatch(actions.default.setAmountInput(amount));
+    const onPlayerSelect = (playerId: PlayerId) => dispatch(actions.default.setSelectedPlayerId(playerId));
+    const onGiveButtonClick = () => dispatch(actions.default.giveToken({
         tokenId: token.id,
         playerId: state.selectedPlayerId,
         amount: state.amountInput,

@@ -15,8 +15,8 @@ import { Alert } from "@material-ui/lab";
 export default function PlayerPage() {
     const { gameTitle, errorMessage, notification } = usePLSelector((state) => ({
         gameTitle: state.gameTitle,
-        errorMessage: state.errorMessage,
-        notification: state.notification,
+        errorMessage: state.errorNotification.message,
+        notification: state.notification.message,
     }));
 
     return <Grid container direction="column" spacing={2}>
