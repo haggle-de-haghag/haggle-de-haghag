@@ -6,6 +6,9 @@ import {all, call, put, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
 import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
+import {createNotificationState, NotificationState} from "./subState/notificationState";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 export interface GameMasterState {
     // Model state
@@ -27,6 +30,8 @@ export interface GameMasterState {
     tokenTextInput: string;
     selectedTokenId?: TokenId;
     allocationInputs: { [playerId: number]: number };
+    errorNotification: NotificationState;
+    notification: NotificationState;
 }
 
 export interface CreateRule {
@@ -70,6 +75,9 @@ export interface ReplaceAllocation {
     allocation: PlayerIdWithAmount[];
 }
 
+const errorNotificationState = createNotificationState('errorNotification');
+const notificationState = createNotificationState('notification');
+
 const initialState: GameMasterState = {
     game: {
         id: 0,
@@ -88,6 +96,8 @@ const initialState: GameMasterState = {
     tokenTitleInput: '',
     tokenTextInput: '',
     allocationInputs: [],
+    errorNotification: {},
+    notification: {},
 };
 
 const slice = createSlice({
@@ -226,39 +236,43 @@ const slice = createSlice({
     }
 });
 
-export const actions = slice.actions;
+export const actions = {
+    default: slice.actions,
+    errorNotification: errorNotificationState.slice.actions,
+    notification: notificationState.slice.actions,
+};
 
-function* createRuleSaga(action: ReturnType<typeof actions.createRule>) {
+function* createRuleSaga(action: ReturnType<typeof actions.default.createRule>) {
     const payload = action.payload;
     const createdRule: Rule = yield call(GameMasterRestApi.createRule, payload.title, payload.text);
-    yield put(actions.addRule(createdRule));
+    yield put(actions.default.addRule(createdRule));
 }
 
-function* updateRuleSaga(action: ReturnType<typeof actions.updateRule>) {
+function* updateRuleSaga(action: ReturnType<typeof actions.default.updateRule>) {
     const payload = action.payload;
     const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.defaultAssignments);
-    yield put(actions.replaceRule(updatedRule));
+    yield put(actions.default.replaceRule(updatedRule));
 }
 
-function* createTokenSaga(action: ReturnType<typeof actions.createToken>) {
+function* createTokenSaga(action: ReturnType<typeof actions.default.createToken>) {
     const payload = action.payload;
     const createdToken: Token = yield call(GameMasterRestApi.createToken, payload.title, payload.text);
-    yield put(actions.addToken(createdToken));
+    yield put(actions.default.addToken(createdToken));
 }
 
-function* updateTokenSaga(action: ReturnType<typeof actions.updateToken>) {
+function* updateTokenSaga(action: ReturnType<typeof actions.default.updateToken>) {
     const payload = action.payload;
     const response: UpdateTokenResponse = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
-    yield put(actions.replaceToken(response.token));
-    yield put(actions.replaceAllocation({ tokenId: response.token.id, allocation: response.playerTokens } ));
+    yield put(actions.default.replaceToken(response.token));
+    yield put(actions.default.replaceAllocation({ tokenId: response.token.id, allocation: response.playerTokens } ));
 }
 
 function* createWatcherSaga() {
     yield all([
-        takeEvery(actions.createRule, createRuleSaga),
-        takeEvery(actions.updateRule, updateRuleSaga),
-        takeEvery(actions.createToken, createTokenSaga),
-        takeEvery(actions.updateToken, updateTokenSaga),
+        takeEvery(actions.default.createRule, createRuleSaga),
+        takeEvery(actions.default.updateRule, updateRuleSaga),
+        takeEvery(actions.default.createToken, createTokenSaga),
+        takeEvery(actions.default.updateToken, updateTokenSaga),
     ]);
 }
 
@@ -266,7 +280,7 @@ function* initSaga() {
     const key = location.hash.substring(1);
     yield call(GameMasterRestApi.configure, key)
     const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
-    yield put(actions.initialize(fullInfo));
+    yield put(actions.default.initialize(fullInfo));
 }
 
 const sagaMiddleware = createSagaMiddleware();
@@ -276,6 +290,8 @@ export const store = configureStore({
     devTools: process.env.NODE_ENV !== 'production',
 });
 sagaMiddleware.run(retryForever, createWatcherSaga);
+sagaMiddleware.run(retryForever, errorNotificationState.watcherSaga);
+sagaMiddleware.run(retryForever, notificationState.watcherSaga);
 sagaMiddleware.run(initSaga as any);
 
 export type GMDispatch = typeof store.dispatch;

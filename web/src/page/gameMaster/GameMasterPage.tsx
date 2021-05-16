@@ -10,13 +10,13 @@ export default function GameMasterPage() {
     }));
     const dispatch = useGMDispatch();
 
-    const onNewRuleClick = () => dispatch(actions.createRule({
+    const onNewRuleClick = () => dispatch(actions.default.createRule({
         title: '（新規ルール）',
         text: '',
         accessList: [],
     }));
 
-    const onNewTokenClick = () => dispatch(actions.createToken({
+    const onNewTokenClick = () => dispatch(actions.default.createToken({
         title: '（新規トークン）',
         text: '',
     }));

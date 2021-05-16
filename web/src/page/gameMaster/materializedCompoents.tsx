@@ -14,7 +14,7 @@ export function RuleList() {
     return <RuleListComponent
         rules={rules}
         selectedRuleId={selectedRuleId}
-        onRuleClick={(r) => dispatch(actions.changeSelectedRule(r.id))}/>;
+        onRuleClick={(r) => dispatch(actions.default.changeSelectedRule(r.id))}/>;
 }
 
 export function RuleEditor() {
@@ -28,15 +28,15 @@ export function RuleEditor() {
 
     const assignedPlayerIds = state.defaultAssignmentsInput;
 
-    const onRuleTitleChange = (text: string) => dispatch(actions.setRuleTitleInput(text));
-    const onRuleTextChange = (text: string) => dispatch(actions.setRuleTextInput(text));
-    const onSaveButtonClick = () => dispatch(actions.updateRule({
+    const onRuleTitleChange = (text: string) => dispatch(actions.default.setRuleTitleInput(text));
+    const onRuleTextChange = (text: string) => dispatch(actions.default.setRuleTextInput(text));
+    const onSaveButtonClick = () => dispatch(actions.default.updateRule({
         ruleId: currentRuleId,
         title: state.ruleTitleInput,
         text: state.ruleTextInput,
         defaultAssignments: assignedPlayerIds,
     }));
-    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.changeRuleAccessListInput({
+    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.default.changeRuleAccessListInput({
         playerId,
         ruleId: currentRuleId,
         assigned
@@ -61,7 +61,7 @@ export function TokenList() {
     return <TokenListComponent
         tokens={tokens}
         selectedTokenId={selectedTokenId}
-        onTokenClick={(t) => dispatch(actions.changeSelectedToken(t.id))}/>;
+        onTokenClick={(t) => dispatch(actions.default.changeSelectedToken(t.id))}/>;
 }
 
 export function TokenEditor() {
@@ -73,10 +73,10 @@ export function TokenEditor() {
         return null;
     }
 
-    const onTokenTitleChange = (text: string) => dispatch(actions.setTokenTitleInput(text));
-    const onTokenTextChange = (text: string) => dispatch(actions.setTokenTextInput(text));
-    const onAllocationChange = (playerId: number, amount: number) => dispatch(actions.setAllocation({ playerId, amount }));
-    const onSaveButtonClick = () => dispatch(actions.updateToken({
+    const onTokenTitleChange = (text: string) => dispatch(actions.default.setTokenTitleInput(text));
+    const onTokenTextChange = (text: string) => dispatch(actions.default.setTokenTextInput(text));
+    const onAllocationChange = (playerId: number, amount: number) => dispatch(actions.default.setAllocation({ playerId, amount }));
+    const onSaveButtonClick = () => dispatch(actions.default.updateToken({
         tokenId: currentTokenId,
         title: state.tokenTitleInput,
         text: state.tokenTextInput,
