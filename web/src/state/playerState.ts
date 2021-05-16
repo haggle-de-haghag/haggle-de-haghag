@@ -1,6 +1,6 @@
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {all, call, put, takeEvery} from "redux-saga/effects";
+import {all, call, delay, put, takeEvery} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
 import {FullPlayerInfo} from "../rest/player";
 import createSagaMiddleware from "redux-saga";
@@ -20,6 +20,8 @@ export interface PlayerState {
     selectedTokenId?: TokenId;
     amountInput: number,
     selectedPlayerId: PlayerId;
+    errorMessage?: string;
+    notification?: string;
 }
 
 export interface ShareRule {
@@ -31,6 +33,16 @@ export interface GiveToken {
     playerId: PlayerId;
     tokenId: TokenId;
     amount: number;
+}
+
+export interface SetErrorMessage {
+    message?: string;
+    expected?: string;
+}
+
+export interface SetNotificationMessage {
+    message?: string;
+    expected?: string;
 }
 
 const slice = createSlice({
@@ -73,6 +85,24 @@ const slice = createSlice({
             state.amountInput = action.payload;
         },
 
+        showErrorMessage: (state, action: PayloadAction<string>) => state,
+
+        setErrorMessage: (state, action: PayloadAction<SetErrorMessage>) => {
+            const payload = action.payload;
+            if (payload.expected === undefined || payload.expected == state.errorMessage) {
+                state.errorMessage = payload.message;
+            }
+        },
+
+        showNotificationMessage: (state, action: PayloadAction<string>) => state,
+
+        setNotificationMessage: (state, action: PayloadAction<SetNotificationMessage>) => {
+            const payload = action.payload;
+            if (payload.expected === undefined || payload.expected == state.notification) {
+                state.notification = payload.message;
+            }
+        },
+
         initialize: (state, action: PayloadAction<FullPlayerInfo>) => {
             const info = action.payload;
             return {
@@ -89,22 +119,56 @@ const slice = createSlice({
 });
 export const actions = slice.actions;
 
+function* showErrorSaga(action: ReturnType<typeof actions.showErrorMessage>) {
+    const message = action.payload;
+    yield put(actions.setErrorMessage({ message }));
+    yield delay(10 * 1000);
+    yield put(actions.setErrorMessage({ message: undefined, expected: message }));
+}
+
+function* showNotificationSaga(action: ReturnType<typeof actions.showNotificationMessage>) {
+    const message = action.payload;
+    yield put(actions.setNotificationMessage({ message }));
+    yield delay(3 * 1000);
+    yield put(actions.setNotificationMessage({ message: undefined, expected: message }));
+}
+
 function* shareRuleSaga(action: ReturnType<typeof actions.shareRule>) {
     const payload = action.payload;
-    const success: boolean = yield call(PlayerApi.shareRule, payload.rule.id, payload.player.id);
-    // TODO: Show success message
+    try {
+        const success: boolean = yield call(PlayerApi.shareRule, payload.rule.id, payload.player.id);
+        if (success) {
+            yield put(actions.showNotificationMessage('ルールを共有しました。'));
+        } else {
+            yield put(actions.showNotificationMessage('ルールを共有できませんでした。'));
+        }
+    } catch (e) {
+        console.error('API error: shareRule', e);
+        yield put(actions.showErrorMessage('ルールの共有に失敗しました。もう一度試してみてください。'));
+    }
 }
 
 function* giveTokenSaga(action: ReturnType<typeof actions.giveToken>) {
     const payload = action.payload;
-    const success: boolean = yield call(PlayerApi.giveToken, payload.tokenId, payload.playerId, payload.amount);
-    // TODO: Show success message
+    try {
+        const success: boolean = yield call(PlayerApi.giveToken, payload.tokenId, payload.playerId, payload.amount);
+        if (success) {
+            yield put(actions.showNotificationMessage(`トークンを渡しました。`));
+        } else {
+            yield put(actions.showNotificationMessage('トークンを渡せませんでした。'));
+        }
+    } catch (e) {
+        console.error('API error: giveToken', e);
+        yield put(actions.showErrorMessage('トークンの受け渡しに失敗しました。もう一度試してみてください。'));
+    }
 }
 
 function* installWatcherSaga() {
     yield all([
         takeEvery(actions.shareRule, shareRuleSaga),
         takeEvery(actions.giveToken, giveTokenSaga),
+        takeEvery(actions.showErrorMessage, showErrorSaga),
+        takeEvery(actions.showNotificationMessage, showNotificationSaga),
     ])
 }
 

@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, Divider, Grid, Typography} from "@material-ui/core/index";
+import {Box, Divider, Grid, Snackbar, Typography} from "@material-ui/core/index";
 import {usePLSelector} from "../../state/playerState";
 import {
     GiveTokenPane,
@@ -10,10 +10,13 @@ import {
     TokenView,
     useSelectedToken
 } from "./materializedComponents";
+import { Alert } from "@material-ui/lab";
 
 export default function PlayerPage() {
-    const { gameTitle } = usePLSelector((state) => ({
+    const { gameTitle, errorMessage, notification } = usePLSelector((state) => ({
         gameTitle: state.gameTitle,
+        errorMessage: state.errorMessage,
+        notification: state.notification,
     }));
 
     return <Grid container direction="column" spacing={2}>
@@ -33,6 +36,15 @@ export default function PlayerPage() {
             </Grid>
             <Grid item xs={3}><ShareRulePane /></Grid>
         </Grid>
+        <Snackbar
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            open={errorMessage !== undefined}>
+            <Alert severity="error">{errorMessage}</Alert>
+        </Snackbar>
+        <Snackbar
+            anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            open={notification !== undefined}
+            message={notification} />
     </Grid>;
 }
 
