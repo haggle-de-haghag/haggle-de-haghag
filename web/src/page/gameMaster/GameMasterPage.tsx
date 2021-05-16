@@ -1,12 +1,15 @@
-import {Box, Button, Divider, Grid, Paper, Typography} from "@material-ui/core/index";
+import {Box, Button, Divider, Grid, Paper, Snackbar, Typography} from "@material-ui/core/index";
 import React from "react";
 import {PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
+import {Alert} from "@material-ui/lab";
 
 export default function GameMasterPage() {
-    const { gameKey, gameTitle } = useGMSelector((state) => ({
+    const { gameKey, gameTitle, notification, errorNotification } = useGMSelector((state) => ({
         gameKey: state.game.gameKey,
         gameTitle: state.game.title,
+        notification: state.notification.message,
+        errorNotification: state.errorNotification.message,
     }));
     const dispatch = useGMDispatch();
 
@@ -43,6 +46,15 @@ export default function GameMasterPage() {
                     <PlayerList />
                 </Grid>
             </Grid>
+            <Snackbar
+                anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+                open={errorNotification !== undefined}>
+                <Alert severity="error">{errorNotification}</Alert>
+            </Snackbar>
+            <Snackbar
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                open={notification !== undefined}
+                message={notification} />
         </Grid>
     )
 }

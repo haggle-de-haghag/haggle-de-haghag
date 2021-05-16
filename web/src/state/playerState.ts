@@ -42,7 +42,7 @@ export interface SetErrorMessage {
 }
 
 const notificationState = createNotificationState('notification');
-const errorNotificationState = createNotificationState('errorMessage');
+const errorNotificationState = createNotificationState('errorMessage', 10*1000);
 
 const slice = createSlice({
     name: 'player',

@@ -13,7 +13,7 @@ export interface SetNotificationMessage {
     expected?: string;
 }
 
-export function createNotificationState(name: string) {
+export function createNotificationState(name: string, showDurationMs: number = 3*1000) {
     const slice = createSlice({
         name: name,
         initialState: initialState,
@@ -33,7 +33,7 @@ export function createNotificationState(name: string) {
     function* showNotificationSaga(action: ReturnType<typeof actions.showNotificationMessage>) {
         const message = action.payload;
         yield put(actions.setNotificationMessage({ message }));
-        yield delay(3 * 1000);
+        yield delay(showDurationMs);
         yield put(actions.setNotificationMessage({ message: undefined, expected: message }));
     }
 

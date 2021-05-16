@@ -1,4 +1,4 @@
-import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
+import {Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
@@ -7,8 +7,6 @@ import * as GameMasterRestApi from '../rest/gameMaster';
 import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
-import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
 
 export interface GameMasterState {
     // Model state
@@ -75,7 +73,7 @@ export interface ReplaceAllocation {
     allocation: PlayerIdWithAmount[];
 }
 
-const errorNotificationState = createNotificationState('errorNotification');
+const errorNotificationState = createNotificationState('errorNotification', 10*1000);
 const notificationState = createNotificationState('notification');
 
 const initialState: GameMasterState = {
@@ -233,6 +231,12 @@ const slice = createSlice({
                 selectedTokenId: undefined,
             };
         }
+    },
+    extraReducers: (builder) => {
+        builder.addDefaultCase((state, action) => {
+            state.notification = notificationState.slice.reducer(state.notification, action);
+            state.errorNotification = errorNotificationState.slice.reducer(state.errorNotification, action);
+        });
     }
 });
 
@@ -244,27 +248,49 @@ export const actions = {
 
 function* createRuleSaga(action: ReturnType<typeof actions.default.createRule>) {
     const payload = action.payload;
-    const createdRule: Rule = yield call(GameMasterRestApi.createRule, payload.title, payload.text);
-    yield put(actions.default.addRule(createdRule));
+    try {
+        const createdRule: Rule = yield call(GameMasterRestApi.createRule, payload.title, payload.text);
+        yield put(actions.default.addRule(createdRule));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage("ルールの作成に失敗しました。リロードしてもう一度試してみてください。"));
+    }
 }
 
 function* updateRuleSaga(action: ReturnType<typeof actions.default.updateRule>) {
     const payload = action.payload;
-    const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.defaultAssignments);
-    yield put(actions.default.replaceRule(updatedRule));
+    try {
+        const updatedRule: Rule = yield call(GameMasterRestApi.updateRule, payload.ruleId, payload.title, payload.text, payload.defaultAssignments);
+        yield put(actions.default.replaceRule(updatedRule));
+        yield put(actions.notification.showNotificationMessage("ルールを保存しました。"));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage("ルールの保存に失敗しました。もう一度試してみてください。"));
+    }
 }
 
 function* createTokenSaga(action: ReturnType<typeof actions.default.createToken>) {
     const payload = action.payload;
-    const createdToken: Token = yield call(GameMasterRestApi.createToken, payload.title, payload.text);
-    yield put(actions.default.addToken(createdToken));
+    try {
+        const createdToken: Token = yield call(GameMasterRestApi.createToken, payload.title, payload.text);
+        yield put(actions.default.addToken(createdToken));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage("トークンの作成に失敗しました。もう一度試してみてください。"));
+    }
 }
 
 function* updateTokenSaga(action: ReturnType<typeof actions.default.updateToken>) {
     const payload = action.payload;
-    const response: UpdateTokenResponse = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
-    yield put(actions.default.replaceToken(response.token));
-    yield put(actions.default.replaceAllocation({ tokenId: response.token.id, allocation: response.playerTokens } ));
+    try {
+        const response: UpdateTokenResponse = yield call(GameMasterRestApi.updateToken, payload.tokenId, payload.title, payload.text, payload.allocation);
+        yield put(actions.default.replaceToken(response.token));
+        yield put(actions.default.replaceAllocation({tokenId: response.token.id, allocation: response.playerTokens}));
+        yield put(actions.notification.showNotificationMessage("トークンを保存しました。"));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage("トークンの保存に失敗しました。もう一度試してみてください。"));
+    }
 }
 
 function* createWatcherSaga() {
