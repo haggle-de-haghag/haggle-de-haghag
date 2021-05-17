@@ -20,7 +20,7 @@ async function baseFetch<T>(api: string, method: string, body?: any): Promise<T>
     return await response.json() as T;
 }
 
-export async function get<T>(api: string): Promise<T> {
+export function get<T>(api: string): Promise<T> {
     return baseFetch<T>(api, 'GET');
 }
 
@@ -30,6 +30,10 @@ export function post<T>(api: string, body?: any): Promise<T> {
 
 export function patch<T>(api: string, body?: any): Promise<T> {
     return baseFetch<T>(api, 'PATCH', body);
+}
+
+export function del<T>(api: string, body?: any): Promise<T> {
+    return baseFetch<T>(api, 'DELETE', body);
 }
 
 class HttpStatusError {

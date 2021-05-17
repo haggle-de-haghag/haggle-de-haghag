@@ -1,16 +1,18 @@
 import {
-    Box,
     Button,
-    Chip,
+    Dialog,
+    DialogActions,
+    DialogContent,
     Grid,
-    makeStyles,
     Table,
     TableBody,
-    TableCell, TableContainer, TableHead, TableRow,
-    TextField,
-    Typography
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow,
+    TextField
 } from "@material-ui/core";
-import React from "react";
+import React, {useState} from "react";
 import {ForeignPlayer} from "../model";
 
 interface Props {
@@ -22,9 +24,19 @@ interface Props {
     onTokenTextChange: (value: string) => void;
     onAllocationChange: (playerId: number, amount: number) => void;
     onSaveButtonClick: () => void;
+    onDeleteButtonClick: () => void;
 }
 
 export default function TokenEditor(props: Props) {
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const onDeleteDialogClose = (reallyDelete: boolean) => {
+        setDeleteDialogOpen(false);
+        if (reallyDelete) {
+            props.onDeleteButtonClick();
+        }
+    };
+
     return <Grid container direction="column" spacing={2}>
         <Grid item>
             <TextField
@@ -72,8 +84,16 @@ export default function TokenEditor(props: Props) {
                 </Table>
             </TableContainer>
         </Grid>
-        <Grid item xs={2}>
-            <Button variant="contained" onClick={() => props.onSaveButtonClick()}>保存</Button>
+        <Grid item container spacing={2}>
+            <Grid item><Button variant="contained" onClick={() => props.onSaveButtonClick()}>保存</Button></Grid>
+            <Grid item><Button variant="contained" color="secondary" onClick={() => setDeleteDialogOpen(true)}>削除</Button></Grid>
+            <Dialog open={deleteDialogOpen} onClose={() => onDeleteDialogClose(false)}>
+                <DialogContent>本当に削除しますか？</DialogContent>
+                <DialogActions>
+                    <Button onClick={() => onDeleteDialogClose(false)}>やめる</Button>
+                    <Button onClick={() => onDeleteDialogClose(true)} color="secondary">削除する</Button>
+                </DialogActions>
+            </Dialog>
         </Grid>
     </Grid>;
 }

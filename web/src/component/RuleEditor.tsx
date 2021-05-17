@@ -1,6 +1,17 @@
-import {Box, Button, Chip, Grid, makeStyles, TextField, Typography} from "@material-ui/core/index";
+import {
+    Box,
+    Button,
+    Chip,
+    Dialog, DialogActions,
+    DialogContent,
+    Grid,
+    makeStyles,
+    TextField,
+    Typography
+} from "@material-ui/core/index";
 import {ForeignPlayer, PlayerId} from "../model";
 import DoneIcon from '@material-ui/icons/Done';
+import {useState} from "react";
 
 interface Props {
     ruleTitle: string;
@@ -11,6 +22,7 @@ interface Props {
     onRuleTextChange: (value: string) => void;
     onAssignmentChange: (playerId: PlayerId, assigned: boolean) => void;
     onSaveButtonClick: () => void;
+    onDeleteButtonClick: () => void;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -23,6 +35,14 @@ const useStyles = makeStyles((theme) => ({
 
 export default function RuleEditor(props: Props) {
     const classes = useStyles();
+    const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+
+    const onDeleteDialogClose = (reallyDelete: boolean) => {
+        setDeleteDialogOpen(false);
+        if (reallyDelete) {
+            props.onDeleteButtonClick();
+        }
+    };
 
     return <Grid container direction="column" spacing={2}>
         <Grid item>
@@ -61,8 +81,16 @@ export default function RuleEditor(props: Props) {
                 })}
             </Box>
         </Grid>
-        <Grid item xs={2}>
-            <Button variant="contained" onClick={() => props.onSaveButtonClick()}>保存</Button>
+        <Grid item container spacing={2}>
+            <Grid item><Button variant="contained" onClick={() => props.onSaveButtonClick()}>保存</Button></Grid>
+            <Grid item><Button variant="contained" color="secondary" onClick={() => setDeleteDialogOpen(true)}>削除</Button></Grid>
+            <Dialog open={deleteDialogOpen} onClose={() => onDeleteDialogClose(false)}>
+                <DialogContent>本当に削除しますか？</DialogContent>
+                <DialogActions>
+                    <Button onClick={() => onDeleteDialogClose(false)}>やめる</Button>
+                    <Button onClick={() => onDeleteDialogClose(true)} color="secondary">削除する</Button>
+                </DialogActions>
+            </Dialog>
         </Grid>
     </Grid>;
 }

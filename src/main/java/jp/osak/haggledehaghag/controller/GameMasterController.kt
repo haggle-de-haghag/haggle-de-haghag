@@ -15,6 +15,7 @@ import jp.osak.haggledehaghag.util.toMultiMap
 import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullGameInfoView
 import org.springframework.http.HttpStatus
+import org.springframework.web.bind.annotation.DeleteMapping
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PatchMapping
@@ -80,6 +81,17 @@ class GameMasterController(
         return ruleService.updateRule(rule, request.title, request.text, request.assignedPlayerIds)
     }
 
+    @DeleteMapping("/rules/{ruleId}")
+    fun deleteRule(
+        @ModelAttribute game: Game,
+        @PathVariable ruleId: Int,
+    ): DeleteRuleResponse {
+        val rule = gameService.findRule(game, ruleId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId does not belong to the game ${game.id}")
+        ruleService.deleteRule(rule)
+        return DeleteRuleResponse(true)
+    }
+
     @PostMapping("/rules/{ruleId}/assign")
     fun assignRule(
         @ModelAttribute game: Game,
@@ -133,6 +145,17 @@ class GameMasterController(
         return UpdateTokenResponse(updatedToken, playerTokens)
     }
 
+    @DeleteMapping("/tokens/{tokenId}")
+    fun deleteToken(
+        @ModelAttribute game: Game,
+        @PathVariable tokenId: Int
+    ): DeleteTokenResponse {
+        val token = gameService.findToken(game, tokenId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the game ${game.id}")
+        tokenService.deleteToken(token)
+        return DeleteTokenResponse(true)
+    }
+
     @GetMapping("/players")
     fun listPlayers(
         @ModelAttribute game: Game,
@@ -142,6 +165,7 @@ class GameMasterController(
 
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
+    data class DeleteRuleResponse(val success: Boolean)
     data class AssignRuleRequest(val playerId: Int)
     data class CreateTokenRequest(val title: String, val text: String)
 
@@ -150,4 +174,5 @@ class GameMasterController(
      */
     data class UpdateTokenRequest(val tokenId: Int, val title: String?, val text: String?, val allocation: Map<Int, Int>)
     data class UpdateTokenResponse(val token: Token, val playerTokens: List<PlayerToken>)
+    data class DeleteTokenResponse(val success: Boolean)
 }

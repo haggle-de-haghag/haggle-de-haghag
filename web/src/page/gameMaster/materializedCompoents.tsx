@@ -36,6 +36,7 @@ export function RuleEditor() {
         text: state.ruleTextInput,
         defaultAssignments: assignedPlayerIds,
     }));
+    const onDeleteButtonClick = () => dispatch(actions.default.deleteRule(currentRuleId));
     const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.default.changeRuleAccessListInput({
         playerId,
         ruleId: currentRuleId,
@@ -50,6 +51,7 @@ export function RuleEditor() {
         onRuleTitleChange={onRuleTitleChange}
         onRuleTextChange={onRuleTextChange}
         onSaveButtonClick={onSaveButtonClick}
+        onDeleteButtonClick={onDeleteButtonClick}
         onAssignmentChange={onAssignmentChange}
     />;
 }
@@ -82,6 +84,7 @@ export function TokenEditor() {
         text: state.tokenTextInput,
         allocation: state.allocationInputs,
     }));
+    const onDeleteButtonClick = () => dispatch(actions.default.deleteToken(currentTokenId));
 
     return <TokenEditorComponent
         tokenTitle={state.tokenTitleInput}
@@ -92,6 +95,7 @@ export function TokenEditor() {
         onTokenTextChange={onTokenTextChange}
         onAllocationChange={onAllocationChange}
         onSaveButtonClick={onSaveButtonClick}
+        onDeleteButtonClick={onDeleteButtonClick}
     />;
 }
 

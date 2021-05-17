@@ -1,5 +1,5 @@
 import {AccessType, ForeignPlayer, Game, Player, PlayerId, Rule, Token} from "../model";
-import {get, patch, post} from "./common";
+import {del, get, patch, post} from "./common";
 
 interface Config {
     gameMasterKey: string;
@@ -53,6 +53,10 @@ export async function updateRule(ruleId: number, title?: string, text?: string, 
     return patch(fullApi(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
 }
 
+export async function deleteRule(ruleId: number): Promise<void> {
+    return del(fullApi(`/rules/${ruleId}`));
+}
+
 export async function listTokens(): Promise<Token[]> {
     return get(fullApi('/tokens'));
 }
@@ -63,6 +67,10 @@ export async function createToken(title: string, text: string): Promise<Token> {
 
 export async function updateToken(tokenId: number, title?: string, text?: string, allocation?: {[playerId: number]: number}): Promise<UpdateTokenResponse> {
     return await patch(fullApi(`/tokens/${tokenId}`), {title, text, allocation});
+}
+
+export async function deleteToken(tokenId: number): Promise<void> {
+    return await del(fullApi(`/tokens/${tokenId}`));
 }
 
 function fullApi(api: string): string {

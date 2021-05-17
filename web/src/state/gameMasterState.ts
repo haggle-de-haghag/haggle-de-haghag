@@ -103,6 +103,8 @@ const slice = createSlice({
     initialState: initialState,
     reducers: {
         createRule: (state, action: PayloadAction<CreateRule>) => state,
+        updateRule: (state, action: PayloadAction<UpdateRule>) => state,
+        deleteRule: (state, action:PayloadAction<RuleId>) => state,
 
         addRule: (state, action: PayloadAction<Rule>) => {
             return {
@@ -120,7 +122,12 @@ const slice = createSlice({
             state.rules[index] = rule;
         },
 
-        updateRule: (state, action: PayloadAction<UpdateRule>) => state,
+        removeRule: (state, action: PayloadAction<RuleId>) => {
+            state.rules = state.rules.filter((rule) => rule.id != action.payload);
+            if (state.selectedRuleId == action.payload) {
+                state.selectedRuleId = undefined;
+            }
+        },
 
         changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
             const {ruleId, playerId, assigned} = action.payload;
@@ -158,6 +165,7 @@ const slice = createSlice({
 
         createToken: (state, action: PayloadAction<CreateToken>) => state,
         updateToken: (state, action: PayloadAction<UpdateToken>) => state,
+        deleteToken: (state, action: PayloadAction<TokenId>) => state,
 
         addToken: (state, action: PayloadAction<Token>) => {
             state.tokens.push(action.payload);
@@ -171,6 +179,13 @@ const slice = createSlice({
                 return state;
             }
             state.tokens[index] = token;
+        },
+
+        removeToken: (state, action: PayloadAction<TokenId>) => {
+            state.tokens = state.tokens.filter((token) => token.id != action.payload);
+            if (state.selectedTokenId == action.payload) {
+                state.selectedTokenId = undefined;
+            }
         },
 
         replaceAllocation: (state, action: PayloadAction<ReplaceAllocation>) => {
@@ -269,6 +284,16 @@ function* updateRuleSaga(action: ReturnType<typeof actions.default.updateRule>) 
     }
 }
 
+function* deleteRuleSaga(action: ReturnType<typeof actions.default.deleteRule>) {
+    try {
+        yield call(GameMasterRestApi.deleteRule, action.payload);
+        yield put(actions.default.removeRule(action.payload));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('ルールの削除に失敗しました。もう一度試してみてください。'));
+    }
+}
+
 function* createTokenSaga(action: ReturnType<typeof actions.default.createToken>) {
     const payload = action.payload;
     try {
@@ -293,12 +318,24 @@ function* updateTokenSaga(action: ReturnType<typeof actions.default.updateToken>
     }
 }
 
+function* deleteTokenSaga(action: ReturnType<typeof actions.default.deleteToken>) {
+    try {
+        yield call(GameMasterRestApi.deleteToken, action.payload);
+        yield put(actions.default.removeToken(action.payload));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('トークンの削除に失敗しました。もう一度試してみてください。'));
+    }
+}
+
 function* createWatcherSaga() {
     yield all([
         takeEvery(actions.default.createRule, createRuleSaga),
         takeEvery(actions.default.updateRule, updateRuleSaga),
+        takeEvery(actions.default.deleteRule, deleteRuleSaga),
         takeEvery(actions.default.createToken, createTokenSaga),
         takeEvery(actions.default.updateToken, updateTokenSaga),
+        takeEvery(actions.default.deleteToken, deleteTokenSaga),
     ]);
 }
 

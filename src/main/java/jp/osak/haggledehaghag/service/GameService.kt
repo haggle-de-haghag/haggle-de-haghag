@@ -79,6 +79,14 @@ class GameService(
         return playerTokenRepository.findAllByGameId(game.id)
     }
 
+    fun findRule(game: Game, ruleId: Int): Rule? {
+        return ruleRepository.findByIdOrNull(ruleId)?.takeIf { it.gameId == game.id}
+    }
+
+    fun findToken(game: Game, tokenId: Int): Token? {
+        return tokenRepository.findByIdOrNull(tokenId)?.takeIf { it.gameId == game.id }
+    }
+
     private fun generateKey(base: String): String {
         val salt = Math.random()
         val keyBase = "$base-$salt"

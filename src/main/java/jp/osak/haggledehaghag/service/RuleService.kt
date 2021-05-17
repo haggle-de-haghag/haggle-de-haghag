@@ -44,6 +44,12 @@ open class RuleService(
         return savedRule
     }
 
+    @Transactional
+    fun deleteRule(rule: Rule) {
+        ruleRepository.delete(rule)
+        ruleAccessRepository.deleteAllByRuleId(rule.id)
+    }
+
     fun assign(rule: Rule, player: Player): Either<RuleAccess, AssignError> {
         val existingAccess = ruleAccessRepository.findByRuleIdAndPlayerId(rule.id, player.id)
         if (existingAccess != null) {
