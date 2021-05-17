@@ -1,8 +1,8 @@
 name: deploy
 on:
   push:
-    branches:
-      - master
+    tags:
+      - release/*
 jobs:
   deploy-app:
     runs-on: ubuntu-latest
