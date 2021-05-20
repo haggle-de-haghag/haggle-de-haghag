@@ -1,5 +1,5 @@
 import React from "react";
-import {Box, Divider, Grid, Snackbar, Typography} from "@material-ui/core/index";
+import {Box, CircularProgress, Divider, Grid, Snackbar, Typography} from "@material-ui/core/index";
 import {usePLSelector} from "../../state/playerState";
 import {
     GiveTokenPane,
@@ -13,14 +13,18 @@ import {
 import { Alert } from "@material-ui/lab";
 
 export default function PlayerPage() {
-    const { gameTitle, errorMessage, notification } = usePLSelector((state) => ({
+    const { gameTitle, errorMessage, notification, updating } = usePLSelector((state) => ({
         gameTitle: state.gameTitle,
         errorMessage: state.errorNotification.message,
         notification: state.notification.message,
+        updating: state.updating,
     }));
 
     return <Grid container direction="column" spacing={2}>
-        <Grid item><Typography variant="h3">{gameTitle}</Typography></Grid>
+        <Grid item container alignItems="center">
+            <Grid item><Typography variant="h3">{gameTitle}</Typography></Grid>
+            <Grid item>{updating && <CircularProgress />}</Grid>
+        </Grid>
         <Grid item container spacing={3}>
             <Grid item xs={3}>
                 <Box><RuleList /></Box>

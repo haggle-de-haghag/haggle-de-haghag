@@ -1,4 +1,4 @@
-import {get, post} from "./common";
+import {AbortablePromise, get, post} from "./common";
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 
 interface Config {
@@ -23,7 +23,7 @@ export interface FullPlayerInfo {
     tokens: Token[];
 }
 
-export async function listFullInfo(): Promise<FullPlayerInfo> {
+export function listFullInfo(): AbortablePromise<FullPlayerInfo> {
     return get(`/players/${config.playerKey}`);
 }
 

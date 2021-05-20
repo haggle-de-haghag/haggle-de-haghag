@@ -1,12 +1,14 @@
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {combineReducers, configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {all, call, delay, put, takeEvery} from "redux-saga/effects";
+import {all, call, delay, put, race, takeEvery} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
 import {FullPlayerInfo} from "../rest/player";
 import createSagaMiddleware from "redux-saga";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
+import {Simulate} from "react-dom/test-utils";
+import error = Simulate.error;
 
 export interface PlayerState {
     // Model state
@@ -23,6 +25,7 @@ export interface PlayerState {
     selectedPlayerId: PlayerId;
     errorNotification: NotificationState;
     notification: NotificationState;
+    updating?: string; // initiator id
 }
 
 export interface ShareRule {
@@ -86,6 +89,16 @@ const slice = createSlice({
             state.amountInput = action.payload;
         },
 
+        beginUpdate: (state, action: PayloadAction<string>) => {
+            state.updating = action.payload;
+        },
+
+        endUpdate: (state, action: PayloadAction<string>) => {
+            if (state.updating == action.payload) {
+                state.updating = undefined;
+            }
+        },
+
         setGameState: (state, action: PayloadAction<FullPlayerInfo>) => {
             const info = action.payload;
             state.gameTitle = info.gameTitle;
@@ -118,6 +131,7 @@ const slice = createSlice({
     extraReducers: (builder) => {
         builder.addDefaultCase((state, action) => {
             state.notification = notificationState.slice.reducer(state.notification, action);
+            state.errorNotification = errorNotificationState.slice.reducer(state.errorNotification, action);
         })
     }
 });
@@ -166,12 +180,23 @@ function* installWatcherSaga() {
 
 function* pollSaga() {
     while (true) {
-        const fullInfo: FullPlayerInfo = yield call(PlayerApi.listFullInfo);
+        const initiator = `poll-${Date.now()}`;
+        yield put(actions.default.beginUpdate(initiator));
         try {
-            yield put(actions.default.setGameState(fullInfo));
+            const { fullInfo, cancel }: { fullInfo?: FullPlayerInfo, cancel?: boolean } = yield race({
+                fullInfo: call(PlayerApi.listFullInfo),
+                cancel: delay(5000),
+            });
+            if (fullInfo) {
+                yield put(actions.default.setGameState(fullInfo));
+            } else if (cancel) {
+                yield put(actions.errorNotification.showNotificationMessage("サーバーが応答していません"));
+            }
         } catch (e) {
             console.error("Polling failed", e);
             yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+        } finally {
+            yield put(actions.default.endUpdate(initiator));
         }
         yield delay(5000);
     }
