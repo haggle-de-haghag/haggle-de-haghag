@@ -86,6 +86,22 @@ const slice = createSlice({
             state.amountInput = action.payload;
         },
 
+        setGameState: (state, action: PayloadAction<FullPlayerInfo>) => {
+            const info = action.payload;
+            state.gameTitle = info.gameTitle;
+            state.player = info.player;
+            state.players = info.players;
+            state.rules = info.rules;
+            state.tokens = info.tokens;
+
+            if (info.rules.find(rule => rule.id == state.selectedRuleId) === undefined) {
+                state.selectedRuleId = undefined;
+            }
+            if (info.tokens.find(token => token.id == state.selectedTokenId) === undefined) {
+                state.selectedTokenId = undefined;
+            }
+        },
+
         initialize: (state, action: PayloadAction<FullPlayerInfo>) => {
             const info = action.payload;
             return {
@@ -148,11 +164,22 @@ function* installWatcherSaga() {
     ])
 }
 
+function* pollSaga() {
+    while (true) {
+        const fullInfo: FullPlayerInfo = yield call(PlayerApi.listFullInfo);
+        try {
+            yield put(actions.default.setGameState(fullInfo));
+        } catch (e) {
+            console.error("Polling failed", e);
+            yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+        }
+        yield delay(5000);
+    }
+}
+
 function* initSaga() {
     const key = location.hash.substring(1);
     yield call(PlayerApi.reconfigure, key);
-    const fullInfo: FullPlayerInfo = yield call(PlayerApi.listFullInfo);
-    yield put(actions.default.initialize(fullInfo));
 }
 
 const sagaMiddleware = createSagaMiddleware();
@@ -165,6 +192,7 @@ sagaMiddleware.run(retryForever, installWatcherSaga);
 sagaMiddleware.run(retryForever, notificationState.watcherSaga);
 sagaMiddleware.run(retryForever, errorNotificationState.watcherSaga);
 sagaMiddleware.run(initSaga as any);
+sagaMiddleware.run(pollSaga as any);
 
 export type PLDispatch = typeof store.dispatch;
 export const usePLDispatch = () => useDispatch<PLDispatch>();
