@@ -23,7 +23,9 @@ function baseFetch<T>(api: string, method: string, body?: any): AbortablePromise
 
     const promise: Promise<T> = async function() {
         const response = await fetch(`${API_BASE_URL}/${api}`, config);
-        if (response.status != 200) {
+        if (response.status == 404) {
+            throw new NotFoundError(response.statusText);
+        } else if (response.status != 200) {
             throw new HttpStatusError(response.status, response.statusText);
         }
         return await response.json() as T;
@@ -51,12 +53,20 @@ export function del<T>(api: string, body?: any): AbortablePromise<T> {
     return baseFetch<T>(api, 'DELETE', body);
 }
 
-class HttpStatusError {
+export class HttpStatusError {
     readonly statusCode: number;
     readonly message: string;
 
     constructor(statusCode: number, message: string) {
         this.statusCode = statusCode;
+        this.message = message;
+    }
+}
+
+export class NotFoundError {
+    readonly message: string;
+
+    constructor(message: string) {
         this.message = message;
     }
 }

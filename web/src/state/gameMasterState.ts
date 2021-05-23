@@ -7,6 +7,7 @@ import * as GameMasterRestApi from '../rest/gameMaster';
 import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
+import {NotFoundError} from "../rest/common";
 
 export interface GameMasterState {
     // Model state
@@ -358,9 +359,18 @@ function* createWatcherSaga() {
 
 function* initSaga() {
     const key = location.hash.substring(1);
-    yield call(GameMasterRestApi.configure, key)
-    const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
-    yield put(actions.default.initialize(fullInfo));
+    yield call(GameMasterRestApi.configure, key);
+    try {
+        const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
+        yield put(actions.default.initialize(fullInfo));
+    } catch (e) {
+        console.log("API error", e);
+        if (e instanceof NotFoundError) {
+            yield put(actions.errorNotification.showNotificationMessage("IDが間違っています"));
+        } else {
+            yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+        }
+    }
 }
 
 const sagaMiddleware = createSagaMiddleware();

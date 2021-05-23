@@ -9,6 +9,7 @@ import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
+import {NotFoundError} from "../rest/common";
 
 export interface PlayerState {
     // Model state
@@ -194,7 +195,11 @@ function* pollSaga() {
             }
         } catch (e) {
             console.error("Polling failed", e);
-            yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+            if (e instanceof NotFoundError) {
+                yield put(actions.errorNotification.showNotificationMessage("IDが間違ってるっぽいです。GMに聞いてみてください。"));
+            } else {
+                yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+            }
         } finally {
             yield put(actions.default.endUpdate(initiator));
         }
