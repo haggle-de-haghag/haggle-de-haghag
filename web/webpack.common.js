@@ -35,7 +35,7 @@ module.exports = {
             chunks: ['game_master']
         }),
         new HtmlWebpackPlugin({
-            filename: 'lobby.html',
+            filename: 'index.html',
             template: 'public/index.html',
             chunks: ['lobby']
         }),
