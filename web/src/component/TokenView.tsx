@@ -10,8 +10,9 @@ export interface Props {
 export default function TokenView(props: Props) {
     const { token } = props;
     return <Grid container direction="column" spacing={2}>
-        <Grid item container spacing={2} alignItems="center">
+        <Grid item container spacing={2} alignItems="flex-end" justify="space-between">
             <Grid item><Typography variant="h3">{token.title}</Typography></Grid>
+            <Grid item>所持数：{token.amount}</Grid>
         </Grid>
         <Grid item>
             <Typography>{token.text}</Typography>

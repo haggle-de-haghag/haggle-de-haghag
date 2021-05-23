@@ -22,8 +22,10 @@ export default function TokenList(props: Props) {
                         selected={token.id == props.selectedTokenId}
                         onClick={() => props.onTokenClick(token)}
                     >
-                        {props.showAmount && <ListItemAvatar><Avatar>{ token.amount }</Avatar></ListItemAvatar>}
-                        {token.title}
+                        <Box display="flex" alignItems="center" justifyContent="space-between" width="100%">
+                            {token.title}
+                            {props.showAmount && <ListItemAvatar><Avatar>{ token.amount }</Avatar></ListItemAvatar>}
+                        </Box>
                     </ListItem>
                 )}
             </List>
