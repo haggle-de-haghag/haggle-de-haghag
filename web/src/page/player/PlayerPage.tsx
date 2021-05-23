@@ -13,7 +13,8 @@ import {
 import { Alert } from "@material-ui/lab";
 
 export default function PlayerPage() {
-    const { gameTitle, errorMessage, notification, updating } = usePLSelector((state) => ({
+    const { player, gameTitle, errorMessage, notification, updating } = usePLSelector((state) => ({
+        player: state.player,
         gameTitle: state.gameTitle,
         errorMessage: state.errorNotification.message,
         notification: state.notification.message,
@@ -22,7 +23,7 @@ export default function PlayerPage() {
 
     return <Grid container direction="column" spacing={2}>
         <Grid item container alignItems="center">
-            <Grid item><Typography variant="h3">{gameTitle}</Typography></Grid>
+            <Grid item><Typography variant="h3">{player.displayName} - {gameTitle}</Typography></Grid>
             <Grid item>{updating && <CircularProgress />}</Grid>
         </Grid>
         <Grid item container spacing={3}>
