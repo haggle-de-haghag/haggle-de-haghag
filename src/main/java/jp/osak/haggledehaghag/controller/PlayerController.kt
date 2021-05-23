@@ -33,7 +33,7 @@ class PlayerController(
     @ModelAttribute
     fun addPlayer(@PathVariable playerKey: String): Player {
         return playerService.findPlayer(playerKey)
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid player key: $playerKey")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid player key: $playerKey")
     }
 
     @GetMapping

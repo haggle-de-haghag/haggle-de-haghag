@@ -36,7 +36,7 @@ class GameMasterController(
     @ModelAttribute
     fun addGame(@PathVariable masterKey: String): Game {
         return gameService.findGameForMasterKey(masterKey)
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Invalid game master key: $masterKey")
+            ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid game master key: $masterKey")
     }
 
     @GetMapping
