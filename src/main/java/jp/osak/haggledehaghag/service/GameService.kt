@@ -87,6 +87,11 @@ class GameService(
         return tokenRepository.findByIdOrNull(tokenId)?.takeIf { it.gameId == game.id }
     }
 
+    fun updateTitle(game: Game, title: String): Game {
+        val newGame = game.copy(title = title)
+        return gameRepository.save(newGame)
+    }
+
     private fun generateKey(base: String): String {
         val salt = Math.random()
         val keyBase = "$base-$salt"

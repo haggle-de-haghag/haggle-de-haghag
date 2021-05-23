@@ -1,8 +1,15 @@
-import {Box, Button, Divider, Grid, Paper, Snackbar, Typography} from "@material-ui/core/index";
+import {Box, Button, Divider, Grid, makeStyles, Paper, Snackbar, Typography} from "@material-ui/core/index";
 import React from "react";
 import {PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 import {Alert} from "@material-ui/lab";
+import {EditableLabel} from "../../component/EditableLabel";
+
+const useStyles = makeStyles((theme) => ({
+    titleEdit: {
+        fontSize: theme.typography.h3.fontSize,
+    }
+}));
 
 export default function GameMasterPage() {
     const { gameKey, gameTitle, notification, errorNotification } = useGMSelector((state) => ({
@@ -12,7 +19,9 @@ export default function GameMasterPage() {
         errorNotification: state.errorNotification.message,
     }));
     const dispatch = useGMDispatch();
+    const classes = useStyles();
 
+    const onTitleUpdate = (title: string) => dispatch(actions.default.updateTitle(title));
     const onNewRuleClick = () => dispatch(actions.default.createRule({
         title: '（新規ルール）',
         text: '',
@@ -26,7 +35,10 @@ export default function GameMasterPage() {
 
     return (
         <Grid container direction="column" spacing={4}>
-            <Grid item><Typography variant="h3">ゲームマスター - {gameTitle}</Typography></Grid>
+            <Grid item container alignItems="center">
+                <Grid item><Typography variant="h3"> ゲームマスター -&nbsp;</Typography></Grid>
+                <Grid item><EditableLabel className={classes.titleEdit} labelText={gameTitle} onUpdate={onTitleUpdate} /></Grid>
+            </Grid>
             <Grid component={Paper} item>
                 <Typography variant="h5">ゲームキー：<b>{gameKey}</b></Typography>
             </Grid>

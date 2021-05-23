@@ -12,7 +12,6 @@ import jp.osak.haggledehaghag.service.RuleService
 import jp.osak.haggledehaghag.service.TokenService
 import jp.osak.haggledehaghag.util.Either
 import jp.osak.haggledehaghag.util.toMultiMap
-import jp.osak.haggledehaghag.viewmodel.ForeignPlayerView
 import jp.osak.haggledehaghag.viewmodel.FullGameInfoView
 import org.springframework.http.HttpStatus
 import org.springframework.web.bind.annotation.DeleteMapping
@@ -51,6 +50,11 @@ class GameMasterController(
             .map { Pair(it.tokenId, FullGameInfoView.PlayerIdWithAmount(it.playerId, it.amount)) }
             .toMultiMap()
         return FullGameInfoView(game, rules, players, ruleAccessMap, tokens, tokenAllocationMap)
+    }
+
+    @PostMapping("/title")
+    fun updateTitle(@ModelAttribute game: Game, @RequestBody request: UpdateTitleRequest): Game {
+        return gameService.updateTitle(game, request.title)
     }
 
     @GetMapping("/rules")
@@ -163,6 +167,7 @@ class GameMasterController(
         return gameService.listPlayers(game)
     }
 
+    data class UpdateTitleRequest(val title: String)
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class DeleteRuleResponse(val success: Boolean)

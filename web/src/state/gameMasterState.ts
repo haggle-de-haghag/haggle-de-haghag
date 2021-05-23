@@ -228,6 +228,12 @@ const slice = createSlice({
             state.allocationInputs[payload.playerId] = payload.amount;
         },
 
+        updateTitle: (state, action: PayloadAction<string>) => state,
+
+        setGame: (state, action: PayloadAction<Game>) => {
+            state.game = action.payload;
+        },
+
         initialize: (state, action: PayloadAction<FullGameInfo>) => {
             const info = action.payload;
             return {
@@ -328,6 +334,16 @@ function* deleteTokenSaga(action: ReturnType<typeof actions.default.deleteToken>
     }
 }
 
+function* updateTitleSaga(action: ReturnType<typeof actions.default.updateTitle>) {
+    try {
+        const game: Game = yield call(GameMasterRestApi.updateTitle, action.payload);
+        yield put(actions.default.setGame(game));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('ゲームタイトルの更新に失敗しました。もう一度試してみてください。'));
+    }
+}
+
 function* createWatcherSaga() {
     yield all([
         takeEvery(actions.default.createRule, createRuleSaga),
@@ -336,6 +352,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.createToken, createTokenSaga),
         takeEvery(actions.default.updateToken, updateTokenSaga),
         takeEvery(actions.default.deleteToken, deleteTokenSaga),
+        takeEvery(actions.default.updateTitle, updateTitleSaga),
     ]);
 }
 

@@ -1,5 +1,5 @@
 import {AccessType, ForeignPlayer, Game, Player, PlayerId, Rule, Token} from "../model";
-import {del, get, patch, post} from "./common";
+import {AbortablePromise, del, get, patch, post} from "./common";
 
 interface Config {
     gameMasterKey: string;
@@ -39,6 +39,10 @@ export interface UpdateTokenResponse {
 
 export async function listFullInfo(): Promise<FullGameInfo> {
     return get(fullApi(''));
+}
+
+export function updateTitle(title: string): AbortablePromise<Game> {
+    return post(fullApi('/title'), { title });
 }
 
 export async function listRules(): Promise<Rule[]> {
