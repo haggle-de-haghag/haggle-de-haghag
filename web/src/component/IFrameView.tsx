@@ -21,6 +21,7 @@ export function IFrameView(props: Props) {
         if (current) {
             const doc = ref.current?.contentDocument;
             if (doc) {
+                current.height = '0';
                 doc.open();
                 doc.write(props.html.replaceAll("\n", "<br>"));
                 doc.close();
