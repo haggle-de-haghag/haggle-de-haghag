@@ -4,6 +4,7 @@ import RuleEditorComponent from '../../component/RuleEditor';
 import TokenListComponent from '../../component/TokenList';
 import TokenEditorComponent from '../../component/TokenEditor';
 import PlayerListComponent from '../../component/PlayerList';
+import GameSummaryPaneComponent from '../../component/GameSummaryPane';
 import {PlayerId} from "../../model";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
@@ -104,4 +105,21 @@ export function PlayerList() {
         players: state.players
     }));
     return <PlayerListComponent players={players} />;
+}
+
+export function GameSummaryPane() {
+    const { players, rules, ruleAccessList, tokens, tokenAllocationMap } = useGMSelector((state) => ({
+        players: state.players,
+        rules: state.rules,
+        ruleAccessList: state.ruleAccessList,
+        tokens: state.tokens,
+        tokenAllocationMap: state.tokenAllocationMap
+    }));
+    return <GameSummaryPaneComponent
+        players={players}
+        rules={rules}
+        ruleAccessList={ruleAccessList}
+        tokens={tokens}
+        tokenAllocationMap={tokenAllocationMap}
+    />;
 }

@@ -22,15 +22,16 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-export function GameSummaryPane(props: Props) {
+export default function GameSummaryPane(props: Props) {
     const styles = useStyles();
 
     const renderPlayerRow = (player: Player) => {
         return <TableRow key={player.id}>
             <TableCell>{player.displayName}</TableCell>
-            <TableCell>{props.rules.map((r) => {
+            <TableCell style={{ display: 'flex' }}>
+                {props.rules.map((r) => {
                 const accessList = props.ruleAccessList[r.id];
-                const access = accessList.find((a) => a.playerId == player.id);
+                const access = accessList?.find((a) => a.playerId == player.id);
                 const className = access == null
                     ? styles.unknownRule
                     : access.accessType == 'ASSIGNED'
