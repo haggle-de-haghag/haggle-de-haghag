@@ -2,8 +2,17 @@ import {Box, Button, Divider, Grid} from "@material-ui/core";
 import {PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import React from "react";
 import {actions, useGMDispatch} from "../../state/gameMasterState";
+import {makeStyles} from "@material-ui/core/index";
+
+const useStyles = makeStyles((theme) => ({
+    menu: {
+        overflowY: 'scroll',
+        height: 'calc(100vh - 300px)',
+    },
+}));
 
 export default function EditScreen() {
+    const classes = useStyles();
     const dispatch = useGMDispatch();
 
     const onNewRuleClick = () => dispatch(actions.default.createRule({
@@ -18,7 +27,7 @@ export default function EditScreen() {
     }));
 
     return <Grid container spacing={3}>
-        <Grid item xs={3}>
+        <Grid item xs={3} className={classes.menu}>
             <Box><RuleList/></Box>
             <Box><Button variant="contained" onClick={onNewRuleClick}>新規ルール</Button></Box>
             <Box mt={2}><Divider/></Box>
