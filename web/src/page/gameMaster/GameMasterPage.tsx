@@ -1,4 +1,16 @@
-import {Box, Button, Divider, Grid, makeStyles, Paper, Snackbar, Tab, Tabs, Typography} from "@material-ui/core/index";
+import {
+    Box,
+    Button,
+    CircularProgress,
+    Divider,
+    Grid,
+    makeStyles,
+    Paper,
+    Snackbar,
+    Tab,
+    Tabs,
+    Typography
+} from "@material-ui/core/index";
 import React, {useState} from "react";
 import {GameSummaryPane, PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
@@ -19,11 +31,12 @@ const useStyles = makeStyles((theme) => ({
 }));
 
 export default function GameMasterPage() {
-    const { gameKey, gameTitle, notification, errorNotification } = useGMSelector((state) => ({
+    const { gameKey, gameTitle, notification, errorNotification, updating } = useGMSelector((state) => ({
         gameKey: state.game.gameKey,
         gameTitle: state.game.title,
         notification: state.notification.message,
         errorNotification: state.errorNotification.message,
+        updating: state.updating,
     }));
     const [tabIndex, setTabIndex] = useState(0);
     const dispatch = useGMDispatch();
@@ -39,6 +52,7 @@ export default function GameMasterPage() {
                 <Grid className={classes.gameKeyBox} component={Paper} item>
                     <Typography variant="h5">ゲームキー：<b>{gameKey}</b></Typography>
                 </Grid>
+                <Grid item>{updating && <CircularProgress />}</Grid>
             </Grid>
             <Grid item>
                 <Tabs value={tabIndex} onChange={(_, value) => setTabIndex(value)}>

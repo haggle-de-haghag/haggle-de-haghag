@@ -2,12 +2,14 @@ import {Game, Player, PlayerId, Rule, RuleAccessMap, RuleId, Token, TokenAllocat
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
-import {all, call, put, takeEvery} from 'redux-saga/effects';
+import {all, call, delay, put, race, takeEvery} from 'redux-saga/effects';
 import * as GameMasterRestApi from '../rest/gameMaster';
 import {FullGameInfo, PlayerIdWithAccess, PlayerIdWithAmount, UpdateTokenResponse} from '../rest/gameMaster';
 import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
 import {NotFoundError} from "../rest/common";
+import {FullPlayerInfo} from "../rest/player";
+import * as PlayerApi from "../rest/player";
 
 export interface GameMasterState {
     // Model state
@@ -31,6 +33,9 @@ export interface GameMasterState {
     allocationInputs: { [playerId: number]: number };
     errorNotification: NotificationState;
     notification: NotificationState;
+
+    // UI state (other)
+    updating?: string; // initiator id
 }
 
 export interface CreateRule {
@@ -231,8 +236,28 @@ const slice = createSlice({
 
         updateTitle: (state, action: PayloadAction<string>) => state,
 
+        beginUpdate: (state, action: PayloadAction<string>) => {
+            state.updating = action.payload;
+        },
+
+        endUpdate: (state, action: PayloadAction<string>) => {
+            if (state.updating == action.payload) {
+                state.updating = undefined;
+            }
+        },
+
         setGame: (state, action: PayloadAction<Game>) => {
             state.game = action.payload;
+        },
+
+        setGameState: (state, action: PayloadAction<FullGameInfo>) => {
+            const info = action.payload;
+            state.game = info.game;
+            state.rules = info.rules;
+            state.players = info.players;
+            state.ruleAccessList = info.ruleAccessMap;
+            state.tokens = info.tokens;
+            state.tokenAllocationMap = info.tokenAllocationMap;
         },
 
         initialize: (state, action: PayloadAction<FullGameInfo>) => {
@@ -357,6 +382,34 @@ function* createWatcherSaga() {
     ]);
 }
 
+function* pollSaga() {
+    while (true) {
+        const initiator = `poll-${Date.now()}`;
+        yield put(actions.default.beginUpdate(initiator));
+        try {
+            const { fullInfo, cancel }: { fullInfo?: FullGameInfo, cancel?: boolean } = yield race({
+                fullInfo: call(GameMasterRestApi.listFullInfo),
+                cancel: delay(5000),
+            });
+            if (fullInfo) {
+                yield put(actions.default.setGameState(fullInfo));
+            } else if (cancel) {
+                yield put(actions.errorNotification.showNotificationMessage("サーバーが応答していません"));
+            }
+        } catch (e) {
+            console.error("Polling failed", e);
+            if (e instanceof NotFoundError) {
+                yield put(actions.errorNotification.showNotificationMessage("IDが間違ってるっぽいです"));
+            } else {
+                yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+            }
+        } finally {
+            yield put(actions.default.endUpdate(initiator));
+        }
+        yield delay(5000);
+    }
+}
+
 function* initSaga() {
     const key = location.hash.substring(1);
     yield call(GameMasterRestApi.configure, key);
@@ -383,6 +436,7 @@ sagaMiddleware.run(retryForever, createWatcherSaga);
 sagaMiddleware.run(retryForever, errorNotificationState.watcherSaga);
 sagaMiddleware.run(retryForever, notificationState.watcherSaga);
 sagaMiddleware.run(initSaga as any);
+sagaMiddleware.run(pollSaga as any);
 
 export type GMDispatch = typeof store.dispatch;
 export const useGMDispatch = () => useDispatch<GMDispatch>();
