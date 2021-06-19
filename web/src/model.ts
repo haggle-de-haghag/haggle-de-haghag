@@ -1,3 +1,5 @@
+import {PlayerIdWithAccess, PlayerIdWithAmount} from "./rest/gameMaster";
+
 export type GameId = number;
 export type PlayerId = number;
 export type RuleId = number;
@@ -37,3 +39,6 @@ export interface Token {
 }
 
 export type AccessType = 'ASSIGNED' | 'SHARED';
+
+export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };
+export type TokenAllocationMap = { [tokenId: number]: PlayerIdWithAmount[] };

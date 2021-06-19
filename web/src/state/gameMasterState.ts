@@ -1,4 +1,4 @@
-import {Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
+import {Game, Player, PlayerId, Rule, RuleAccessMap, RuleId, Token, TokenAllocationMap, TokenId} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
@@ -14,9 +14,9 @@ export interface GameMasterState {
     game: Game;
     players: Player[];
     rules: Rule[];
-    ruleAccessList: { [ruleId: number]: PlayerIdWithAccess[] };
+    ruleAccessList: RuleAccessMap;
     tokens: Token[];
-    tokenAllocationMap: { [tokenId: number]: PlayerIdWithAmount[] };
+    tokenAllocationMap: TokenAllocationMap;
 
     // UI state (Rule)
     ruleTitleInput: string;
