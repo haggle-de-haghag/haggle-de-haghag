@@ -167,6 +167,21 @@ class GameMasterController(
         return gameService.listPlayers(game)
     }
 
+    @PostMapping("/players/{playerId}/tokens/{tokenId}/add")
+    fun addTokenToPlayer(
+        @ModelAttribute game: Game,
+        @PathVariable playerId: Int,
+        @PathVariable tokenId: Int,
+        @RequestBody request: AddTokenToPlayerRequest,
+    ): AddTokenToPlayerResponse {
+        val player = gameService.findPlayer(game, playerId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player $playerId does not belong to the game ${game.id}")
+        val token = gameService.findToken(game, tokenId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the game ${game.id}")
+        val playerToken = playerService.addToken(player, token, request.amount)
+        return AddTokenToPlayerResponse(playerToken)
+    }
+
     data class UpdateTitleRequest(val title: String)
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
@@ -180,4 +195,6 @@ class GameMasterController(
     data class UpdateTokenRequest(val tokenId: Int, val title: String?, val text: String?, val allocation: Map<Int, Int>)
     data class UpdateTokenResponse(val token: Token, val playerTokens: List<PlayerToken>)
     data class DeleteTokenResponse(val success: Boolean)
+    data class AddTokenToPlayerRequest(val amount: Int)
+    data class AddTokenToPlayerResponse(val playerToken: PlayerToken)
 }

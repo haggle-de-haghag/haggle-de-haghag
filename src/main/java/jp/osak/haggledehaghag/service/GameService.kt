@@ -79,8 +79,12 @@ class GameService(
         return playerTokenRepository.findAllByGameId(game.id)
     }
 
+    fun findPlayer(game: Game, playerId: Int): Player? {
+        return playerRepository.findByIdOrNull(playerId)?.takeIf { it.gameId == game.id }
+    }
+
     fun findRule(game: Game, ruleId: Int): Rule? {
-        return ruleRepository.findByIdOrNull(ruleId)?.takeIf { it.gameId == game.id}
+        return ruleRepository.findByIdOrNull(ruleId)?.takeIf { it.gameId == game.id }
     }
 
     fun findToken(game: Game, tokenId: Int): Token? {
