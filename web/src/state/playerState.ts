@@ -209,27 +209,10 @@ function* loadFullStateSaga() {
 
 function* pollSaga() {
     while (true) {
-        const initiator = `poll-${Date.now()}`;
-        yield put(actions.default.beginUpdate(initiator));
         try {
-            const { fullInfo, cancel }: { fullInfo?: FullPlayerInfo, cancel?: boolean } = yield race({
-                fullInfo: call(PlayerApi.listFullInfo),
-                cancel: delay(5000),
-            });
-            if (fullInfo) {
-                yield put(actions.default.setGameState(fullInfo));
-            } else if (cancel) {
-                yield put(actions.errorNotification.showNotificationMessage("サーバーが応答していません"));
-            }
+            yield call(loadFullStateSaga);
         } catch (e) {
             console.error("Polling failed", e);
-            if (e instanceof NotFoundError) {
-                yield put(actions.errorNotification.showNotificationMessage("IDが間違ってるっぽいです。GMに聞いてみてください。"));
-            } else {
-                yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
-            }
-        } finally {
-            yield put(actions.default.endUpdate(initiator));
         }
         yield delay(5000);
     }

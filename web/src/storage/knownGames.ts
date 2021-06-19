@@ -1,8 +1,8 @@
 import {KnownGame, KnownGameMaster} from "../model";
 
 export class KnownGames {
-    private knownGames: KnownGame[] = [];
-    private knownGameMasters: KnownGameMaster[] = [];
+    readonly knownGames: KnownGame[] = [];
+    readonly knownGameMasters: KnownGameMaster[] = [];
 
     constructor() {
         this.knownGames = KnownGames.loadItem('knownGames') ?? [];

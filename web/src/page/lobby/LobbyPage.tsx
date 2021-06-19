@@ -1,10 +1,29 @@
 import React from "react";
-import {Box, Button, Card, CardActions, CardContent, Grid, TextField, Typography} from "@material-ui/core/index";
+import {
+    Box,
+    Button,
+    Card,
+    CardActions,
+    CardContent,
+    Grid, Link,
+    List,
+    ListItem, makeStyles,
+    TextField,
+    Typography
+} from "@material-ui/core/index";
 import {actions, useLobbyDispatch, useLobbySelector} from "../../state/lobbyState";
+import {knownGames} from "../../storage/knownGames";
+
+const useStyles = makeStyles((theme) => ({
+    historyList: {
+        marginTop: theme.spacing(),
+    },
+}));
 
 export function LobbyPage() {
     const { gameTitleInput, gameKeyInput, playerNameInput } = useLobbySelector((state) => state);
     const dispatch = useLobbyDispatch();
+    const classes = useStyles();
 
     const onGameTitleInputChange = (value: string) => dispatch(actions.setGameTitleInput(value));
     const onGameKeyInputChange = (value: string) => dispatch(actions.setGameKeyInput(value));
@@ -14,7 +33,7 @@ export function LobbyPage() {
 
     return <Box display="flex" justifyContent="space-between">
         <Box component={Card} width={0.45}>
-            <Box display="flex" flexDirection="column" justifyContent="space-between" height="100%">
+            <Box display="flex" flexDirection="column" height="100%">
                 <Box component={CardContent}>
                     <Typography variant="h3">ゲームマスター</Typography>
                 </Box>
@@ -24,6 +43,14 @@ export function LobbyPage() {
                         <Grid item><Button variant="contained" color="primary" onClick={onCreateGame}>ゲームを作る</Button></Grid>
                     </Grid>
                 </CardActions>
+                <Box className={classes.historyList}>
+                    <Typography variant="h4">履歴</Typography>
+                    <List>
+                        {knownGames.knownGameMasters.map((kg) =>
+                            <ListItem key={kg.masterKey}><Link href={`game_master.html#${kg.masterKey}`}>{kg.title}</Link></ListItem>
+                        )}
+                    </List>
+                </Box>
             </Box>
         </Box>
         <Box component={Card} width={0.45}>
@@ -41,6 +68,14 @@ export function LobbyPage() {
                     </Grid>
                 </Grid>
             </CardActions>
+            <Box className={classes.historyList}>
+                <Typography variant="h4">履歴</Typography>
+                <List>
+                    {knownGames.knownGames.map((kg) =>
+                        <ListItem key={kg.gameKey}><Link href={`player.html#${kg.gameKey}`}>{kg.title}</Link></ListItem>
+                    )}
+                </List>
+            </Box>
         </Box>
     </Box>
 }

@@ -10,6 +10,7 @@ import {createNotificationState, NotificationState} from "./subState/notificatio
 import {NotFoundError} from "../rest/common";
 import {FullPlayerInfo} from "../rest/player";
 import * as PlayerApi from "../rest/player";
+import {knownGames} from "../storage/knownGames";
 
 export interface GameMasterState {
     // Model state
@@ -452,6 +453,7 @@ function* initSaga() {
     try {
         const fullInfo: FullGameInfo = yield call(GameMasterRestApi.listFullInfo);
         yield put(actions.default.initialize(fullInfo));
+        knownGames.pushKnownGameMaster({ masterKey: key, title: fullInfo.game.title });
     } catch (e) {
         console.log("API error", e);
         if (e instanceof NotFoundError) {
