@@ -3,17 +3,18 @@ import {
     Dialog,
     DialogActions,
     DialogContent,
-    Grid,
+    Grid, Tab,
     Table,
     TableBody,
     TableCell,
     TableContainer,
     TableHead,
-    TableRow,
+    TableRow, Tabs,
     TextField
 } from "@material-ui/core";
 import React, {useState} from "react";
 import {ForeignPlayer} from "../model";
+import {IFrameView} from "./IFrameView";
 
 interface Props {
     tokenTitle: string;
@@ -29,12 +30,17 @@ interface Props {
 
 export default function TokenEditor(props: Props) {
     const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+    const [tabIndex, setTabIndex] = useState(0);
 
     const onDeleteDialogClose = (reallyDelete: boolean) => {
         setDeleteDialogOpen(false);
         if (reallyDelete) {
             props.onDeleteButtonClick();
         }
+    };
+
+    const onTabChange = (_: any, value: number) => {
+        setTabIndex(value);
     };
 
     return <Grid container direction="column" spacing={2}>
@@ -48,6 +54,11 @@ export default function TokenEditor(props: Props) {
             />
         </Grid>
         <Grid item>
+            <Tabs value={tabIndex} onChange={onTabChange}>
+                <Tab label="HTML" />
+                <Tab label="プレビュー" />
+            </Tabs>
+            {tabIndex == 0 &&
             <TextField
                 variant="filled"
                 label="説明"
@@ -56,7 +67,10 @@ export default function TokenEditor(props: Props) {
                 fullWidth
                 value={props.tokenText}
                 onChange={(e) => props.onTokenTextChange(e.target.value)}
-            />
+            />}
+            {tabIndex == 1 &&
+                <IFrameView html={props.tokenText} />
+            }
         </Grid>
         <Grid item>
             <TableContainer>
