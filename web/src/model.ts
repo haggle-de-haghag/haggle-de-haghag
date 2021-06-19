@@ -38,6 +38,16 @@ export interface Token {
     amount: number;
 }
 
+export interface KnownGame {
+    gameKey: string;
+    title: string;
+}
+
+export interface KnownGameMaster {
+    masterKey: string;
+    title: string;
+}
+
 export type AccessType = 'ASSIGNED' | 'SHARED';
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };

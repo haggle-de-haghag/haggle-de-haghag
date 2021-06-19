@@ -10,6 +10,7 @@ import {createNotificationState, NotificationState} from "./subState/notificatio
 import {Simulate} from "react-dom/test-utils";
 import error = Simulate.error;
 import {NotFoundError} from "../rest/common";
+import {knownGames} from "../storage/knownGames";
 
 export interface PlayerState {
     // Model state
@@ -179,6 +180,33 @@ function* installWatcherSaga() {
     ])
 }
 
+function* loadFullStateSaga() {
+    const initiator = `poll-${Date.now()}`;
+    yield put(actions.default.beginUpdate(initiator));
+    try {
+        const { fullInfo, cancel }: { fullInfo?: FullPlayerInfo, cancel?: boolean } = yield race({
+            fullInfo: call(PlayerApi.listFullInfo),
+            cancel: delay(5000),
+        });
+        if (fullInfo) {
+            yield put(actions.default.setGameState(fullInfo));
+            return fullInfo;
+        } else if (cancel) {
+            yield put(actions.errorNotification.showNotificationMessage("サーバーが応答していません"));
+            throw Error('The server is not responding');
+        }
+    } catch (e) {
+        if (e instanceof NotFoundError) {
+            yield put(actions.errorNotification.showNotificationMessage("IDが間違ってるっぽいです。GMに聞いてみてください。"));
+        } else {
+            yield put(actions.errorNotification.showNotificationMessage("サーバーに接続できませんでした"));
+        }
+        throw e;
+    } finally {
+        yield put(actions.default.endUpdate(initiator));
+    }
+}
+
 function* pollSaga() {
     while (true) {
         const initiator = `poll-${Date.now()}`;
@@ -210,6 +238,12 @@ function* pollSaga() {
 function* initSaga() {
     const key = location.hash.substring(1);
     yield call(PlayerApi.reconfigure, key);
+    try {
+        const info: FullPlayerInfo = yield call(loadFullStateSaga);
+        knownGames.pushKnownGame({ gameKey: key, title: info.gameTitle });
+    } catch (e) {
+        console.error('Init failed', e);
+    }
 }
 
 const sagaMiddleware = createSagaMiddleware();
