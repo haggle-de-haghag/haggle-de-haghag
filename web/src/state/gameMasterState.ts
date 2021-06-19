@@ -79,6 +79,18 @@ export interface ReplaceAllocation {
     allocation: PlayerIdWithAmount[];
 }
 
+export interface AddTokenToPlayer {
+    playerId: number;
+    tokenId: number;
+    amount: number;
+}
+
+export interface SetPlayerTokenAllocation {
+    playerId: number;
+    tokenId: number;
+    amount: number;
+}
+
 const errorNotificationState = createNotificationState('errorNotification', 10*1000);
 const notificationState = createNotificationState('notification');
 
@@ -234,6 +246,18 @@ const slice = createSlice({
             state.allocationInputs[payload.playerId] = payload.amount;
         },
 
+        addTokenToPlayer: (state, action: PayloadAction<AddTokenToPlayer>) => state,
+
+        setPlayerTokenAllocation: (state, action: PayloadAction<SetPlayerTokenAllocation>) => {
+            const { playerId, tokenId, amount } = action.payload;
+            const allocation = state.tokenAllocationMap[tokenId].find((a) => a.playerId == playerId);
+            if (allocation) {
+                allocation.amount = amount;
+            } else {
+                state.tokenAllocationMap[tokenId].push({playerId, amount});
+            }
+        },
+
         updateTitle: (state, action: PayloadAction<string>) => state,
 
         beginUpdate: (state, action: PayloadAction<string>) => {
@@ -370,6 +394,17 @@ function* updateTitleSaga(action: ReturnType<typeof actions.default.updateTitle>
     }
 }
 
+function* addTokenToPlayerSaga(action: ReturnType<typeof actions.default.addTokenToPlayer>) {
+    try {
+        const { playerId, tokenId, amount } = action.payload;
+        const newAmount: number = yield call(GameMasterRestApi.addTokenToPlayer, playerId, tokenId, amount);
+        yield put(actions.default.setPlayerTokenAllocation({ playerId, tokenId, amount: newAmount }));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('トークンの付与/削除に失敗しました'));
+    }
+}
+
 function* createWatcherSaga() {
     yield all([
         takeEvery(actions.default.createRule, createRuleSaga),
@@ -379,6 +414,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.updateToken, updateTokenSaga),
         takeEvery(actions.default.deleteToken, deleteTokenSaga),
         takeEvery(actions.default.updateTitle, updateTitleSaga),
+        takeEvery(actions.default.addTokenToPlayer, addTokenToPlayerSaga),
     ]);
 }
 

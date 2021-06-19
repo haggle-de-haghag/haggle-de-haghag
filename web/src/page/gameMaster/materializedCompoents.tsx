@@ -5,7 +5,7 @@ import TokenListComponent from '../../component/TokenList';
 import TokenEditorComponent from '../../component/TokenEditor';
 import PlayerListComponent from '../../component/PlayerList';
 import GameSummaryPaneComponent from '../../component/GameSummaryPane';
-import {PlayerId} from "../../model";
+import {Player, PlayerId, Token} from "../../model";
 import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 
 export function RuleList() {
@@ -115,11 +115,18 @@ export function GameSummaryPane() {
         tokens: state.tokens,
         tokenAllocationMap: state.tokenAllocationMap
     }));
+    const dispatch = useGMDispatch();
+
+    const onAddTokenToPlayer = (player: Player, token: Token, amount: number) => {
+        dispatch(actions.default.addTokenToPlayer({ playerId: player.id, tokenId: token.id, amount }));
+    }
+
     return <GameSummaryPaneComponent
         players={players}
         rules={rules}
         ruleAccessList={ruleAccessList}
         tokens={tokens}
         tokenAllocationMap={tokenAllocationMap}
+        onAddTokenToPlayer={onAddTokenToPlayer}
     />;
 }

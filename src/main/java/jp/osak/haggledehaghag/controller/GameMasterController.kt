@@ -179,7 +179,7 @@ class GameMasterController(
         val token = gameService.findToken(game, tokenId)
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Token $tokenId does not belong to the game ${game.id}")
         val playerToken = playerService.addToken(player, token, request.amount)
-        return AddTokenToPlayerResponse(playerToken)
+        return AddTokenToPlayerResponse(playerToken.amount)
     }
 
     data class UpdateTitleRequest(val title: String)
@@ -196,5 +196,5 @@ class GameMasterController(
     data class UpdateTokenResponse(val token: Token, val playerTokens: List<PlayerToken>)
     data class DeleteTokenResponse(val success: Boolean)
     data class AddTokenToPlayerRequest(val amount: Int)
-    data class AddTokenToPlayerResponse(val playerToken: PlayerToken)
+    data class AddTokenToPlayerResponse(val newAmount: Int)
 }

@@ -77,6 +77,11 @@ export async function deleteToken(tokenId: number): Promise<void> {
     return await del(fullApi(`/tokens/${tokenId}`));
 }
 
+export async function addTokenToPlayer(playerId: number, tokenId: number, amount: number): Promise<number> {
+    const response = await post<{newAmount: number}>(fullApi(`/players/${playerId}/tokens/${tokenId}/add`), { amount });
+    return response.newAmount;
+}
+
 function fullApi(api: string): string {
     return `/game_master/${config.gameMasterKey}${api}`;
 }

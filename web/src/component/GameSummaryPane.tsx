@@ -1,5 +1,4 @@
 import {Player, Rule, RuleAccessMap, Token, TokenAllocationMap} from "../model";
-import {PlayerIdWithAccess} from "../rest/gameMaster";
 import {ListItem, Table, TableBody, TableCell, TableHead, TableRow} from "@material-ui/core";
 import {Avatar, Box, Button, Grid, IconButton, List, makeStyles} from "@material-ui/core/index";
 import {AddCircle, RemoveCircle} from "@material-ui/icons";
@@ -10,6 +9,7 @@ interface Props {
     ruleAccessList: RuleAccessMap;
     tokens: Token[];
     tokenAllocationMap: TokenAllocationMap;
+    onAddTokenToPlayer: (player: Player, token: Token, amount: number) => void;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -68,8 +68,16 @@ export default function GameSummaryPane(props: Props) {
                             <Grid container className={styles.allocationListBox} spacing={4}>
                                 <Grid item>{t.title}: {allocation?.amount ?? 0}</Grid>
                                 <Grid item container className={styles.allocationButtonList}>
-                                    <Grid item><IconButton size="small"><AddCircle /></IconButton></Grid>
-                                    <Grid item><IconButton size="small"><RemoveCircle /></IconButton></Grid>
+                                    <Grid item>
+                                        <IconButton size="small" onClick={() => props.onAddTokenToPlayer(player, t, 1)}>
+                                            <AddCircle />
+                                        </IconButton>
+                                    </Grid>
+                                    <Grid item>
+                                        <IconButton size="small" onClick={() => props.onAddTokenToPlayer(player, t, -1)}>
+                                            <RemoveCircle />
+                                        </IconButton>
+                                    </Grid>
                                 </Grid>
                             </Grid>
                         </ListItem>;
