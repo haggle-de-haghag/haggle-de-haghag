@@ -61,7 +61,7 @@ export default function TokenEditor(props: Props) {
             {tabIndex == 0 &&
             <TextField
                 variant="filled"
-                label="説明"
+                label="説明（HTMLが使えます）"
                 multiline
                 rows={5}
                 fullWidth
