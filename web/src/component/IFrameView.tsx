@@ -8,6 +8,7 @@ interface Props {
 const useStyle = makeStyles((theme) => ({
     iframe: {
         border: 'none',
+        width: '100%',
     }
 }));
 
