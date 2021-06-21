@@ -14,11 +14,16 @@ import jp.osak.haggledehaghag.repository.RuleRepository
 import jp.osak.haggledehaghag.repository.TokenRepository
 import org.springframework.data.repository.findByIdOrNull
 import org.springframework.stereotype.Service
+import org.springframework.transaction.PlatformTransactionManager
+import org.springframework.transaction.annotation.Transactional
+import org.springframework.transaction.support.TransactionTemplate
+import java.lang.IllegalArgumentException
 
 @Service
 class GameService(
     private val gameRepository: GameRepository,
     private val playerService: PlayerService,
+    private val ruleService: RuleService,
     private val playerRepository: PlayerRepository,
     private val ruleRepository: RuleRepository,
     private val ruleAccessRepository: RuleAccessRepository,
@@ -85,6 +90,33 @@ class GameService(
 
     fun findRule(game: Game, ruleId: Int): Rule? {
         return ruleRepository.findByIdOrNull(ruleId)?.takeIf { it.gameId == game.id }
+    }
+
+    @Transactional
+    fun deleteRule(game: Game, ruleId: Int) {
+        val rule = findRule(game, ruleId)
+            ?: throw IllegalArgumentException("Rule $ruleId does not belong to the game ${game.id}")
+        ruleService.deleteRule(rule)
+
+        // Reassign ruleNumbers to "shift" the rules to fill the position of the deleted rule.
+        val newRules = listRules(game).sortedBy { it.ruleNumber }
+            .mapIndexed { idx, r -> r.copy(ruleNumber = idx + 1) }
+        ruleService.saveAll(newRules)
+    }
+
+    @Transactional
+    fun moveRuleTo(game: Game, ruleId: Int, position: Int): Rule? {
+        val rules = listRules(game).sortedBy { it.ruleNumber }
+        val movingRule = rules.find { it.id == ruleId }
+            ?: throw IllegalArgumentException("Rule $ruleId} does not belong to the game ${game.id}")
+
+        val (head, tail) = rules.filterNot { it.id == movingRule.id }.partition { it.ruleNumber >= position }
+        val newRules = (head + movingRule + tail).mapIndexed { idx, rule ->
+            rule.copy(ruleNumber = idx + 1)
+        }
+        ruleRepository.saveAll(newRules)
+
+        return findRule(game, ruleId)
     }
 
     fun findToken(game: Game, tokenId: Int): Token? {

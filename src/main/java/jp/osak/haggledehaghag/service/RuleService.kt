@@ -21,6 +21,10 @@ open class RuleService(
         return ruleRepository.findByIdOrNull(ruleId)
     }
 
+    fun saveAll(rules: Collection<Rule>) {
+        ruleRepository.saveAll(rules)
+    }
+
     @Transactional
     open fun updateRule(rule: Rule, title: String? = null, text: String? = null, assignedPlayerIds: List<Int>): Rule {
         // Pre-flight check: assignedPlayerIds are all in the same game as rule

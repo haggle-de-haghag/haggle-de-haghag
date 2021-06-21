@@ -90,9 +90,7 @@ class GameMasterController(
         @ModelAttribute game: Game,
         @PathVariable ruleId: Int,
     ): DeleteRuleResponse {
-        val rule = gameService.findRule(game, ruleId)
-            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId does not belong to the game ${game.id}")
-        ruleService.deleteRule(rule)
+        gameService.deleteRule(game, ruleId)
         return DeleteRuleResponse(true)
     }
 
