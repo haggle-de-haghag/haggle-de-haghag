@@ -1,5 +1,5 @@
 import React from 'react';
-import {Box, List, ListItem, ListSubheader} from "@material-ui/core/index";
+import {Box, List, ListItem, ListSubheader, makeStyles} from "@material-ui/core/index";
 import {Rule, RuleId} from "../model";
 
 interface Props {
@@ -8,10 +8,19 @@ interface Props {
     onRuleClick: (r: Rule) => void;
 }
 
+const useStyles = makeStyles((theme) => ({
+    subheader: {
+        backgroundColor: theme.palette.background.paper,
+    }
+}));
+
+
 export default function RuleList(props: Props) {
+    const classes = useStyles();
+
     return (
         <Box>
-            <List subheader={<ListSubheader>ルール</ListSubheader>}>
+            <List subheader={<ListSubheader className={classes.subheader}>ルール</ListSubheader>}>
                 {props.rules.map((rule) =>
                     <ListItem
                         key={rule.id}

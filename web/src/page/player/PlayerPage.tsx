@@ -16,6 +16,7 @@ const useStyles = makeStyles((theme) => ({
     menu: {
         overflowY: 'scroll',
         height: 'calc(100vh - 200px)',
+        paddingTop: '0 !important',
     },
 }));
 

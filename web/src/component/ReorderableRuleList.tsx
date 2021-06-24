@@ -2,6 +2,7 @@ import {Rule, RuleId} from "../model";
 import {Box, List, ListItem, ListSubheader} from "@material-ui/core";
 import React from "react";
 import {DragDropContext, Draggable, Droppable, DropResult} from 'react-beautiful-dnd';
+import {makeStyles} from "@material-ui/core/index";
 
 interface Props {
     rules: Rule[];
@@ -10,7 +11,15 @@ interface Props {
     onDragEnd: (ruleId: RuleId, to: number) => void;
 }
 
+const useStyles = makeStyles((theme) => ({
+    subheader: {
+        backgroundColor: theme.palette.background.paper,
+    }
+}));
+
 export default function ReorderableRuleList(props: Props) {
+    const classes = useStyles();
+
     const onDragEnd = (result: DropResult) => {
         const dest = result.destination?.index;
         if (dest != undefined) {
@@ -23,7 +32,7 @@ export default function ReorderableRuleList(props: Props) {
         <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="rule-list">
                 {(provided, snapshot) =>
-                    <List ref={provided.innerRef} subheader={<ListSubheader>ルール</ListSubheader>} {...provided.droppableProps}>
+                    <List ref={provided.innerRef} subheader={<ListSubheader className={classes.subheader}>ルール</ListSubheader>} {...provided.droppableProps}>
                         {props.rules.map((rule, index) =>
                             <DraggableItem
                                 key={rule.id}

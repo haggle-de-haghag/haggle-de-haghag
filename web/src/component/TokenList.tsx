@@ -1,4 +1,4 @@
-import {Box, List, ListItem, ListItemAvatar, ListSubheader} from "@material-ui/core";
+import {Box, List, ListItem, ListItemAvatar, ListSubheader, makeStyles} from "@material-ui/core";
 import React from "react";
 import { Token } from "../model";
 import {Avatar} from "@material-ui/core/index";
@@ -10,11 +10,19 @@ export interface Props {
     onTokenClick: (t: Token) => void;
 }
 
+const useStyles = makeStyles((theme) => ({
+    subheader: {
+        backgroundColor: theme.palette.background.paper,
+    }
+}));
+
 export default function TokenList(props: Props) {
     const { tokens } = props;
+    const classes = useStyles();
+
     return (
         <Box>
-            <List subheader={<ListSubheader>トークン</ListSubheader>}>
+            <List subheader={<ListSubheader className={classes.subheader}>トークン</ListSubheader>}>
                 {tokens.map((token) =>
                     <ListItem
                         key={token.id}
