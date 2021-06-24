@@ -52,6 +52,11 @@ export interface UpdateRule {
     defaultAssignments?: PlayerId[];
 }
 
+export interface MoveRule {
+    ruleId: RuleId;
+    to: number;
+}
+
 export interface ChangeRuleAccess {
     playerId: PlayerId;
     ruleId: RuleId;
@@ -146,6 +151,22 @@ const slice = createSlice({
             if (state.selectedRuleId == action.payload) {
                 state.selectedRuleId = undefined;
             }
+        },
+
+        moveRule: (state, action: PayloadAction<MoveRule>) => {
+            const { ruleId, to } = action.payload;
+            const fromIndex = state.rules.findIndex((r) => r.id == ruleId);
+            const rule = state.rules[fromIndex];
+            state.rules.splice(fromIndex, 1);
+            state.rules = state.rules.slice(0, to).concat(rule, state.rules.slice(to))
+                .map((r, index) =>({
+                    ...r,
+                    ruleNumber: index + 1,
+                }));
+        },
+
+        setRules: (state, action: PayloadAction<Rule[]>) => {
+            state.rules = action.payload;
         },
 
         changeRuleAccessListInput: (state, action: PayloadAction<ChangeRuleAccess>) => {
@@ -406,6 +427,18 @@ function* addTokenToPlayerSaga(action: ReturnType<typeof actions.default.addToke
     }
 }
 
+function* moveRuleSaga(action: ReturnType<typeof actions.default.moveRule>) {
+    try {
+        const { ruleId, to } = action.payload;
+        // moveRule API expects `to` as in ruleNumber
+        const newRules: Rule[] = yield call(GameMasterRestApi.moveRule, ruleId, to + 1);
+        yield put(actions.default.setRules(newRules));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('ルールの並び替えに失敗しました'));
+    }
+}
+
 function* createWatcherSaga() {
     yield all([
         takeEvery(actions.default.createRule, createRuleSaga),
@@ -416,6 +449,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.deleteToken, deleteTokenSaga),
         takeEvery(actions.default.updateTitle, updateTitleSaga),
         takeEvery(actions.default.addTokenToPlayer, addTokenToPlayerSaga),
+        takeEvery(actions.default.moveRule, moveRuleSaga),
     ]);
 }
 

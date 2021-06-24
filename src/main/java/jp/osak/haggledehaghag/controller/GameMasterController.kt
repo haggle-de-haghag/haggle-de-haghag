@@ -61,7 +61,7 @@ class GameMasterController(
     fun listRules(
         @ModelAttribute game: Game
     ): List<Rule> {
-        return gameService.listRules(game)
+        return gameService.listRules(game).sortedBy { it.ruleNumber }
     }
 
     @PostMapping("/rules")
@@ -114,6 +114,16 @@ class GameMasterController(
             is Either.Ok -> result.data
             is Either.Err -> throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId is already assigned to player ${player.id}")
         }
+    }
+
+    @PostMapping("/rules/{ruleId}/move")
+    fun moveRule(
+        @ModelAttribute game: Game,
+        @PathVariable ruleId: Int,
+        @RequestBody request: MoveRuleRequest
+    ): List<Rule> {
+        gameService.moveRuleTo(game, ruleId, request.to)
+        return gameService.listRules(game).sortedBy { it.ruleNumber }
     }
 
     @GetMapping("/tokens")
@@ -185,6 +195,7 @@ class GameMasterController(
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class DeleteRuleResponse(val success: Boolean)
     data class AssignRuleRequest(val playerId: Int)
+    data class MoveRuleRequest(val to: Int)
     data class CreateTokenRequest(val title: String, val text: String)
 
     /**

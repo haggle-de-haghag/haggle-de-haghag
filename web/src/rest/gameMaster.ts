@@ -61,6 +61,10 @@ export async function deleteRule(ruleId: number): Promise<void> {
     return del(fullApi(`/rules/${ruleId}`));
 }
 
+export async function moveRule(ruleId: number, to: number): Promise<Rule[]> {
+    return post(fullApi(`/rules/${ruleId}/move`), { to });
+}
+
 export async function listTokens(): Promise<Token[]> {
     return get(fullApi('/tokens'));
 }

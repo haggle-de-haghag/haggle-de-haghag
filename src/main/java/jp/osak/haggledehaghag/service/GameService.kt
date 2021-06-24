@@ -106,12 +106,28 @@ class GameService(
 
     @Transactional
     fun moveRuleTo(game: Game, ruleId: Int, position: Int): Rule? {
-        val rules = listRules(game).sortedBy { it.ruleNumber }
-        val movingRule = rules.find { it.id == ruleId }
-            ?: throw IllegalArgumentException("Rule $ruleId} does not belong to the game ${game.id}")
+        val rules = listRules(game).sortedBy { it.ruleNumber }.toMutableList()
+        var index = rules.indexOfFirst { it.id == ruleId }
+        if (index == -1) {
+            throw IllegalArgumentException("Rule $ruleId} does not belong to the game ${game.id}")
+        }
 
-        val (head, tail) = rules.filterNot { it.id == movingRule.id }.partition { it.ruleNumber >= position }
-        val newRules = (head + movingRule + tail).mapIndexed { idx, rule ->
+        if (rules[index].ruleNumber > position) {
+            while (index > 0 && rules[index - 1].ruleNumber >= position) {
+                val tmp = rules[index]
+                rules[index] = rules[index - 1]
+                rules[index - 1] = tmp
+                --index
+            }
+        } else {
+            while (index < rules.size - 1 && rules[index + 1].ruleNumber <= position) {
+                val tmp = rules[index]
+                rules[index] = rules[index + 1]
+                rules[index + 1] = tmp
+                ++index
+            }
+        }
+        val newRules = rules.mapIndexed { idx, rule ->
             rule.copy(ruleNumber = idx + 1)
         }
         ruleRepository.saveAll(newRules)

@@ -1,0 +1,1 @@
+alter table rule drop constraint rule_rule_id_rule_number_key;

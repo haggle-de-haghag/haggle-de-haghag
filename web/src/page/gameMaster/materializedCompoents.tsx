@@ -1,5 +1,5 @@
 import React from 'react';
-import RuleListComponent from '../../component/RuleList';
+import RuleListComponent from '../../component/ReorderableRuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
 import TokenListComponent from '../../component/TokenList';
 import TokenEditorComponent from '../../component/TokenEditor';
@@ -15,7 +15,9 @@ export function RuleList() {
     return <RuleListComponent
         rules={rules}
         selectedRuleId={selectedRuleId}
-        onRuleClick={(r) => dispatch(actions.default.changeSelectedRule(r.id))}/>;
+        onRuleClick={(r) => dispatch(actions.default.changeSelectedRule(r.id))}
+        onDragEnd={(ruleId, to) => dispatch(actions.default.moveRule({ ruleId, to }))}
+    />;
 }
 
 export function RuleEditor() {
