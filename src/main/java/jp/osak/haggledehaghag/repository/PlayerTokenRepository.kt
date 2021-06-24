@@ -14,7 +14,7 @@ interface PlayerTokenRepository : CrudRepository<PlayerToken, Int> {
 
     @Query(
         """
-        SELECT *
+        SELECT player_token.*
         FROM player_token
         JOIN player ON player_token.player_id = player.id
         WHERE player.game_id = :gameId
