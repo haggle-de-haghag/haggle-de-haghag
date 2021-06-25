@@ -151,6 +151,7 @@ const slice = createSlice({
             if (state.selectedRuleId == action.payload) {
                 state.selectedRuleId = undefined;
             }
+            state.rules.forEach((r, index) => r.ruleNumber = index+1);
         },
 
         moveRule: (state, action: PayloadAction<MoveRule>) => {
