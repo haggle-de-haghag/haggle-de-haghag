@@ -24,14 +24,14 @@ cat db/* | psql -h localhost -p 15432 -U haggle
 Password for user haggle: haggle
 ```
 
-2. Run backend server
+3. Run backend server
 ```shell
 gradle bootRun
 ```
 
 If you are using IDE such as IntelliJ, you can also run `src/main/java/jp/osak/haggledehaghag/HaggleDeHaghagApplication.kt` as a Spring Boot application.
 
-3. Run frontend server
+4. Run frontend server
 ```shell
 cd web
 npm install
