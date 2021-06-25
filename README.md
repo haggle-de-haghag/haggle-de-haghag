@@ -38,6 +38,8 @@ npm install
 npm start
 ```
 
+5. Open http://localhost:3000 in browser.
+
 ## Contributing
 Feel free to create issues and send pull requests on GitHub.
 GitHub issue is also a preferable platform to ask questions, but you can also reach out to me at:
