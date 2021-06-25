@@ -36,6 +36,11 @@ const useStyles = makeStyles((theme) => ({
         justifyContent: 'flex-end',
         flexWrap: 'nowrap',
     },
+    legendAvatar: {
+        width: theme.spacing(3),
+        height: theme.spacing(3),
+        display: 'inline-flex',
+    },
 }));
 
 export default function GameSummaryPane(props: Props) {
@@ -92,7 +97,14 @@ export default function GameSummaryPane(props: Props) {
         <TableHead>
             <TableRow>
                 <TableCell>プレイヤー</TableCell>
-                <TableCell>ルール所持状況</TableCell>
+                <TableCell>
+                    <p>ルール所持状況</p>
+                    <Grid container spacing={2}>
+                        <Grid item><Avatar className={`${styles.assignedRule} ${styles.legendAvatar}`} >1</Avatar>: 初期割当</Grid>
+                        <Grid item><Avatar className={`${styles.sharedRule} ${styles.legendAvatar}`}>1</Avatar>: 見た</Grid>
+                        <Grid item><Avatar className={`${styles.unknownRule} ${styles.legendAvatar}`}>1</Avatar>: 未知</Grid>
+                    </Grid>
+                </TableCell>
                 <TableCell>トークン所持状況</TableCell>
                 <TableCell>プレイヤーキー</TableCell>
             </TableRow>
