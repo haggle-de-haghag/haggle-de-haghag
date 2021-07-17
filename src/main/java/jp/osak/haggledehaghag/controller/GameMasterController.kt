@@ -190,6 +190,13 @@ class GameMasterController(
         return AddTokenToPlayerResponse(playerToken.amount)
     }
 
+    @DeleteMapping("/players/{playerId}")
+    fun kickPlayer(@ModelAttribute game: Game, @PathVariable playerId: Int): Player {
+        val player = gameService.findPlayer(game, playerId)
+            ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Player $playerId does not belong to the game ${game.id}")
+        return gameService.kickPlayer(game, player)
+    }
+
     data class UpdateTitleRequest(val title: String)
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)

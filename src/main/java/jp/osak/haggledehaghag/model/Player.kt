@@ -7,4 +7,5 @@ data class Player(
     val gameId: Int,
     val displayName: String,
     val playerKey: String,
+    val deleted: Boolean,
 )

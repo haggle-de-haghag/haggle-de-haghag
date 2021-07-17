@@ -65,7 +65,7 @@ class GameService(
     }
 
     fun listPlayers(game: Game): List<Player> {
-        return playerRepository.findByGameId(game.id)
+        return playerRepository.findByGameIdAndDeleted(game.id, false)
     }
 
     fun listRules(game: Game): List<Rule> {
@@ -109,7 +109,7 @@ class GameService(
         val rules = listRules(game).sortedBy { it.ruleNumber }.toMutableList()
         var index = rules.indexOfFirst { it.id == ruleId }
         if (index == -1) {
-            throw IllegalArgumentException("Rule $ruleId} does not belong to the game ${game.id}")
+            throw IllegalArgumentException("Rule $ruleId does not belong to the game ${game.id}")
         }
 
         if (rules[index].ruleNumber > position) {
@@ -142,6 +142,11 @@ class GameService(
     fun updateTitle(game: Game, title: String): Game {
         val newGame = game.copy(title = title)
         return gameRepository.save(newGame)
+    }
+
+    fun kickPlayer(game: Game, player: Player): Player {
+        require(player.gameId == game.id) { "Player ${player.id} does not belong to game ${game.id}" }
+        return playerService.kick(player)
     }
 
     private fun generateKey(base: String): String {

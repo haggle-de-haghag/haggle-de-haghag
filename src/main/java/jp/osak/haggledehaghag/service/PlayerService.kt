@@ -27,7 +27,7 @@ class PlayerService(
 ) {
     fun createNewPlayer(gameId: Int, displayName: String): Player {
         val playerKey = "pl-${generateKey("$gameId-$displayName")}"
-        val player = Player(0, gameId, displayName, playerKey)
+        val player = Player(0, gameId, displayName, playerKey, false)
         playerRepository.save(player)
         return player
     }
@@ -147,6 +147,11 @@ class PlayerService(
      */
     fun shareRule(player: Player, to: Player, rule: Rule): Boolean {
         return ruleService.share(rule, player, to)
+    }
+
+    fun kick(player: Player): Player {
+        val newPlayer = player.copy(deleted = true)
+        return playerRepository.save(newPlayer)
     }
 
     private fun generateKey(base: String): String {
