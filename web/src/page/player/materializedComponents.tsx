@@ -96,11 +96,17 @@ export function GiveTokenPane() {
 
     const onAmountChange = (amount: number) => dispatch(actions.default.setAmountInput(amount));
     const onPlayerSelect = (playerId: PlayerId) => dispatch(actions.default.setSelectedPlayerId(playerId));
-    const onGiveButtonClick = () => dispatch(actions.default.giveToken({
-        tokenId: token.id,
-        playerId: state.selectedPlayerId,
-        amount: state.amountInput,
-    }));
+    const onGiveButtonClick = () => {
+        const player = state.players.find((p) => p.id == state.selectedPlayerId);
+        if (player == undefined) {
+            throw Error(`Cannot find player with id=${state.selectedPlayerId}`);
+        }
+        dispatch(actions.default.giveToken({
+            token,
+            player,
+            amount: state.amountInput,
+        }));
+    };
 
     return <GiveTokenComponent
         token={token}

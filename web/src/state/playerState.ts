@@ -1,6 +1,6 @@
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import {combineReducers, configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
-import {all, call, delay, put, race, takeEvery} from "redux-saga/effects";
+import {all, call, delay, put, race, takeEvery, select} from "redux-saga/effects";
 import * as PlayerApi from "../rest/player";
 import {FullPlayerInfo} from "../rest/player";
 import createSagaMiddleware from "redux-saga";
@@ -8,7 +8,6 @@ import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {retryForever} from "./sagaUtil";
 import {createNotificationState, NotificationState} from "./subState/notificationState";
 import {Simulate} from "react-dom/test-utils";
-import error = Simulate.error;
 import {NotFoundError} from "../rest/common";
 import {knownGames} from "../storage/knownGames";
 
@@ -36,8 +35,8 @@ export interface ShareRule {
 }
 
 export interface GiveToken {
-    playerId: PlayerId;
-    tokenId: TokenId;
+    player: ForeignPlayer;
+    token: Token;
     amount: number;
 }
 
@@ -164,9 +163,9 @@ function* shareRuleSaga(action: ReturnType<typeof actions.default.shareRule>) {
     try {
         const success: boolean = yield call(PlayerApi.shareRule, payload.rule.id, payload.player.id);
         if (success) {
-            yield put(actions.notification.showNotificationMessage('ルールを共有しました。'));
+            yield put(actions.notification.showNotificationMessage(`${payload.player.displayName}とルールを共有しました。`));
         } else {
-            yield put(actions.notification.showNotificationMessage('ルールを共有できませんでした。'));
+            yield put(actions.notification.showNotificationMessage(`${payload.player.displayName}とルールを共有できませんでした。`));
         }
     } catch (e) {
         console.error('API error: shareRule', e);
@@ -177,11 +176,11 @@ function* shareRuleSaga(action: ReturnType<typeof actions.default.shareRule>) {
 function* giveTokenSaga(action: ReturnType<typeof actions.default.giveToken>) {
     const payload = action.payload;
     try {
-        const success: boolean = yield call(PlayerApi.giveToken, payload.tokenId, payload.playerId, payload.amount);
+        const success: boolean = yield call(PlayerApi.giveToken, payload.token.id, payload.player.id, payload.amount);
         if (success) {
-            yield put(actions.notification.showNotificationMessage(`トークンを渡しました。`));
+            yield put(actions.notification.showNotificationMessage(`${payload.player.displayName}に${payload.token.title}を渡しました。`));
         } else {
-            yield put(actions.notification.showNotificationMessage('トークンを渡せませんでした。'));
+            yield put(actions.notification.showNotificationMessage(`${payload.player.displayName}に${payload.token.title}を渡せませんでした。`));
         }
     } catch (e) {
         console.error('API error: giveToken', e);
