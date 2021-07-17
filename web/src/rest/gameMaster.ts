@@ -86,6 +86,10 @@ export async function addTokenToPlayer(playerId: number, tokenId: number, amount
     return response.newAmount;
 }
 
+export function createStubPlayers(amount: number): AbortablePromise<Player[]> {
+    return post(fullApi(`/players/stub`), { amount });
+}
+
 export function kickPlayer(playerId: number): AbortablePromise<Player> {
     return del(fullApi(`/players/${playerId}`));
 }

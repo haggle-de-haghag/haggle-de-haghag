@@ -35,12 +35,9 @@ export default function EditScreen() {
             <Box><TokenList/></Box>
             <Box><Button variant="contained" onClick={onNewTokenClick}>新規トークン</Button></Box>
         </Grid>
-        <Grid item xs={7}>
+        <Grid item xs={9}>
             <RuleEditor/>
             <TokenEditor/>
-        </Grid>
-        <Grid item xs={2}>
-            <PlayerList/>
         </Grid>
     </Grid>;
 }

@@ -175,6 +175,21 @@ class GameMasterController(
         return gameService.listPlayers(game)
     }
 
+    @PostMapping("/players/stub")
+    fun createStubPlayers(
+        @ModelAttribute game: Game,
+        @RequestBody request: CreateStubPlayersRequest
+    ): List<Player> {
+        if (!(1..20).contains(request.amount)) {
+            throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Amount must be within 1 to 20: Got ${request.amount}")
+        }
+        val currentPlayers = gameService.listPlayers(game)
+        repeat(request.amount) { i ->
+            gameService.createNewPlayer(game, "プレイヤー${currentPlayers.size + i + 1}")
+        }
+        return gameService.listPlayers(game)
+    }
+
     @PostMapping("/players/{playerId}/tokens/{tokenId}/add")
     fun addTokenToPlayer(
         @ModelAttribute game: Game,
@@ -213,4 +228,5 @@ class GameMasterController(
     data class DeleteTokenResponse(val success: Boolean)
     data class AddTokenToPlayerRequest(val amount: Int)
     data class AddTokenToPlayerResponse(val newAmount: Int)
+    data class CreateStubPlayersRequest(val amount: Int)
 }

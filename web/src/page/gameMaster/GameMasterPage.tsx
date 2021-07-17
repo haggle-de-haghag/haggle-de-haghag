@@ -17,6 +17,7 @@ import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState
 import {Alert} from "@material-ui/lab";
 import {EditableLabel} from "../../component/EditableLabel";
 import EditScreen from "./EditScreen";
+import {MiscScreen} from "./MiscScreen";
 
 const useStyles = makeStyles((theme) => ({
     titleEdit: {
@@ -58,11 +59,13 @@ export default function GameMasterPage() {
                 <Tabs value={tabIndex} onChange={(_, value) => setTabIndex(value)}>
                     <Tab label="ルール編集" />
                     <Tab label="ゲーム状況" />
+                    <Tab label="便利機能" />
                 </Tabs>
             </Grid>
             <Grid item container spacing={3}>
                 {tabIndex == 0 && <EditScreen />}
                 {tabIndex == 1 && <GameSummaryPane />}
+                {tabIndex == 2 && <MiscScreen />}
             </Grid>
             <Snackbar
                 anchorOrigin={{ vertical: 'top', horizontal: 'center' }}

@@ -283,6 +283,8 @@ const slice = createSlice({
 
         updateTitle: (state, action: PayloadAction<string>) => state,
 
+        createStubPlayers: (state, action: PayloadAction<number>) => {},
+
         kickPlayer: (state, action: PayloadAction<Player>) => {
             const player = action.payload;
             const index = state.players.findIndex((p) => p.id == player.id);
@@ -290,6 +292,10 @@ const slice = createSlice({
                 return state;
             }
             state.players = state.players.splice(index, 1);
+        },
+
+        setPlayers: (state, action: PayloadAction<Player[]>) => {
+            state.players = action.payload;
         },
 
         beginUpdate: (state, action: PayloadAction<string>) => {
@@ -449,6 +455,18 @@ function* moveRuleSaga(action: ReturnType<typeof actions.default.moveRule>) {
     }
 }
 
+function* createStubPlayersSaga(action: ReturnType<typeof actions.default.createStubPlayers>) {
+    try {
+        const amount = action.payload;
+        const players: Player[] = yield call(GameMasterRestApi.createStubPlayers, amount);
+        yield put(actions.default.setPlayers(players));
+        yield put(actions.notification.showNotificationMessage('仮プレイヤーを作成しました'));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('仮プレイヤーの作成に失敗しました'));
+    }
+}
+
 function* kickPlayerSaga(action: ReturnType<typeof actions.default.kickPlayer>) {
     try {
         const player = action.payload;
@@ -470,6 +488,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.updateTitle, updateTitleSaga),
         takeEvery(actions.default.addTokenToPlayer, addTokenToPlayerSaga),
         takeEvery(actions.default.moveRule, moveRuleSaga),
+        takeEvery(actions.default.createStubPlayers, createStubPlayersSaga),
         takeEvery(actions.default.kickPlayer, kickPlayerSaga),
     ]);
 }
