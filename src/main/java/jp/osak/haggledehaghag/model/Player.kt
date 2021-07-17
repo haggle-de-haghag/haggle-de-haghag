@@ -7,5 +7,11 @@ data class Player(
     val gameId: Int,
     val displayName: String,
     val playerKey: String,
-    val deleted: Boolean,
-)
+    val state: State,
+) {
+    enum class State {
+        ACTIVE,
+        STUB,
+        DELETED,
+    }
+}

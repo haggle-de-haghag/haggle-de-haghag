@@ -35,8 +35,10 @@ class GameController(
 
     @PostMapping("{gameKey}/join")
     fun join(@ModelAttribute game: Game, @RequestBody request: JoinRequest): Player {
-        val player = gameService.createNewPlayer(game, request.playerName)
-        return player
+        repeat(5) {
+            return gameService.createNewPlayer(game, request.playerName)
+        }
+        throw ResponseStatusException(HttpStatus.CONFLICT, "Cannot join game ${game.id}")
     }
 
     @GetMapping("/{gameKey}/players")

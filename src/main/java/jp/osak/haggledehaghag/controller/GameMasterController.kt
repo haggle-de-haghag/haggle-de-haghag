@@ -172,7 +172,7 @@ class GameMasterController(
     fun listPlayers(
         @ModelAttribute game: Game,
     ): List<Player> {
-        return gameService.listPlayers(game)
+        return gameService.listPlayers(game).sortedBy { it.id }
     }
 
     @PostMapping("/players/stub")
@@ -185,7 +185,7 @@ class GameMasterController(
         }
         val currentPlayers = gameService.listPlayers(game)
         repeat(request.amount) { i ->
-            gameService.createNewPlayer(game, "プレイヤー${currentPlayers.size + i + 1}")
+            gameService.createNewStubPlayer(game, "プレイヤー${currentPlayers.size + i + 1}")
         }
         return gameService.listPlayers(game)
     }

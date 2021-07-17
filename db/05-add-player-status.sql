@@ -1,0 +1,2 @@
+ALTER TABLE player DROP COLUMN deleted;
+ALTER TABLE player ADD COLUMN state varchar(16) DEFAULT 'ACTIVE';

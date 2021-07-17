@@ -25,9 +25,9 @@ class PlayerService(
     private val tokenRepository: TokenRepository,
     private val playerTokenRepository: PlayerTokenRepository,
 ) {
-    fun createNewPlayer(gameId: Int, displayName: String): Player {
+    fun createNewPlayer(gameId: Int, displayName: String, state: Player.State): Player {
         val playerKey = "pl-${generateKey("$gameId-$displayName")}"
-        val player = Player(0, gameId, displayName, playerKey, false)
+        val player = Player(0, gameId, displayName, playerKey, state)
         playerRepository.save(player)
         return player
     }
@@ -38,6 +38,12 @@ class PlayerService(
 
     fun findPlayer(playerKey: String): Player? {
         return playerRepository.findByPlayerKey(playerKey)
+    }
+
+    fun activate(player: Player, name: String): Player {
+        require(player.state == Player.State.STUB) { "Player ${player.id} is not a stub player" }
+        val newPlayer = player.copy(displayName = name, state = Player.State.ACTIVE)
+        return playerRepository.save(newPlayer)
     }
 
     fun updateName(player: Player, name: String): Player {
@@ -150,7 +156,7 @@ class PlayerService(
     }
 
     fun kick(player: Player): Player {
-        val newPlayer = player.copy(deleted = true)
+        val newPlayer = player.copy(state = Player.State.DELETED)
         return playerRepository.save(newPlayer)
     }
 

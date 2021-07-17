@@ -49,8 +49,18 @@ class GameService(
         return gameRepository.findByMasterKey(masterKey)
     }
 
+    @Transactional(rollbackFor = [Exception::class])
     fun createNewPlayer(game: Game, displayName: String): Player {
-        return playerService.createNewPlayer(game.id, displayName)
+        val stubPlayer = listStubPlayers(game).firstOrNull()
+        return if (stubPlayer != null) {
+            playerService.activate(stubPlayer, displayName)
+        } else {
+            playerService.createNewPlayer(game.id, displayName, Player.State.ACTIVE)
+        }
+    }
+
+    fun createNewStubPlayer(game: Game, displayName: String): Player {
+        return playerService.createNewPlayer(game.id, displayName, Player.State.STUB)
     }
 
     fun createNewRule(game: Game, title: String, text: String): Rule {
@@ -65,7 +75,11 @@ class GameService(
     }
 
     fun listPlayers(game: Game): List<Player> {
-        return playerRepository.findByGameIdAndDeleted(game.id, false)
+        return playerRepository.findByGameIdAndStateIn(game.id, setOf(Player.State.ACTIVE, Player.State.STUB))
+    }
+
+    fun listStubPlayers(game: Game): List<Player> {
+        return playerRepository.findByGameIdAndStateIn(game.id, setOf(Player.State.STUB))
     }
 
     fun listRules(game: Game): List<Rule> {
