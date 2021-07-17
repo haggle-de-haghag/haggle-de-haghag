@@ -48,7 +48,7 @@ export function LobbyPage() {
                     <List>
                         {knownGames.knownGameMasters.map((kg) =>
                             <ListItem key={kg.masterKey}><Link href={`game_master.html#${kg.masterKey}`}>{kg.title}</Link></ListItem>
-                        )}
+                        ).reverse()}
                     </List>
                 </Box>
             </Box>
@@ -73,7 +73,7 @@ export function LobbyPage() {
                 <List>
                     {knownGames.knownGames.map((kg) =>
                         <ListItem key={kg.gameKey}><Link href={`player.html#${kg.gameKey}`}>{kg.title}</Link></ListItem>
-                    )}
+                    ).reverse()}
                 </List>
             </Box>
         </Box>
