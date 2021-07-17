@@ -82,6 +82,10 @@ class GameService(
         return playerRepository.findByGameIdAndStateIn(game.id, setOf(Player.State.STUB))
     }
 
+    fun listActivePlayers(game: Game): List<Player> {
+        return playerRepository.findByGameIdAndStateIn(game.id, setOf(Player.State.ACTIVE))
+    }
+
     fun listRules(game: Game): List<Rule> {
         return ruleRepository.findByGameId(game.id)
     }

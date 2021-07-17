@@ -39,7 +39,7 @@ class PlayerController(
     fun listFullPlayerInfo(@ModelAttribute player: Player): FullPlayerInfoView {
         val game = gameService.findGame(player.gameId)
             ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
-        val players = gameService.listPlayers(game)
+        val players = gameService.listActivePlayers(game)
             .filter { it.id != player.id }
             .map { ForeignPlayerView(it) }
         val rules = playerService.findAllAccessibleRules(player)
