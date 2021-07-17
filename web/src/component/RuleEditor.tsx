@@ -68,7 +68,7 @@ export default function RuleEditor(props: Props) {
             {tabIndex == 0 &&
                 <TextField
                     variant="filled"
-                    label="ルール文章（HTMLが使えます）"
+                    label="ルール文章（最大3000文字。HTMLが使えます）"
                     multiline
                     rows={5}
                     fullWidth
