@@ -11,13 +11,7 @@ import jp.osak.haggledehaghag.viewmodel.FullPlayerInfoView
 import jp.osak.haggledehaghag.viewmodel.RuleView
 import jp.osak.haggledehaghag.viewmodel.TokenView
 import org.springframework.http.HttpStatus
-import org.springframework.web.bind.annotation.GetMapping
-import org.springframework.web.bind.annotation.ModelAttribute
-import org.springframework.web.bind.annotation.PathVariable
-import org.springframework.web.bind.annotation.PostMapping
-import org.springframework.web.bind.annotation.RequestBody
-import org.springframework.web.bind.annotation.RequestMapping
-import org.springframework.web.bind.annotation.RestController
+import org.springframework.web.bind.annotation.*
 import org.springframework.web.server.ResponseStatusException
 
 /**
@@ -34,6 +28,11 @@ class PlayerController(
     fun addPlayer(@PathVariable playerKey: String): Player {
         return playerService.findPlayer(playerKey)
             ?: throw ResponseStatusException(HttpStatus.NOT_FOUND, "Invalid player key: $playerKey")
+    }
+
+    @PatchMapping("/name")
+    fun updateName(@ModelAttribute player: Player, @RequestBody request: UpdateNameRequest): Player {
+        return playerService.updateName(player, request.name)
     }
 
     @GetMapping
@@ -99,6 +98,7 @@ class PlayerController(
         return ShareRuleResult(success)
     }
 
+    data class UpdateNameRequest(val name: String)
     data class ShareRuleRequest(val playerId: Int)
     data class ShareRuleResult(val success: Boolean)
     data class GiveTokenRequest(val playerId: Int, val amount: Int)

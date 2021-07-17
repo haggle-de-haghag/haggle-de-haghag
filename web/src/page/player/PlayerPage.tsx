@@ -1,6 +1,6 @@
 import React from "react";
 import {Box, CircularProgress, Divider, Grid, makeStyles, Snackbar, Typography} from "@material-ui/core/index";
-import {usePLSelector} from "../../state/playerState";
+import {actions, usePLDispatch, usePLSelector} from "../../state/playerState";
 import {
     GiveTokenPane,
     RuleList,
@@ -11,8 +11,12 @@ import {
     useSelectedToken
 } from "./materializedComponents";
 import { Alert } from "@material-ui/lab";
+import {EditableLabel} from "../../component/EditableLabel";
 
 const useStyles = makeStyles((theme) => ({
+    playerNameEdit: {
+        fontSize: theme.typography.h3.fontSize,
+    },
     menu: {
         overflowY: 'scroll',
         height: 'calc(100vh - 200px)',
@@ -28,11 +32,14 @@ export default function PlayerPage() {
         notification: state.notification.message,
         updating: state.updating,
     }));
+    const dispatch = usePLDispatch();
+    const onPlayerNameUpdate = (name: string) => dispatch(actions.default.updateName(name));
     const classes = useStyles();
 
     return <Grid container direction="column" spacing={2}>
         <Grid item container alignItems="center">
-            <Grid item><Typography variant="h3">{player.displayName} - {gameTitle}</Typography></Grid>
+            <Grid item><EditableLabel className={classes.playerNameEdit} labelText={player.displayName} onUpdate={onPlayerNameUpdate} /></Grid>
+            <Grid item><Typography variant="h3">&nbsp;- {gameTitle}</Typography></Grid>
             <Grid item>{updating && <CircularProgress />}</Grid>
         </Grid>
         <Grid item container spacing={3}>

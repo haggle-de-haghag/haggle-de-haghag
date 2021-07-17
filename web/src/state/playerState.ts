@@ -68,8 +68,13 @@ const slice = createSlice({
         notification: {},
     } as PlayerState,
     reducers: {
+        updateName: (state, action: PayloadAction<string>) => state,
         shareRule: (state, action: PayloadAction<ShareRule>) => state,
         giveToken: (state, action: PayloadAction<GiveToken>) => state,
+
+        setName: (state, action: PayloadAction<string>) => {
+            state.player.displayName = action.payload;
+        },
 
         setSelectedRuleId: (state, action: PayloadAction<RuleId>) => {
             state.selectedRuleId = action.payload;
@@ -143,6 +148,17 @@ export const actions = {
     notification: notificationState.slice.actions,
 };
 
+function* updateNameSaga(action: ReturnType<typeof actions.default.updateName>) {
+    const payload = action.payload;
+    try {
+        const newPlayer: Player = yield call(PlayerApi.updateName, payload);
+        yield put(actions.default.setName(newPlayer.displayName));
+    } catch (e) {
+        console.error('API error: updateName', e);
+        yield put(actions.errorNotification.showNotificationMessage('名前の変更に失敗しました。もう一度試してみてください。'));
+    }
+}
+
 function* shareRuleSaga(action: ReturnType<typeof actions.default.shareRule>) {
     const payload = action.payload;
     try {
@@ -175,6 +191,7 @@ function* giveTokenSaga(action: ReturnType<typeof actions.default.giveToken>) {
 
 function* installWatcherSaga() {
     yield all([
+        takeEvery(actions.default.updateName, updateNameSaga),
         takeEvery(actions.default.shareRule, shareRuleSaga),
         takeEvery(actions.default.giveToken, giveTokenSaga),
     ])

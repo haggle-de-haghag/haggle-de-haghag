@@ -40,6 +40,11 @@ class PlayerService(
         return playerRepository.findByPlayerKey(playerKey)
     }
 
+    fun updateName(player: Player, name: String): Player {
+        val newPlayer = player.copy(displayName = name)
+        return playerRepository.save(newPlayer)
+    }
+
     fun findAllAccessibleRules(player: Player): List<RuleWithAccess> {
         val ruleAccesses = ruleAccessRepository.findAllByPlayerId(player.id)
         val ruleIds = ruleAccesses.map { it.ruleId }

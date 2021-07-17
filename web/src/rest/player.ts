@@ -1,4 +1,4 @@
-import {AbortablePromise, get, post} from "./common";
+import {AbortablePromise, get, patch, post} from "./common";
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 
 interface Config {
@@ -21,6 +21,10 @@ export interface FullPlayerInfo {
     players: ForeignPlayer[];
     rules: Rule[];
     tokens: Token[];
+}
+
+export function updateName(name: string): AbortablePromise<Player> {
+    return patch(`/players/${config.playerKey}/name`, { name });
 }
 
 export function listFullInfo(): AbortablePromise<FullPlayerInfo> {
