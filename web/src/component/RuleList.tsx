@@ -1,6 +1,6 @@
 import React from 'react';
 import {Box, List, ListItem, ListSubheader, makeStyles} from "@material-ui/core/index";
-import {Rule, RuleId} from "../model";
+import {AccessType, Rule, RuleId} from "../model";
 
 interface Props {
     rules: Rule[];
@@ -11,12 +11,22 @@ interface Props {
 const useStyles = makeStyles((theme) => ({
     subheader: {
         backgroundColor: theme.palette.background.paper,
+    },
+    assignedRule: {
+        backgroundColor: '#e0e0ff',
+    },
+    sharedRule: {
+        backgroundColor: '#ffffd0',
     }
 }));
 
 
 export default function RuleList(props: Props) {
     const classes = useStyles();
+    const accessTypeClass: {[key in AccessType]: string} = {
+        ASSIGNED: classes.assignedRule,
+        SHARED: classes.sharedRule
+    };
 
     return (
         <Box>
@@ -27,6 +37,7 @@ export default function RuleList(props: Props) {
                         button
                         selected={rule.id == props.selectedRuleId}
                         onClick={() => props.onRuleClick(rule)}
+                        className={accessTypeClass[rule.accessType]}
                     >
                         {rule.ruleNumber}: {rule.title}
                     </ListItem>
