@@ -10,6 +10,7 @@ interface Props {
     tokens: Token[];
     tokenAllocationMap: TokenAllocationMap;
     onAddTokenToPlayer: (player: Player, token: Token, amount: number) => void;
+    onKick: (player: Player) => void;
 }
 
 const useStyles = makeStyles((theme) => ({
@@ -48,7 +49,10 @@ export default function GameSummaryPane(props: Props) {
 
     const renderPlayerRow = (player: Player) => {
         return <TableRow key={player.id}>
-            <TableCell>{player.displayName}</TableCell>
+            <TableCell>
+                {player.displayName}<br />
+                <Button variant="contained" size="small" color="secondary" onClick={() => props.onKick(player)}>Kick</Button>
+            </TableCell>
             <TableCell>
                 <Box className={styles.ruleListBox}>
                     {props.rules.map((r) => {

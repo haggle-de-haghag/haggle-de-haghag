@@ -283,6 +283,15 @@ const slice = createSlice({
 
         updateTitle: (state, action: PayloadAction<string>) => state,
 
+        kickPlayer: (state, action: PayloadAction<Player>) => {
+            const player = action.payload;
+            const index = state.players.findIndex((p) => p.id == player.id);
+            if (index == -1) {
+                return state;
+            }
+            state.players = state.players.splice(index, 1);
+        },
+
         beginUpdate: (state, action: PayloadAction<string>) => {
             state.updating = action.payload;
         },
@@ -440,6 +449,16 @@ function* moveRuleSaga(action: ReturnType<typeof actions.default.moveRule>) {
     }
 }
 
+function* kickPlayerSaga(action: ReturnType<typeof actions.default.kickPlayer>) {
+    try {
+        const player = action.payload;
+        yield call(GameMasterRestApi.kickPlayer, player.id);
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('プレイヤーのKickに失敗しました'));
+    }
+}
+
 function* createWatcherSaga() {
     yield all([
         takeEvery(actions.default.createRule, createRuleSaga),
@@ -451,6 +470,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.updateTitle, updateTitleSaga),
         takeEvery(actions.default.addTokenToPlayer, addTokenToPlayerSaga),
         takeEvery(actions.default.moveRule, moveRuleSaga),
+        takeEvery(actions.default.kickPlayer, kickPlayerSaga),
     ]);
 }
 

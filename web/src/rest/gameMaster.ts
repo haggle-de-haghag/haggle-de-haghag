@@ -86,6 +86,10 @@ export async function addTokenToPlayer(playerId: number, tokenId: number, amount
     return response.newAmount;
 }
 
+export function kickPlayer(playerId: number): AbortablePromise<Player> {
+    return del(fullApi(`/players/${playerId}`));
+}
+
 function fullApi(api: string): string {
     return `/game_master/${config.gameMasterKey}${api}`;
 }

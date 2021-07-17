@@ -123,6 +123,12 @@ export function GameSummaryPane() {
         dispatch(actions.default.addTokenToPlayer({ playerId: player.id, tokenId: token.id, amount }));
     }
 
+    const onKick = (player: Player) => {
+        if (window.confirm(`本当に${player.displayName}をKickしますか？`)) {
+            dispatch(actions.default.kickPlayer(player));
+        }
+    }
+
     return <GameSummaryPaneComponent
         players={players}
         rules={rules}
@@ -130,5 +136,6 @@ export function GameSummaryPane() {
         tokens={tokens}
         tokenAllocationMap={tokenAllocationMap}
         onAddTokenToPlayer={onAddTokenToPlayer}
+        onKick={onKick}
     />;
 }
