@@ -1,0 +1,8 @@
+<mat-chip
+        [color]="color"
+        [selected]="color != undefined"
+        (click)="emit()"
+>
+    <mat-icon *ngIf="accessType == 'ASSIGNED'">done</mat-icon>
+    {{ player.displayName }}
+</mat-chip>

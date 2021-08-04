@@ -1,0 +1,11 @@
+.main {
+  display: flex;
+
+  .menu {
+    flex-basis: 20%;
+  }
+
+  .view {
+    flex-grow: 1;
+  }
+}

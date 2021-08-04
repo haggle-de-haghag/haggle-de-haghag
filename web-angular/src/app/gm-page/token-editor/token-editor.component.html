@@ -1,0 +1,8 @@
+<mat-form-field appearance="fill" style="width: 100%">
+    <mat-label>タイトル</mat-label>
+    <input matInput [ngModel]="token.title">
+</mat-form-field>
+
+<app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [html]="token.text"></app-html-editor>
+
+<app-allocation-table [token]="token"></app-allocation-table>

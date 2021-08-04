@@ -1,0 +1,15 @@
+.root {
+  display: flex;
+}
+
+.menu {
+  flex-basis: 25%;
+  height: calc(100vh - 300px);
+  overflow-y: scroll;
+  padding: 16px;
+}
+
+.view {
+  flex-grow: 1;
+  padding: 16px;
+}

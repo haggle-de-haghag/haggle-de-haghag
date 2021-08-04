@@ -1,0 +1,9 @@
+<div *ngIf="ruleListService.selectedRule != undefined" class="root">
+    <div class="view">
+        <h3>{{ ruleListService.selectedRule.title }}</h3>
+        <div>{{ ruleListService.selectedRule.text}}</div>
+    </div>
+    <div class="share">
+        <app-player-list [rule]="ruleListService.selectedRule"></app-player-list>
+    </div>
+</div>

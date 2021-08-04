@@ -1,0 +1,23 @@
+<table mat-table [dataSource]="players">
+    <ng-container matColumnDef="name">
+        <th mat-header-cell *matHeaderCellDef>プレイヤー名</th>
+        <td mat-cell *matCellDef="let player">{{ player.displayName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="amount">
+        <th mat-header-cell *matHeaderCellDef>割当</th>
+        <td mat-cell *matCellDef="let player">
+            <mat-form-field appearance="fill">
+                <input matInput
+                       type="number"
+                       min="0"
+                       max="100"
+                       [value]="'' + (allocationMap[player.id] ?? 0)"
+                       (blur)="saveAmount(player, $event)">
+            </mat-form-field>
+        </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+</table>

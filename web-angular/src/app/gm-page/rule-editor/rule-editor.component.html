@@ -1,0 +1,17 @@
+<mat-form-field appearance="fill" style="width: 100%">
+    <mat-label>タイトル</mat-label>
+    <input matInput [ngModel]="rule.title">
+</mat-form-field>
+
+<app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [html]="rule.text"></app-html-editor>
+
+<div>
+    <p>初期割り当て</p>
+    <mat-chip-list>
+        <app-assignment-chip
+            *ngFor="let player of players"
+            [player]="player"
+            [rule]="rule"
+        ></app-assignment-chip>
+    </mat-chip-list>
+</div>
