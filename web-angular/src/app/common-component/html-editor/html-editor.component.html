@@ -2,7 +2,7 @@
     <mat-tab label="HTML">
         <mat-form-field appearance="fill" class="editor">
             <mat-label>{{title}}</mat-label>
-            <textarea matInput [(ngModel)]="html"></textarea>
+            <textarea matInput [(ngModel)]="htmlProp" (blur)="blur.emit()"></textarea>
         </mat-form-field>
     </mat-tab>
     <mat-tab label="プレビュー">

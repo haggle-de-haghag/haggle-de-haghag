@@ -1,6 +1,6 @@
-import {Component, Input, OnInit} from '@angular/core';
+import {Component, Input, OnChanges, SimpleChanges} from '@angular/core';
 import {DBService} from "../db.service";
-import {Player, Rule} from "../../model";
+import {Player, Rule, RuleId} from "../../model";
 import {ThemePalette} from "@angular/material/core";
 
 @Component({
@@ -8,16 +8,21 @@ import {ThemePalette} from "@angular/material/core";
   templateUrl: './rule-editor.component.html',
   styleUrls: ['./rule-editor.component.scss']
 })
-export class RuleEditorComponent implements OnInit {
-  @Input()
-  rule!: Rule;
+export class RuleEditorComponent implements OnChanges {
+  @Input() ruleId!: RuleId;
+
+  rule!: Rule | undefined;
 
   constructor(private dbService: DBService) { }
 
-  ngOnInit(): void {
+  ngOnChanges(changes: SimpleChanges) {
+    const change = changes['ruleId'];
+    if (change != undefined) {
+      this.rule = this.dbService.rules.find((r) => r.id == change.currentValue);
+    }
   }
 
-  get accessList() { return this.dbService.ruleAccessList[this.rule.id]; }
+  get accessList() { return this.dbService.ruleAccessList[this.ruleId]; }
   get players() { return this.dbService.players; }
 
   chipColor(player: Player): ThemePalette | undefined {

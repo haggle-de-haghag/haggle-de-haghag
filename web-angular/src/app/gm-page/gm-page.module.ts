@@ -15,7 +15,6 @@ import {BrowserAnimationsModule} from "@angular/platform-browser/animations";
 import {BrowserModule} from "@angular/platform-browser";
 import { AssignmentChipComponent } from './rule-editor/assignment-chip.component';
 import {MatIconModule} from "@angular/material/icon";
-import { AllocationTableComponent } from './token-editor/allocation-table.component';
 import {MatTableModule} from "@angular/material/table";
 import { ItemListComponent } from './item-list/item-list.component';
 
@@ -25,7 +24,6 @@ import { ItemListComponent } from './item-list/item-list.component';
       RuleEditorComponent,
       TokenEditorComponent,
       AssignmentChipComponent,
-      AllocationTableComponent,
       ItemListComponent,
   ],
     imports: [

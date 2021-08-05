@@ -1,17 +1,32 @@
 import { Injectable } from '@angular/core';
-import {Player, Token} from "../model";
+import {Player, Token, TokenId} from "../model";
 import {DBService} from "./db.service";
+import {Observable} from "rxjs";
 
 @Injectable({
   providedIn: 'root'
 })
 export class TokenListService {
-  selectedToken: Token | undefined;
-
   constructor(private dbService: DBService) { }
 
-  selectToken(token: Token) {
-    this.selectedToken = token;
+  getToken(tokenId: TokenId) {
+    return new Observable<TokenWithAllocation>((subscriber) => {
+      const token = this.dbService.tokens.find((t) => t.id == tokenId);
+      if (token == undefined) {
+        throw new Error(`Token ${tokenId} not found`);
+      }
+
+      const playerTokenAllocation: PlayerTokenAllocation = {};
+      this.dbService.tokenAllocationMap[tokenId]
+          .forEach((alloc) => playerTokenAllocation[alloc.playerId] = alloc.amount);
+      this.dbService.players.forEach((player) => {
+        if (playerTokenAllocation[player.id] == undefined) {
+          playerTokenAllocation[player.id] = 0;
+        }
+      });
+
+      subscriber.next(new TokenWithAllocation(token, playerTokenAllocation));
+    });
   }
 
   setAllocation(token: Token, player: Player, amount: number) {
@@ -32,4 +47,10 @@ export class TokenListService {
       allocation.amount = amount;
     }
   }
+}
+
+export type PlayerTokenAllocation = { [key: number]: number }; // PlayerId -> Amount
+
+export class TokenWithAllocation {
+  constructor(public token: Token, public playerTokenAllocation: PlayerTokenAllocation) {}
 }

@@ -1,8 +1,31 @@
-<mat-form-field appearance="fill" style="width: 100%">
-    <mat-label>タイトル</mat-label>
-    <input matInput [ngModel]="token.title">
-</mat-form-field>
+<div *ngIf="data">
+    <mat-form-field appearance="fill" style="width: 100%">
+        <mat-label>タイトル</mat-label>
+        <input matInput [(ngModel)]="data.token.title">
+    </mat-form-field>
 
-<app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [html]="token.text"></app-html-editor>
+    <app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [(html)]="data.token.text"></app-html-editor>
 
-<app-allocation-table [token]="token"></app-allocation-table>
+    <table mat-table [dataSource]="players">
+        <ng-container matColumnDef="name">
+            <th mat-header-cell *matHeaderCellDef>プレイヤー名</th>
+            <td mat-cell *matCellDef="let player">{{ player.displayName }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="amount">
+            <th mat-header-cell *matHeaderCellDef>割当</th>
+            <td mat-cell *matCellDef="let player">
+                <mat-form-field appearance="fill">
+                    <input matInput
+                           type="number"
+                           min="0"
+                           max="100"
+                           [(ngModel)]="data.playerTokenAllocation[player.id]">
+                </mat-form-field>
+            </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;"></tr>
+    </table>
+</div>

@@ -3,7 +3,7 @@
         <app-item-list></app-item-list>
     </div>
     <div class="view">
-        <app-rule-editor [rule]="selectedRule" *ngIf="selectedRule"></app-rule-editor>
-        <app-token-editor [token]="selectedToken" *ngIf="selectedToken"></app-token-editor>
+        <app-rule-editor [ruleId]="selectedRule.id" *ngIf="selectedRule"></app-rule-editor>
+        <app-token-editor [tokenId]="selectedToken.id" *ngIf="selectedToken"></app-token-editor>
     </div>
 </div>
