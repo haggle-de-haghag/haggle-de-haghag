@@ -1,10 +1,10 @@
-<div *ngIf="rule">
+<div *ngIf="data">
     <mat-form-field appearance="fill" style="width: 100%">
         <mat-label>タイトル</mat-label>
-        <input matInput [(ngModel)]="rule.title">
+        <input matInput [(ngModel)]="data.rule.title">
     </mat-form-field>
 
-    <app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [(html)]="rule.text"></app-html-editor>
+    <app-html-editor title="ルール文章（最大3000文字。一部HTMLタグが使えます）" [(html)]="data.rule.text"></app-html-editor>
 
     <div>
         <p>初期割り当て</p>
@@ -12,7 +12,7 @@
             <app-assignment-chip
                     *ngFor="let player of players"
                     [player]="player"
-                    [rule]="rule"
+                    [(accessType)]="data.playerRuleAccess[player.id]"
             ></app-assignment-chip>
         </mat-chip-list>
     </div>

@@ -1,8 +1,6 @@
-import {Component, Input, OnInit} from '@angular/core';
-import {AccessType, Player, Rule} from "../../model";
+import {Component, EventEmitter, Input, OnInit, Output} from '@angular/core';
+import {AccessType, Player} from "../../model";
 import {ThemePalette} from "@angular/material/core";
-import {DBService} from "../db.service";
-import {RuleListService} from "../rule-list.service";
 
 @Component({
   selector: 'app-assignment-chip',
@@ -10,20 +8,14 @@ import {RuleListService} from "../rule-list.service";
   styleUrls: ['./assignment-chip.component.scss']
 })
 export class AssignmentChipComponent implements OnInit {
-  @Input()
-  player!: Player;
+  @Input() player!: Player;
 
-  @Input()
-  rule!: Rule;
+  @Input() accessType: AccessType | undefined = undefined;
+  @Output() accessTypeChange = new EventEmitter<AccessType | undefined>();
 
-  constructor(private dbService: DBService, private ruleListService: RuleListService) { }
+  constructor() { }
 
   ngOnInit(): void {
-  }
-
-  get accessType(): AccessType | undefined {
-    const accessList = this.dbService.ruleAccessList[this.rule.id];
-    return accessList?.find((a) => a.playerId == this.player.id)?.accessType;
   }
 
   get color(): ThemePalette | undefined {
@@ -33,14 +25,6 @@ export class AssignmentChipComponent implements OnInit {
       return 'accent';
     } else {
       return undefined;
-    }
-  }
-
-  emit() {
-    if (this.accessType == 'ASSIGNED') {
-      this.ruleListService.removeAssignment(this.rule, this.player);
-    } else {
-      this.ruleListService.setAssignment(this.rule, this.player, 'ASSIGNED');
     }
   }
 }
