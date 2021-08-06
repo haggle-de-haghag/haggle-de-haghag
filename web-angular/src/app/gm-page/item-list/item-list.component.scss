@@ -1,3 +1,7 @@
+@use 'sass:map';
+@use '~@angular/material' as mat;
+
+
 .cdk-drag-placeholder {
   opacity: 0;
 }
@@ -7,4 +11,8 @@
   align-items: center;
   padding: 16px;
   font-size: 16px;
+}
+
+.selected {
+  background-color: map.get(mat.$gray-palette, 200);
 }
