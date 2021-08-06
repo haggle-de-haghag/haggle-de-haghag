@@ -17,6 +17,8 @@ import { AssignmentChipComponent } from './rule-editor/assignment-chip.component
 import {MatIconModule} from "@angular/material/icon";
 import {MatTableModule} from "@angular/material/table";
 import { ItemListComponent } from './item-list/item-list.component';
+import {DragDropModule} from "@angular/cdk/drag-drop";
+import {MatButtonModule} from "@angular/material/button";
 
 @NgModule({
   declarations: [
@@ -38,6 +40,8 @@ import { ItemListComponent } from './item-list/item-list.component';
         MatChipsModule,
         MatIconModule,
         MatTableModule,
+        DragDropModule,
+        MatButtonModule,
     ],
   providers: [
     {provide: DBService, useClass: DBServiceStub}
