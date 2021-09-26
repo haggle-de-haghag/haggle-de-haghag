@@ -49,7 +49,7 @@ open class RuleService(
     }
 
     @Transactional
-    fun deleteRule(rule: Rule) {
+    open fun deleteRule(rule: Rule) {
         ruleRepository.delete(rule)
         ruleAccessRepository.deleteAllByRuleId(rule.id)
     }
@@ -74,9 +74,18 @@ open class RuleService(
      * @return true if the rule is successfully shared. false if the rule is not assigned to the `from` player.
      */
     fun share(rule: Rule, from: Player, to: Player): Boolean {
-        if (ruleAccessRepository.findByRuleIdAndPlayerId(rule.id, from.id) == null) {
+        // Failure case: the `from` player doesn't actually own the rule
+        val fromPlayerAccess = ruleAccessRepository.findByRuleIdAndPlayerId(rule.id, from.id)
+        if (fromPlayerAccess?.type != RuleAccess.Type.ASSIGNED) {
             return false
         }
+
+        // Failure case: the `to` player already knows the rule
+        val currentAccess = ruleAccessRepository.findByRuleIdAndPlayerId(rule.id, to.id)
+        if (currentAccess != null) {
+            return false
+        }
+
         val access = RuleAccess(0, rule.id, to.id, RuleAccess.Type.SHARED)
         ruleAccessRepository.save(access)
         return true
