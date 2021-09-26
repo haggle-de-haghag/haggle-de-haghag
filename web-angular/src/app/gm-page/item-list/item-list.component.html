@@ -1,9 +1,9 @@
-<mat-action-list cdkDropList>
+<mat-action-list cdkDropList (cdkDropListDropped)="dropRule($event)">
     <div mat-subheader>ルール</div>
     <mat-list-item *ngFor="let rule of rules" [class]="{selected: rule.id==selectedRule?.id}" cdkDrag (click)="selectRule(rule)">{{ rule.title }}</mat-list-item>
 </mat-action-list>
 
-<mat-action-list cdkDropList>
+<mat-action-list cdkDropList (cdkDropListDropped)="dropToken($event)">
     <div mat-subheader>トークン</div>
     <mat-list-item *ngFor="let token of tokens" [class]="{selected: token.id==selectedToken?.id}" cdkDrag (click)="selectToken(token)">{{ token.title }}</mat-list-item>
 </mat-action-list>

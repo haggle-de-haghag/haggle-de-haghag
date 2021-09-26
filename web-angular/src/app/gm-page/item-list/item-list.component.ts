@@ -2,6 +2,7 @@ import {Component, OnInit} from '@angular/core';
 import {DBService} from "../db.service";
 import {UIService} from "../ui.service";
 import {Rule, Token} from "../../model";
+import {CdkDragDrop, moveItemInArray} from "@angular/cdk/drag-drop";
 
 @Component({
   selector: 'app-item-list',
@@ -26,5 +27,13 @@ export class ItemListComponent implements OnInit {
 
   selectToken(token: Token) {
     this.uiService.selectToken(token);
+  }
+
+  dropRule(event: CdkDragDrop<string[]>) {
+    moveItemInArray(this.dbService.rules, event.previousIndex, event.currentIndex);
+  }
+
+  dropToken(event: CdkDragDrop<string[]>) {
+    moveItemInArray(this.dbService.tokens, event.previousIndex, event.currentIndex);
   }
 }
