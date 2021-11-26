@@ -17,6 +17,9 @@ const useStyles = makeStyles((theme) => ({
     },
     sharedRule: {
         backgroundColor: '#ffffd0',
+    },
+    postMortemRule: {
+        backgroundColor: '#ffffff',
     }
 }));
 
@@ -25,7 +28,8 @@ export default function RuleList(props: Props) {
     const classes = useStyles();
     const accessTypeClass: {[key in AccessType]: string} = {
         ASSIGNED: classes.assignedRule,
-        SHARED: classes.sharedRule
+        SHARED: classes.sharedRule,
+        POST_MORTEM: classes.postMortemRule,
     };
 
     return (

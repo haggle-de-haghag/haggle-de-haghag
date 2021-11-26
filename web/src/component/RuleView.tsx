@@ -11,7 +11,8 @@ export default function RuleView(props: Props) {
     const { rule } = props;
     const accessTypeText: {[key in AccessType]: string} = {
         ASSIGNED: '原本',
-        SHARED: 'コピー'
+        SHARED: 'コピー',
+        POST_MORTEM: '感想戦'
     }
 
     return <Grid container direction="column" spacing={2}>

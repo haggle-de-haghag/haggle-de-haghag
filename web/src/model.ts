@@ -50,7 +50,7 @@ export interface KnownGameMaster {
 }
 
 export type GameState = 'PLAYING' | 'POST_MORTEM';
-export type AccessType = 'ASSIGNED' | 'SHARED';
+export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };
 export type TokenAllocationMap = { [tokenId: number]: PlayerIdWithAmount[] };
