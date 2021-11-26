@@ -10,6 +10,9 @@ data class RuleAccess(
 ) {
     enum class Type {
         ASSIGNED,
-        SHARED
+        SHARED,
+
+        // Intended to be only used in-code to flag the rules that are visible because of post-mortem mode.
+        POST_MORTEM,
     }
 }

@@ -1,8 +1,10 @@
 package jp.osak.haggledehaghag.service
 
+import jp.osak.haggledehaghag.model.Game
 import jp.osak.haggledehaghag.model.Player
 import jp.osak.haggledehaghag.model.PlayerToken
 import jp.osak.haggledehaghag.model.Rule
+import jp.osak.haggledehaghag.model.RuleAccess
 import jp.osak.haggledehaghag.model.RuleWithAccess
 import jp.osak.haggledehaghag.model.Token
 import jp.osak.haggledehaghag.model.TokenWithAmount
@@ -51,14 +53,23 @@ class PlayerService(
         return playerRepository.save(newPlayer)
     }
 
-    fun findAllAccessibleRules(player: Player): List<RuleWithAccess> {
+    fun findAllAccessibleRules(player: Player, game: Game): List<RuleWithAccess> {
         val ruleAccesses = ruleAccessRepository.findAllByPlayerId(player.id)
         val ruleIds = ruleAccesses.map { it.ruleId }
-        val rules = ruleRepository.findByGameIdAndIdIn(player.gameId, ruleIds)
+        val rules = when (game.state) {
+            Game.State.POST_MORTEM -> ruleRepository.findByGameId(player.gameId)
+            else -> ruleRepository.findByGameIdAndIdIn(player.gameId, ruleIds)
+        }
         val accessMap = ruleAccesses.map { Pair(it.ruleId, it) }.toMap()
-        return rules.stream()
-            .map { r: Rule -> RuleWithAccess(r, accessMap[r.id]!!.type) }
-            .collect(Collectors.toList())
+        return rules.mapNotNull { r: Rule ->
+            val access = accessMap[r.id]
+            val accessType = when {
+                access != null -> access.type
+                game.state == Game.State.POST_MORTEM -> RuleAccess.Type.POST_MORTEM
+                else -> null
+            }
+            accessType?.let { RuleWithAccess(r, it) }
+        }
     }
 
     fun findAllTokens(player: Player): List<TokenWithAmount> {

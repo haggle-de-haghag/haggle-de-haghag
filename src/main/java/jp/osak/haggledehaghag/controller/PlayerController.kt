@@ -42,7 +42,7 @@ class PlayerController(
         val players = gameService.listActivePlayers(game)
             .filter { it.id != player.id }
             .map { ForeignPlayerView(it) }
-        val rules = playerService.findAllAccessibleRules(player)
+        val rules = playerService.findAllAccessibleRules(player, game)
             .sortedBy { it.rule.ruleNumber }
             .map { RuleView(it) }
         val tokens = playerService.findAllTokens(player)
@@ -60,7 +60,9 @@ class PlayerController(
 
     @GetMapping("/rules")
     fun findAllAccessibleRules(@ModelAttribute player: Player): List<RuleView> {
-        val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player)
+        val game = gameService.findGame(player.gameId)
+            ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
+        val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player, game)
         return rules.map { RuleView(it) }
     }
 
@@ -89,7 +91,9 @@ class PlayerController(
         @PathVariable ruleId: Int,
         @RequestBody request: ShareRuleRequest
     ): ShareRuleResult {
-        val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player)
+        val game = gameService.findGame(player.gameId)
+            ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
+        val rules: List<RuleWithAccess> = playerService.findAllAccessibleRules(player, game)
         val rule = rules.find { it.rule.id == ruleId && it.accessType == RuleAccess.Type.ASSIGNED }
             ?: throw ResponseStatusException(HttpStatus.BAD_REQUEST, "Rule $ruleId is not assigned to you")
         val targetPlayer: Player = playerService.findPlayer(request.playerId)
