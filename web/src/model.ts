@@ -10,6 +10,7 @@ export interface Game {
     title: string;
     gameKey: string;
     masterKey: string;
+    state: GameState;
 }
 
 export interface Player {
@@ -48,6 +49,7 @@ export interface KnownGameMaster {
     title: string;
 }
 
+export type GameState = 'PLAYING' | 'POST_MORTEM';
 export type AccessType = 'ASSIGNED' | 'SHARED';
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };

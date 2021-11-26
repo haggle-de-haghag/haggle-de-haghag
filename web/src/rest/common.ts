@@ -53,6 +53,10 @@ export function del<T>(api: string, body?: any): AbortablePromise<T> {
     return baseFetch<T>(api, 'DELETE', body);
 }
 
+export function put<T>(api: string, body?: any): AbortablePromise<T> {
+    return baseFetch<T>(api, 'PUT', body);
+}
+
 export class HttpStatusError {
     readonly statusCode: number;
     readonly message: string;

@@ -1,4 +1,15 @@
-import {Game, Player, PlayerId, Rule, RuleAccessMap, RuleId, Token, TokenAllocationMap, TokenId} from "../model";
+import {
+    Game,
+    GameState,
+    Player,
+    PlayerId,
+    Rule,
+    RuleAccessMap,
+    RuleId,
+    Token,
+    TokenAllocationMap,
+    TokenId
+} from "../model";
 import {TypedUseSelectorHook, useDispatch, useSelector} from "react-redux";
 import {configureStore, createSlice, PayloadAction} from "@reduxjs/toolkit";
 import createSagaMiddleware from 'redux-saga';
@@ -106,6 +117,7 @@ const initialState: GameMasterState = {
         title: '',
         gameKey: '',
         masterKey: '',
+        state: 'PLAYING',
     },
     players: [],
     rules: [],
@@ -285,6 +297,10 @@ const slice = createSlice({
 
         createStubPlayers: (state, action: PayloadAction<number>) => {},
 
+        setGameState: (state, action: PayloadAction<GameState>) => {
+            state.game.state = action.payload;
+        },
+
         kickPlayer: (state, action: PayloadAction<Player>) => {
             const player = action.payload;
             const index = state.players.findIndex((p) => p.id == player.id);
@@ -312,7 +328,7 @@ const slice = createSlice({
             state.game = action.payload;
         },
 
-        setGameState: (state, action: PayloadAction<FullGameInfo>) => {
+        setFullGame: (state, action: PayloadAction<FullGameInfo>) => {
             const info = action.payload;
             state.game = info.game;
             state.rules = info.rules;
@@ -432,6 +448,16 @@ function* updateTitleSaga(action: ReturnType<typeof actions.default.updateTitle>
     }
 }
 
+function* setGameStateSaga(action: ReturnType<typeof actions.default.setGameState>) {
+    try {
+        const game: Game = yield call(GameMasterRestApi.setGameState, action.payload);
+        yield put(actions.default.setGame(game));
+    } catch (e) {
+        console.error("API error", e);
+        yield put(actions.errorNotification.showNotificationMessage('感想戦モードの設定に失敗しました。もう一度試してみてください。'));
+    }
+}
+
 function* addTokenToPlayerSaga(action: ReturnType<typeof actions.default.addTokenToPlayer>) {
     try {
         const { playerId, tokenId, amount } = action.payload;
@@ -486,6 +512,7 @@ function* createWatcherSaga() {
         takeEvery(actions.default.updateToken, updateTokenSaga),
         takeEvery(actions.default.deleteToken, deleteTokenSaga),
         takeEvery(actions.default.updateTitle, updateTitleSaga),
+        takeEvery(actions.default.setGameState, setGameStateSaga),
         takeEvery(actions.default.addTokenToPlayer, addTokenToPlayerSaga),
         takeEvery(actions.default.moveRule, moveRuleSaga),
         takeEvery(actions.default.createStubPlayers, createStubPlayersSaga),
@@ -503,7 +530,7 @@ function* pollSaga() {
                 cancel: delay(5000),
             });
             if (fullInfo) {
-                yield put(actions.default.setGameState(fullInfo));
+                yield put(actions.default.setFullGame(fullInfo));
             } else if (cancel) {
                 yield put(actions.errorNotification.showNotificationMessage("サーバーが応答していません"));
             }
