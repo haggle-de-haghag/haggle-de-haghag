@@ -55,12 +55,12 @@ class GameService(
         return if (stubPlayer != null) {
             playerService.activate(stubPlayer, displayName)
         } else {
-            playerService.createNewPlayer(game.id, displayName, Player.State.ACTIVE)
+            playerService.createNewPlayer(game, displayName, Player.State.ACTIVE)
         }
     }
 
     fun createNewStubPlayer(game: Game, displayName: String): Player {
-        return playerService.createNewPlayer(game.id, displayName, Player.State.STUB)
+        return playerService.createNewPlayer(game, displayName, Player.State.STUB)
     }
 
     fun createNewRule(game: Game, title: String, text: String): Rule {

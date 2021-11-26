@@ -27,9 +27,9 @@ class PlayerService(
     private val tokenRepository: TokenRepository,
     private val playerTokenRepository: PlayerTokenRepository,
 ) {
-    fun createNewPlayer(gameId: Int, displayName: String, state: Player.State): Player {
-        val playerKey = "pl-${generateKey("$gameId-$displayName")}"
-        val player = Player(0, gameId, displayName, playerKey, state)
+    fun createNewPlayer(game: Game, displayName: String, state: Player.State): Player {
+        val playerKey = "pl-${game.gameKey}-${generateKey("${game.id}-$displayName")}"
+        val player = Player(0, game.id, displayName, playerKey, state)
         playerRepository.save(player)
         return player
     }
