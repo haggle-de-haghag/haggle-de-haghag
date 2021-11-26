@@ -1,1 +1,1 @@
-ALTER TABLE game ADD COLUMN state varchar(16) DEFAULT 'IN_GAME';
+ALTER TABLE game ADD COLUMN state varchar(16) DEFAULT 'PLAYING';

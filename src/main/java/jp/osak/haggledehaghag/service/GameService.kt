@@ -33,7 +33,7 @@ class GameService(
     fun createNewGame(title: String): Game {
         val key = generateKey(title)
         val masterKey = "gm-" + generateKey(title)
-        val game = Game(0, title, key, masterKey)
+        val game = Game(0, title, key, masterKey, Game.State.PLAYING)
         return gameRepository.save(game)
     }
 
