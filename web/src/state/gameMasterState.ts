@@ -376,6 +376,7 @@ function* createRuleSaga(action: ReturnType<typeof actions.default.createRule>) 
     try {
         const createdRule: Rule = yield call(GameMasterRestApi.createRule, payload.title, payload.text);
         yield put(actions.default.addRule(createdRule));
+        yield put(actions.default.changeSelectedRule(createdRule.id));
     } catch (e) {
         console.error("API error", e);
         yield put(actions.errorNotification.showNotificationMessage("ルールの作成に失敗しました。リロードしてもう一度試してみてください。"));
@@ -409,6 +410,7 @@ function* createTokenSaga(action: ReturnType<typeof actions.default.createToken>
     try {
         const createdToken: Token = yield call(GameMasterRestApi.createToken, payload.title, payload.text);
         yield put(actions.default.addToken(createdToken));
+        yield put(actions.default.changeSelectedToken(createdToken.id));
     } catch (e) {
         console.error("API error", e);
         yield put(actions.errorNotification.showNotificationMessage("トークンの作成に失敗しました。もう一度試してみてください。"));
