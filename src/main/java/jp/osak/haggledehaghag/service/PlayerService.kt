@@ -72,13 +72,22 @@ class PlayerService(
         }
     }
 
-    fun findAllTokens(player: Player): List<TokenWithAmount> {
+    fun findAllTokens(player: Player, game: Game): List<TokenWithAmount> {
         val playerTokens = playerTokenRepository.findAllByPlayerId(player.id)
         val tokenIds = playerTokens.map { it.tokenId }
-        val tokens = tokenRepository.findAllByIdIn(tokenIds)
+        val tokens = when (game.state) {
+            Game.State.POST_MORTEM -> tokenRepository.findAllByGameId(player.gameId)
+            else -> tokenRepository.findAllByIdIn(tokenIds)
+        }
         val amountMap = playerTokens.map { Pair(it.tokenId, it.amount) }.toMap()
-        return tokens.map { TokenWithAmount(it, amountMap[it.id]!!) }
-            .filter { it.amount > 0 }
+        return tokens.mapNotNull {
+            val amount = amountMap[it.id]
+            when {
+                amount != null && amount > 0 -> TokenWithAmount(it, amount)
+                game.state == Game.State.POST_MORTEM -> TokenWithAmount(it, 0)
+                else -> null
+            }
+        }
     }
 
     fun findToken(player: Player, tokenId: Int): TokenWithAmount? {

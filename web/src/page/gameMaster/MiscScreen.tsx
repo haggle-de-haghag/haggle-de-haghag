@@ -13,7 +13,7 @@ export function MiscScreen() {
 
     const onPostMortemModeChange = (e: ChangeEvent<HTMLInputElement>) => {
         if (e.target.checked) {
-            if (confirm('感想戦モードを有効化します。全てのプレイヤーは全てのルールを見ることができるようになります。')) {
+            if (confirm('感想戦モードを有効化します。\n全てのプレイヤーは全てのルールとトークンを見ることができるようになります。')) {
                 dispatch(actions.default.setGameState('POST_MORTEM'));
             }
         } else {

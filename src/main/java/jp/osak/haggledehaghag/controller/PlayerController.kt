@@ -45,7 +45,7 @@ class PlayerController(
         val rules = playerService.findAllAccessibleRules(player, game)
             .sortedBy { it.rule.ruleNumber }
             .map { RuleView(it) }
-        val tokens = playerService.findAllTokens(player)
+        val tokens = playerService.findAllTokens(player, game)
             .sortedBy { it.token.id }
             .map { TokenView(it) }
 
@@ -68,7 +68,9 @@ class PlayerController(
 
     @GetMapping("/tokens")
     fun listTokens(@ModelAttribute player: Player): List<TokenView> {
-        return playerService.findAllTokens(player).map { TokenView(it) }
+        val game = gameService.findGame(player.gameId)
+            ?: throw IllegalStateException("Cannot find current game for player ${player.id}: DB corrupted?")
+        return playerService.findAllTokens(player, game).map { TokenView(it) }
     }
 
     @PostMapping("/tokens/{tokenId}/give")
