@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.ModelAttribute
 import org.springframework.web.bind.annotation.PatchMapping
 import org.springframework.web.bind.annotation.PathVariable
 import org.springframework.web.bind.annotation.PostMapping
+import org.springframework.web.bind.annotation.PutMapping
 import org.springframework.web.bind.annotation.RequestBody
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RestController
@@ -55,6 +56,11 @@ class GameMasterController(
     @PostMapping("/title")
     fun updateTitle(@ModelAttribute game: Game, @RequestBody request: UpdateTitleRequest): Game {
         return gameService.updateTitle(game, request.title)
+    }
+
+    @PutMapping("/state")
+    fun updateState(@ModelAttribute game: Game, @RequestBody request: UpdateStateRequest): Game {
+        return gameService.updateState(game, request.state)
     }
 
     @GetMapping("/rules")
@@ -213,6 +219,7 @@ class GameMasterController(
     }
 
     data class UpdateTitleRequest(val title: String)
+    data class UpdateStateRequest(val state: Game.State)
     data class CreateRuleRequest(val title: String, val text: String)
     data class UpdateRuleRequest(val title: String?, val text: String?, val assignedPlayerIds: List<Int>)
     data class DeleteRuleResponse(val success: Boolean)

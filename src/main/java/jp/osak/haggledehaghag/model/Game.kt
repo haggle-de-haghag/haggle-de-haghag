@@ -7,4 +7,10 @@ data class Game(
     val title: String,
     val gameKey: String,
     val masterKey: String,
-)
+    val state: State
+) {
+    enum class State {
+        PLAYING,
+        POST_MORTEM
+    }
+}

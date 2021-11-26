@@ -167,6 +167,11 @@ class GameService(
         return playerService.kick(player)
     }
 
+    fun updateState(game: Game, state: Game.State): Game {
+        val newGame = game.copy(state = state)
+        return gameRepository.save(newGame)
+    }
+
     private fun generateKey(base: String): String {
         val salt = Math.random()
         val keyBase = "$base-$salt"
