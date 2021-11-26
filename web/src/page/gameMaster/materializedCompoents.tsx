@@ -1,4 +1,4 @@
-import React from 'react';
+import React, {useEffect, useRef, useState} from 'react';
 import RuleListComponent from '../../component/ReorderableRuleList';
 import RuleEditorComponent from '../../component/RuleEditor';
 import TokenListComponent from '../../component/TokenList';
@@ -23,37 +23,71 @@ export function RuleList() {
 export function RuleEditor() {
     const state = useGMSelector((state) => state);
     const dispatch = useGMDispatch();
+    const dirty = useRef(false);
+    const saver = useRef(() => {});
 
     const currentRuleId = state.selectedRuleId;
+    saver.current = () => {
+        if (currentRuleId != null) {
+            dispatch(actions.default.updateRule({
+                ruleId: currentRuleId,
+                title: state.ruleTitleInput,
+                text: state.ruleTextInput,
+                defaultAssignments: assignedPlayerIds,
+            }));
+            dispatch(actions.default.setLastSaveTime(new Date()));
+        }
+    };
+
+    useEffect(() => {
+        const timerId = setInterval(() => {
+            if (dirty.current) {
+                dirty.current = false;
+                saver.current();
+            }
+        }, 5000);
+        return () => {
+            clearInterval(timerId);
+            if (dirty.current) {
+                saver.current();
+            }
+        }
+    }, []);
+
     if (currentRuleId == undefined) {
         return null;
     }
 
     const assignedPlayerIds = state.defaultAssignmentsInput;
 
-    const onRuleTitleChange = (text: string) => dispatch(actions.default.setRuleTitleInput(text));
-    const onRuleTextChange = (text: string) => dispatch(actions.default.setRuleTextInput(text));
-    const onSaveButtonClick = () => dispatch(actions.default.updateRule({
-        ruleId: currentRuleId,
-        title: state.ruleTitleInput,
-        text: state.ruleTextInput,
-        defaultAssignments: assignedPlayerIds,
-    }));
+    const onRuleTitleChange = (text: string) => {
+        dispatch(actions.default.setRuleTitleInput(text));
+        dirty.current = true;
+    };
+    const onRuleTextChange = (text: string) => {
+        dispatch(actions.default.setRuleTextInput(text));
+        dirty.current = true;
+    };
+
     const onDeleteButtonClick = () => dispatch(actions.default.deleteRule(currentRuleId));
-    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => dispatch(actions.default.changeRuleAccessListInput({
-        playerId,
-        ruleId: currentRuleId,
-        assigned
-    }));
+    const onAssignmentChange = (playerId: PlayerId, assigned: boolean) => {
+        dispatch(actions.default.changeRuleAccessListInput({
+            playerId,
+            ruleId: currentRuleId,
+            assigned
+        }));
+        dirty.current = true;
+    }
 
     return <RuleEditorComponent
         ruleTitle={state.ruleTitleInput}
         ruleText={state.ruleTextInput}
         players={state.players}
         assignedPlayerIds={assignedPlayerIds}
+        dirty={dirty.current}
         onRuleTitleChange={onRuleTitleChange}
         onRuleTextChange={onRuleTextChange}
-        onSaveButtonClick={onSaveButtonClick}
+        onSaveButtonClick={saver.current}
         onDeleteButtonClick={onDeleteButtonClick}
         onAssignmentChange={onAssignmentChange}
     />;
@@ -72,21 +106,53 @@ export function TokenList() {
 export function TokenEditor() {
     const state = useGMSelector((state) => state);
     const dispatch = useGMDispatch();
+    const dirty = useRef(false);
+    const saver = useRef(() => {});
 
     const currentTokenId = state.selectedTokenId;
+    saver.current = () => {
+        if (currentTokenId != undefined) {
+            dispatch(actions.default.updateToken({
+                tokenId: currentTokenId,
+                title: state.tokenTitleInput,
+                text: state.tokenTextInput,
+                allocation: state.allocationInputs,
+            }));
+        }
+    }
+
+    useEffect(() => {
+        const timerId = setInterval(() => {
+            if (dirty.current) {
+                dirty.current = false;
+                saver.current();
+            }
+        }, 5000);
+        return () => {
+            clearInterval(timerId);
+            if (dirty.current) {
+                saver.current();
+            }
+        }
+    }, []);
+
     if (currentTokenId == undefined) {
         return null;
     }
 
-    const onTokenTitleChange = (text: string) => dispatch(actions.default.setTokenTitleInput(text));
-    const onTokenTextChange = (text: string) => dispatch(actions.default.setTokenTextInput(text));
-    const onAllocationChange = (playerId: number, amount: number) => dispatch(actions.default.setAllocation({ playerId, amount }));
-    const onSaveButtonClick = () => dispatch(actions.default.updateToken({
-        tokenId: currentTokenId,
-        title: state.tokenTitleInput,
-        text: state.tokenTextInput,
-        allocation: state.allocationInputs,
-    }));
+    const onTokenTitleChange = (text: string) => {
+        dispatch(actions.default.setTokenTitleInput(text));
+        dirty.current = true;
+    }
+    const onTokenTextChange = (text: string) => {
+        dispatch(actions.default.setTokenTextInput(text));
+        dirty.current = true;
+    }
+    const onAllocationChange = (playerId: number, amount: number) => {
+        dispatch(actions.default.setAllocation({ playerId, amount }));
+        dirty.current = true;
+    }
+
     const onDeleteButtonClick = () => dispatch(actions.default.deleteToken(currentTokenId));
 
     return <TokenEditorComponent
@@ -94,10 +160,11 @@ export function TokenEditor() {
         tokenText={state.tokenTextInput}
         players={state.players}
         allocation={state.allocationInputs}
+        dirty={dirty.current}
         onTokenTitleChange={onTokenTitleChange}
         onTokenTextChange={onTokenTextChange}
         onAllocationChange={onAllocationChange}
-        onSaveButtonClick={onSaveButtonClick}
+        onSaveButtonClick={saver.current}
         onDeleteButtonClick={onDeleteButtonClick}
     />;
 }

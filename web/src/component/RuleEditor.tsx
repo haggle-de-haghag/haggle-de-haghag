@@ -19,6 +19,7 @@ interface Props {
     ruleText: string;
     players: ForeignPlayer[];
     assignedPlayerIds: PlayerId[];
+    dirty: boolean;
     onRuleTitleChange: (value: string) => void;
     onRuleTextChange: (value: string) => void;
     onAssignmentChange: (playerId: PlayerId, assigned: boolean) => void;
@@ -91,6 +92,7 @@ export default function RuleEditor(props: Props) {
                         label={p.displayName}
                         color={assigned ? 'primary' : 'default'}
                         onClick={() => props.onAssignmentChange(p.id, !assigned)}
+                        onBlur={() => props.onSaveButtonClick()}
                     />;
                 })}
             </Box>
@@ -106,5 +108,6 @@ export default function RuleEditor(props: Props) {
                 </DialogActions>
             </Dialog>
         </Grid>
+        <Grid item>{props.dirty && <Typography variant="subtitle2">未保存の変更があります。</Typography>}</Grid>
     </Grid>;
 }

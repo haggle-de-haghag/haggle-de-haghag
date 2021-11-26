@@ -10,7 +10,7 @@ import {
     TableContainer,
     TableHead,
     TableRow, Tabs,
-    TextField
+    TextField, Typography
 } from "@material-ui/core";
 import React, {useState} from "react";
 import {ForeignPlayer} from "../model";
@@ -21,6 +21,7 @@ interface Props {
     tokenText: string;
     players: ForeignPlayer[];
     allocation: {[key: number]: number}; // key: playerId
+    dirty: boolean;
     onTokenTitleChange: (value: string) => void;
     onTokenTextChange: (value: string) => void;
     onAllocationChange: (playerId: number, amount: number) => void;
@@ -109,5 +110,6 @@ export default function TokenEditor(props: Props) {
                 </DialogActions>
             </Dialog>
         </Grid>
+        <Grid item>{props.dirty && <Typography variant="subtitle2">未保存の変更があります。</Typography>}</Grid>
     </Grid>;
 }

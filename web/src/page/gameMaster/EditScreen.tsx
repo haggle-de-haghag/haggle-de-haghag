@@ -1,7 +1,7 @@
 import {Box, Button, Divider, Grid} from "@material-ui/core";
 import {PlayerList, RuleEditor, RuleList, TokenEditor, TokenList} from "./materializedCompoents";
 import React from "react";
-import {actions, useGMDispatch} from "../../state/gameMasterState";
+import {actions, useGMDispatch, useGMSelector} from "../../state/gameMasterState";
 import {makeStyles} from "@material-ui/core/index";
 
 const useStyles = makeStyles((theme) => ({
@@ -14,6 +14,7 @@ const useStyles = makeStyles((theme) => ({
 
 export default function EditScreen() {
     const classes = useStyles();
+    const { selectedRuleId, selectedTokenId } = useGMSelector((state) => state);
     const dispatch = useGMDispatch();
 
     const onNewRuleClick = () => dispatch(actions.default.createRule({
@@ -36,8 +37,8 @@ export default function EditScreen() {
             <Box><Button variant="contained" onClick={onNewTokenClick}>新規トークン</Button></Box>
         </Grid>
         <Grid item xs={9}>
-            <RuleEditor/>
-            <TokenEditor/>
+            {selectedRuleId != undefined && <RuleEditor key={selectedRuleId}/>}
+            {selectedTokenId != undefined && <TokenEditor key={selectedTokenId}/>}
         </Grid>
     </Grid>;
 }
