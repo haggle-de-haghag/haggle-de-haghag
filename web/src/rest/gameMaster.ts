@@ -1,8 +1,11 @@
+import { firebaseConfig } from "../env/development";
+import { Firebase } from "../firebase/firebase";
 import {AccessType, ForeignPlayer, Game, GameState, Player, PlayerId, Rule, Token} from "../model";
 import {AbortablePromise, del, get, patch, post, put} from "./common";
 
 interface Config {
     gameMasterKey: string;
+    firebase: Firebase;
 }
 
 let config: Config;
@@ -10,7 +13,8 @@ let config: Config;
 export function configure(gameMasterKey: string) {
     config = {
         gameMasterKey,
-    };
+        firebase: new Firebase(firebaseConfig)
+    }
 }
 
 export interface PlayerIdWithAccess {
@@ -38,7 +42,9 @@ export interface UpdateTokenResponse {
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {
-    return get(fullApi(''));
+    const fullGameInfo = config.firebase.getCallable<any, FullGameInfo>('fullGameInfo');
+    const res = await fullGameInfo({ masterKey: config.gameMasterKey });
+    return res.data;
 }
 
 export function updateTitle(title: string): AbortablePromise<Game> {

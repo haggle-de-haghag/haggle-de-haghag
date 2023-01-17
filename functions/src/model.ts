@@ -57,6 +57,15 @@ export interface KnownGameMaster {
     title: string;
 }
 
+export interface FullGameInfo {
+    game: Game;
+    rules: Rule[];
+    players: Player[];
+    ruleAccessMap: { [key: number]: PlayerIdWithAccess[] };
+    tokens: Token[];
+    tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: tokenId
+}
+
 export type GameState = 'PLAYING' | 'POST_MORTEM';
 export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
 

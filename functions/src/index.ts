@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { Game } from "./model";
+import { FullGameInfo, Game } from "./model";
 
 admin.initializeApp();
 
@@ -13,7 +13,7 @@ admin.initializeApp();
 // });
 
 const db = admin.firestore();
-const games = db.collection('games') as admin.firestore.CollectionReference<Game>;
+const games = db.collection('games') as admin.firestore.CollectionReference<FullGameInfo>;
 
 function generateId(): string {
     const letters = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -29,19 +29,47 @@ export const createGame = functions.https.onCall(async (data, context) => {
     const masterKey = generateId();
 
     const doc = games.doc(id);
+    const game: Game = {
+        id,
+        title: data['title'],
+        gameKey: id,
+        masterKey: masterKey,
+        state: 'PLAYING'
+    };
+    const fullGameInfo: FullGameInfo = {
+        game,
+        rules: [],
+        players: [],
+        ruleAccessMap: {},
+        tokens: [],
+        tokenAllocationMap: {}
+    };
+
     try {
-        await doc.create({
-            id,
-            title: data['title'],
-            gameKey: id,
-            masterKey: masterKey,
-            state: 'PLAYING'
-        });
+        await doc.create(fullGameInfo);
     } catch (e) {
         console.log(e);
         throw new Error(`Failed to create a unique ID`);
     }
 
-    const game = await doc.get();
-    return game.data();
+    return game;
+});
+
+async function findGameByMasterKey(masterKey: string): Promise<admin.firestore.QueryDocumentSnapshot<FullGameInfo> | null> {
+    const querySnapshot = await games.where('game.masterKey', '==', masterKey).get();
+    if (querySnapshot.size == 0) {
+        return null;
+    }
+    return querySnapshot.docs[0];
+}
+
+export const fullGameInfo = functions.https.onCall(async (data, context) => {
+    const masterKey: string = data['masterKey'];
+
+    const gameSnapshot = await findGameByMasterKey(masterKey);
+    if (gameSnapshot == null) {
+        throw new Error(`Invalid master key: ${masterKey}`);
+    }
+
+    return gameSnapshot.data();
 });
