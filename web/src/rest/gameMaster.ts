@@ -42,13 +42,11 @@ export interface UpdateTokenResponse {
 }
 
 export async function listFullInfo(): Promise<FullGameInfo> {
-    const fullGameInfo = config.firebase.getCallable<any, FullGameInfo>('fullGameInfo');
-    const res = await fullGameInfo({ masterKey: config.gameMasterKey });
-    return res.data;
+    return callApi('fullGameInfo', {});
 }
 
-export function updateTitle(title: string): AbortablePromise<Game> {
-    return post(fullApi('/title'), { title });
+export function updateTitle(title: string): Promise<Game> {
+    return callApi('updateTitle', { title });
 }
 
 export function setGameState(gameState: GameState): AbortablePromise<Game> {
@@ -106,4 +104,14 @@ export function kickPlayer(playerId: number): AbortablePromise<Player> {
 
 function fullApi(api: string): string {
     return `/game_master/${config.gameMasterKey}${api}`;
+}
+
+async function callApi<T, R>(api: string, payload: T): Promise<R> {
+    const func = config.firebase.getCallable<T, R>(api);
+    const fullPayload = {
+        ...payload,
+        masterKey: config.gameMasterKey,
+    };
+    const res = await func(fullPayload);
+    return res.data;
 }

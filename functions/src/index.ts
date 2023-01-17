@@ -63,13 +63,21 @@ async function findGameByMasterKey(masterKey: string): Promise<admin.firestore.Q
     return querySnapshot.docs[0];
 }
 
-export const fullGameInfo = functions.https.onCall(async (data, context) => {
+async function findFullGameInfo(data: any): Promise<admin.firestore.QueryDocumentSnapshot<FullGameInfo>> {
     const masterKey: string = data['masterKey'];
-
-    const gameSnapshot = await findGameByMasterKey(masterKey);
-    if (gameSnapshot == null) {
+    const snapshot = await findGameByMasterKey(masterKey);
+    if (snapshot == null) {
         throw new Error(`Invalid master key: ${masterKey}`);
     }
+    return snapshot;
+}
 
-    return gameSnapshot.data();
+export const fullGameInfo = functions.https.onCall(async (data, context) => {
+    return (await findFullGameInfo(data)).data();
+});
+
+export const updateTitle = functions.https.onCall(async (data, context) => {
+    const fullGameInfo = await findFullGameInfo(data);
+    fullGameInfo.ref.update({ "game.title": data['title'] });
+    return fullGameInfo.data().game;
 });
