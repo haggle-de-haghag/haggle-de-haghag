@@ -20,7 +20,7 @@ export async function joinGame(gameKey: string, playerName: string): Promise<Pla
 }
 
 export async function createGame(title: string): Promise<Game> {
-    const func = firebase.getCallable<string, Game>('createGame')
-    const res = await func(title);
+    const func = firebase.getCallable<any, Game>('createGame')
+    const res = await func({ title });
     return res.data;
 }

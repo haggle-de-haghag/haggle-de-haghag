@@ -205,7 +205,7 @@ const slice = createSlice({
             const rule = state.rules.find((r) => r.id == ruleId);
             if (rule == undefined) {
                 console.error(`Rule ${ruleId} doesn't exist. Action: ${action}`);
-                return state;
+                return;
             }
 
             state.selectedRuleId = ruleId;
@@ -231,7 +231,7 @@ const slice = createSlice({
             const index = state.tokens.findIndex((t) => t.id == token.id);
             if (index == -1) {
                 console.error(`Token ${token.id} doesn't exist`);
-                return state;
+                return;
             }
             state.tokens[index] = token;
         },
@@ -253,7 +253,7 @@ const slice = createSlice({
             const token = state.tokens.find((t) => t.id == tokenId);
             if (token == undefined) {
                 console.error(`Token ${tokenId} doesn't exist. Action: ${action}`);
-                return state;
+                return;
             }
 
             const allocation: {[playerId: number]: number} = {};
@@ -308,7 +308,7 @@ const slice = createSlice({
             const player = action.payload;
             const index = state.players.findIndex((p) => p.id == player.id);
             if (index == -1) {
-                return state;
+                return;
             }
             state.players = state.players.splice(index, 1);
         },

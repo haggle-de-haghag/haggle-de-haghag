@@ -24,7 +24,7 @@ function generateId(): string {
     return id;
 }
 
-export const createGame = functions.https.onRequest(async (request, response) => {
+export const createGame = functions.https.onCall(async (data, context) => {
     const id = generateId();
     const masterKey = generateId();
 
@@ -32,7 +32,7 @@ export const createGame = functions.https.onRequest(async (request, response) =>
     try {
         await doc.create({
             id,
-            title: request.body['title'],
+            title: data['title'],
             gameKey: id,
             masterKey: masterKey,
             state: 'PLAYING'
@@ -43,5 +43,5 @@ export const createGame = functions.https.onRequest(async (request, response) =>
     }
 
     const game = await doc.get();
-    response.json(game.data);
+    return game.data;
 });
