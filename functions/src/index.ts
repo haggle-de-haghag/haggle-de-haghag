@@ -43,5 +43,5 @@ export const createGame = functions.https.onCall(async (data, context) => {
     }
 
     const game = await doc.get();
-    return game.data;
+    return game.data();
 });
