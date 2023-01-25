@@ -54,7 +54,7 @@ export function setGameState(gameState: GameState): Promise<Game> {
 }
 
 export async function createRule(title: string, text: string): Promise<Rule> {
-    return post(fullApi('/rules'), {title, text});
+    return callApi('createRule', { title, text });
 }
 
 export async function updateRule(ruleId: number, title?: string, text?: string, assignedPlayerIds?: PlayerId[]): Promise<Rule> {

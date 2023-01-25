@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FullGameInfo, Game } from "./model";
+import { FullGameInfo, Game, Rule } from "./model";
 
 admin.initializeApp();
 
@@ -22,6 +22,16 @@ function generateId(): string {
         id += letters[Math.floor(Math.random() * letters.length)];
     }
     return id;
+}
+
+function parseRule(data: Record<string, any>): Rule {
+    return {
+        id: data['id'] || '',
+        ruleNumber: data['ruleNumber'] || 0,
+        title: data['title'] || '',
+        text: data['text'] || '',
+        accessType: 'ASSIGNED'
+    };
 }
 
 export const createGame = functions.https.onCall(async (data, context) => {
@@ -86,4 +96,14 @@ export const setGameState = functions.https.onCall(async (data, context) => {
     const fullGameInfo = await findFullGameInfo(data);
     fullGameInfo.ref.update({ "game.state": data['state'] });
     return fullGameInfo.data().game;
-})
+});
+
+export const createRule = functions.https.onCall(async (data, context) => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const rule = parseRule(data);
+    const newRuleNumber = fullGameInfo.data().rules.length + 1;
+    rule.id = `${newRuleNumber}`;
+    rule.ruleNumber = newRuleNumber;
+    await fullGameInfo.ref.update({ "rules": admin.firestore.FieldValue.arrayUnion(rule) });
+    return rule;
+});
