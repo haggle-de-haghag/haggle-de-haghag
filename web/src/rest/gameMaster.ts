@@ -49,12 +49,8 @@ export function updateTitle(title: string): Promise<Game> {
     return callApi('updateTitle', { title });
 }
 
-export function setGameState(gameState: GameState): AbortablePromise<Game> {
-    return put(fullApi('/state'), { state: gameState });
-}
-
-export async function listRules(): Promise<Rule[]> {
-    return get(fullApi('/rules'));
+export function setGameState(gameState: GameState): Promise<Game> {
+    return callApi('setGameState', { state: gameState });
 }
 
 export async function createRule(title: string, text: string): Promise<Rule> {
