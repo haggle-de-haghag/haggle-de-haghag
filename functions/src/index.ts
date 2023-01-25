@@ -88,13 +88,13 @@ export const fullGameInfo = functions.https.onCall(async (data, context) => {
 
 export const updateTitle = functions.https.onCall(async (data, context) => {
     const fullGameInfo = await findFullGameInfo(data);
-    fullGameInfo.ref.update({ "game.title": data['title'] });
+    await fullGameInfo.ref.update({ "game.title": data['title'] });
     return fullGameInfo.data().game;
 });
 
 export const setGameState = functions.https.onCall(async (data, context) => {
     const fullGameInfo = await findFullGameInfo(data);
-    fullGameInfo.ref.update({ "game.state": data['state'] });
+    await fullGameInfo.ref.update({ "game.state": data['state'] });
     return fullGameInfo.data().game;
 });
 
