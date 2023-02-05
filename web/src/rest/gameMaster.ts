@@ -62,7 +62,7 @@ export async function updateRule(ruleId: number, title?: string, text?: string, 
 }
 
 export async function deleteRule(ruleId: number): Promise<void> {
-    return del(fullApi(`/rules/${ruleId}`));
+    return callApi('deleteRule', { rule: { id: ruleId }});
 }
 
 export async function moveRule(ruleId: number, to: number): Promise<Rule[]> {

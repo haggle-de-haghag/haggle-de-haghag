@@ -196,3 +196,23 @@ export const updateRule = functions.https.onCall(async (data, context): Promise<
 
     return refIntoRule(ruleDoc.ref);
 });
+
+export const deleteRule = functions.https.onCall(async (data, context): Promise<void> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialRule = parsePartialRule(data['rule']);
+    const partialRuleId = partialRule.id;
+    if (partialRuleId == undefined) {
+        throw new Error(`rule.id is required`);
+    }
+
+    const ruleDoc = await findRuleDoc(partialRuleId);
+    if (!ruleDoc.exists) {
+        throw new Error(`Rule ${partialRule.id} not found`);
+    }
+
+    await fullGameInfo.ref.update({
+        rules: admin.firestore.FieldValue.arrayRemove(partialRuleId),
+        [`ruleAccessMap.${partialRuleId}`]: admin.firestore.FieldValue.delete(),
+    });
+    await ruleDoc.ref.delete();
+});
