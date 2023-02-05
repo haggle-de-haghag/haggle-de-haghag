@@ -61,9 +61,9 @@ export interface FullGameInfo {
     game: Game;
     rules: Rule[];
     players: Player[];
-    ruleAccessMap: { [key: number]: PlayerIdWithAccess[] };
+    ruleAccessMap: { [key: RuleId]: PlayerIdWithAccess[] };
     tokens: Token[];
-    tokenAllocationMap: { [key: number]: PlayerIdWithAmount[] }; // key: tokenId
+    tokenAllocationMap: { [key: TokenId]: PlayerIdWithAmount[] }; // key: tokenId
 }
 
 export type GameState = 'PLAYING' | 'POST_MORTEM';

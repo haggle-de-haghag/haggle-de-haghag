@@ -58,7 +58,7 @@ export async function createRule(title: string, text: string): Promise<Rule> {
 }
 
 export async function updateRule(ruleId: number, title?: string, text?: string, assignedPlayerIds?: PlayerId[]): Promise<Rule> {
-    return patch(fullApi(`/rules/${ruleId}`), {title, text, assignedPlayerIds})
+    return callApi('updateRule', { rule: { id: ruleId, title, text }, assignedPlayerIds});
 }
 
 export async function deleteRule(ruleId: number): Promise<void> {
