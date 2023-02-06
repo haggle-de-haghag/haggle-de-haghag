@@ -73,7 +73,7 @@ async function intoFullGameInfo(doc: FullGameInfoDoc): Promise<FullGameInfo> {
 
     return {
         ...doc,
-        rules: ruleDocSnapshots.map(intoRule),
+        rules: ruleDocSnapshots.map(intoRule).sort((a, b) => a.ruleNumber - b.ruleNumber),
     }
 }
 
@@ -215,4 +215,46 @@ export const deleteRule = functions.https.onCall(async (data, context): Promise<
         [`ruleAccessMap.${partialRuleId}`]: admin.firestore.FieldValue.delete(),
     });
     await ruleDoc.ref.delete();
+});
+
+export const moveRule = functions.https.onCall(async (data, context): Promise<Rule[]> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const ruleId = data['ruleId'];
+    const toNumber = data['to'];
+
+    const ruleDocsRef = fullGameInfo.data().rules.map((id) => rules.doc(id));
+    const ruleDocSnapshots = await db.getAll(...ruleDocsRef) as admin.firestore.DocumentSnapshot<RuleDoc>[];
+    const ruleItems = ruleDocSnapshots.map((ruleDocSnapshot) => intoRule(ruleDocSnapshot));
+    ruleItems.sort((a, b) => a.ruleNumber - b.ruleNumber);
+
+    const fromIdx = ruleItems.findIndex((rule) => rule.id == ruleId);
+    if (fromIdx == -1) {
+        throw new Error(`Rule ${ruleId} not found`);
+    }
+
+    let index = fromIdx;
+    if (ruleItems[fromIdx].ruleNumber > toNumber) {
+        while (index > 0 && ruleItems[index - 1].ruleNumber >= toNumber) {
+            const tmp = ruleItems[index];
+            ruleItems[index] = ruleItems[index - 1];
+            ruleItems[index - 1] = tmp;
+            index--;
+        }
+    } else {
+        while (index < ruleItems.length - 1 && ruleItems[index + 1].ruleNumber <= toNumber) {
+            const tmp = ruleItems[index];
+            ruleItems[index] = ruleItems[index + 1];
+            ruleItems[index + 1] = tmp;
+            index++;
+        }
+    }
+
+    const writeBatch = db.batch();
+    ruleItems.forEach((rule, i) => {
+        const docRef = rules.doc(rule.id);
+        writeBatch.update(docRef, { ruleNumber: i+1 });
+    })
+    await writeBatch.commit();
+
+    return (await refIntoFullGameInfo(fullGameInfo.ref)).rules;
 });
