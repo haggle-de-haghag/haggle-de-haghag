@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FullGameInfo, Game, Rule } from "./model";
+import { FullGameInfo, Game, Rule, Token } from "./model";
 
 admin.initializeApp();
 
@@ -13,13 +13,16 @@ admin.initializeApp();
 // });
 
 type RuleDoc = Omit<Rule, 'id'>;
-type FullGameInfoDoc = Omit<FullGameInfo, 'rules'> & {
-    rules: string[]
+type TokenDoc = Omit<Token, 'id'>;
+type FullGameInfoDoc = Omit<FullGameInfo, 'rules' | 'tokens'> & {
+    rules: string[],
+    tokens: string[],
 };
 
 const db = admin.firestore();
 const games = db.collection('games') as admin.firestore.CollectionReference<FullGameInfoDoc>;
 const rules = db.collection('rules') as admin.firestore.CollectionReference<RuleDoc>;
+const tokens = db.collection('tokens') as admin.firestore.CollectionReference<TokenDoc>;
 
 function generateId(): string {
     const letters = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -67,13 +70,49 @@ async function refIntoRule(docRef: admin.firestore.DocumentReference<RuleDoc>): 
     return intoRule(await docRef.get());
 }
 
+function intoToken(doc: admin.firestore.DocumentSnapshot<TokenDoc>): Token {
+    const data = doc.data();
+    if (data == undefined) {
+        throw new Error(`doc ${doc.id} does not exist`);
+    }
+
+    return {
+        ...data,
+        id: doc.id,
+    };
+}
+
+async function refIntoToken(docRef: admin.firestore.DocumentReference<TokenDoc>): Promise<Token> {
+    return intoToken(await docRef.get());
+}
+
+function parsePartialToken(data: Record<string, any>): Partial<Token> {
+    return {
+        id: data['id'],
+        title: data['title'],
+        text: data['text'],
+    };
+}
+
+async function getAll<T extends admin.firestore.DocumentData>(refs: admin.firestore.DocumentReference<T>[]): Promise<admin.firestore.DocumentSnapshot<T>[]> {
+    if (refs.length == 0) {
+        return [];
+    }
+
+    return (await db.getAll(...refs)) as admin.firestore.DocumentSnapshot<T>[];
+}
+
 async function intoFullGameInfo(doc: FullGameInfoDoc): Promise<FullGameInfo> {
     const ruleDocs = doc.rules.map((ruleId) => rules.doc(ruleId));
-    const ruleDocSnapshots = (await db.getAll(...ruleDocs)) as admin.firestore.DocumentSnapshot<RuleDoc>[];
+    const ruleDocSnapshots = await getAll(ruleDocs);
+
+    const tokenDocs = doc.tokens.map((tokenId) => tokens.doc(tokenId));
+    const tokenDocSnapshots = await getAll(tokenDocs);
 
     return {
         ...doc,
         rules: ruleDocSnapshots.map(intoRule).sort((a, b) => a.ruleNumber - b.ruleNumber),
+        tokens: tokenDocSnapshots.map(intoToken),
     }
 }
 
@@ -257,4 +296,21 @@ export const moveRule = functions.https.onCall(async (data, context): Promise<Ru
     await writeBatch.commit();
 
     return (await refIntoFullGameInfo(fullGameInfo.ref)).rules;
+});
+
+export const createToken = functions.https.onCall(async (data, context): Promise<Token> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data);
+
+    const doc = tokens.doc();
+    const tokenDoc: TokenDoc = {
+        title: partialToken.title || '',
+        text: partialToken.text || '',
+        amount: 0,
+    };
+
+    await doc.create(tokenDoc);
+    await fullGameInfo.ref.update({ "tokens": admin.firestore.FieldValue.arrayUnion(doc.id) });
+
+    return refIntoToken(doc);
 });

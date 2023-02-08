@@ -69,12 +69,8 @@ export async function moveRule(ruleId: number, to: number): Promise<Rule[]> {
     return callApi('moveRule', { ruleId, to });
 }
 
-export async function listTokens(): Promise<Token[]> {
-    return get(fullApi('/tokens'));
-}
-
 export async function createToken(title: string, text: string): Promise<Token> {
-    return post(fullApi('/tokens'), {title, text});
+    return callApi('createToken', { title, text });
 }
 
 export async function updateToken(tokenId: number, title?: string, text?: string, allocation?: {[playerId: number]: number}): Promise<UpdateTokenResponse> {
