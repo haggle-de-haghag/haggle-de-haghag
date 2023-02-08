@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FullGameInfo, Game, Rule, Token } from "./model";
+import { FullGameInfo, Game, PlayerIdWithAmount, Rule, Token } from "./model";
 
 admin.initializeApp();
 
@@ -313,4 +313,39 @@ export const createToken = functions.https.onCall(async (data, context): Promise
     await fullGameInfo.ref.update({ "tokens": admin.firestore.FieldValue.arrayUnion(doc.id) });
 
     return refIntoToken(doc);
+});
+
+interface UpdateTokenResponse {
+    token: Token;
+    playerTokens: PlayerIdWithAmount[];
+}
+
+export const updateToken = functions.https.onCall(async (data, context): Promise<UpdateTokenResponse> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data['token']);
+    const partialTokenId = partialToken.id;
+    if (partialTokenId == undefined) {
+        throw new Error(`token.id is required`);
+    }
+
+    const tokenDoc = await tokens.doc(partialTokenId).get();
+    if (!tokenDoc.exists) {
+        throw new Error(`Token ${partialToken.id} not found`);
+    }
+
+    await tokenDoc.ref.update(stripUndefined({
+        title: partialToken.title,
+        text: partialToken.text,
+    }));
+
+    const allocation = data['allocation'] as (Record<string, number> | undefined);
+    if (allocation != undefined) {
+        const allocationList: PlayerIdWithAmount[] = Object.entries(allocation).map(([key, val]) => ({ playerId: key, amount: val }));
+        await fullGameInfo.ref.update({ [`tokenAllocationMap.${tokenDoc.id}`]: allocationList });
+    }
+
+    return {
+        token: await refIntoToken(tokenDoc.ref),
+        playerTokens: (await fullGameInfo.ref.get()).data()!!.tokenAllocationMap[tokenDoc.id]
+    };
 });
