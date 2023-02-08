@@ -78,7 +78,7 @@ export async function updateToken(tokenId: number, title?: string, text?: string
 }
 
 export async function deleteToken(tokenId: number): Promise<void> {
-    return await del(fullApi(`/tokens/${tokenId}`));
+    return callApi('deleteToken', { token: { id: tokenId }});
 }
 
 export async function addTokenToPlayer(playerId: number, tokenId: number, amount: number): Promise<number> {

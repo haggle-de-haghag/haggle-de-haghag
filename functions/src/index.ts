@@ -349,3 +349,23 @@ export const updateToken = functions.https.onCall(async (data, context): Promise
         playerTokens: (await fullGameInfo.ref.get()).data()!!.tokenAllocationMap[tokenDoc.id]
     };
 });
+
+export const deleteToken = functions.https.onCall(async (data, context): Promise<void> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data['token']);
+    const partialTokenId = partialToken.id;
+    if (partialTokenId == undefined) {
+        throw new Error(`token.id is required`);
+    }
+
+    const tokenDoc = await tokens.doc(partialTokenId).get();
+    if (!tokenDoc.exists) {
+        throw new Error(`Rule ${partialToken.id} not found`);
+    }
+
+    await fullGameInfo.ref.update({
+        tokens: admin.firestore.FieldValue.arrayRemove(partialTokenId),
+        [`tokenAllocationMap.${partialTokenId}`]: admin.firestore.FieldValue.delete(),
+    });
+    await tokenDoc.ref.delete();
+});
