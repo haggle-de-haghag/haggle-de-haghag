@@ -25,6 +25,7 @@ export interface Player {
     id: PlayerId;
     playerKey: string;
     displayName: string;
+    state: PlayerState;
 }
 
 export interface ForeignPlayer {
@@ -68,6 +69,7 @@ export interface FullGameInfo {
 
 export type GameState = 'PLAYING' | 'POST_MORTEM';
 export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
+export type PlayerState = 'ACTIVE' | 'STUB';
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };
 export type TokenAllocationMap = { [tokenId: number]: PlayerIdWithAmount[] };

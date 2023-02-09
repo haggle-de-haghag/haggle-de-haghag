@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FullGameInfo, Game, PlayerIdWithAmount, Rule, Token } from "./model";
+import { FullGameInfo, Game, Player, PlayerIdWithAmount, Rule, Token } from "./model";
 
 admin.initializeApp();
 
@@ -14,15 +14,20 @@ admin.initializeApp();
 
 type RuleDoc = Omit<Rule, 'id'>;
 type TokenDoc = Omit<Token, 'id'>;
-type FullGameInfoDoc = Omit<FullGameInfo, 'rules' | 'tokens'> & {
+type PlayerDoc = Omit<Player, 'id'>;
+type FullGameInfoDoc = Omit<FullGameInfo, 'players' | 'rules' | 'tokens'> & {
+    players: string[],
     rules: string[],
     tokens: string[],
 };
+
+type IdModel = { id: string };
 
 const db = admin.firestore();
 const games = db.collection('games') as admin.firestore.CollectionReference<FullGameInfoDoc>;
 const rules = db.collection('rules') as admin.firestore.CollectionReference<RuleDoc>;
 const tokens = db.collection('tokens') as admin.firestore.CollectionReference<TokenDoc>;
+const players = db.collection('players') as admin.firestore.CollectionReference<PlayerDoc>;
 
 function generateId(): string {
     const letters = "0123456789abcdefghijklmnopqrstuvwxyz";
@@ -42,6 +47,22 @@ function stripUndefined<T extends Record<string, any>>(data: T): Partial<T> {
     }
 
     return copy;
+}
+
+function docIntoIdModel<T>(doc: admin.firestore.DocumentSnapshot<T>): T & IdModel {
+    const data = doc.data();
+    if (data == undefined) {
+        throw new Error(`doc ${doc.id} does not exist`);
+    }
+
+    return {
+        ...data,
+        id: doc.id,
+    };
+}
+
+async function refIntoIdModel<T>(ref: admin.firestore.DocumentReference<T>): Promise<T & IdModel> {
+    return docIntoIdModel(await ref.get());
 }
 
 function parsePartialRule(data: Record<string, any>): Partial<Rule> {
@@ -109,8 +130,11 @@ async function intoFullGameInfo(doc: FullGameInfoDoc): Promise<FullGameInfo> {
     const tokenDocs = doc.tokens.map((tokenId) => tokens.doc(tokenId));
     const tokenDocSnapshots = await getAll(tokenDocs);
 
+    const playerItems: Player[] = await Promise.all(doc.players.map((id) => refIntoIdModel<PlayerDoc>(players.doc(id))));
+
     return {
         ...doc,
+        players: playerItems,
         rules: ruleDocSnapshots.map(intoRule).sort((a, b) => a.ruleNumber - b.ruleNumber),
         tokens: tokenDocSnapshots.map(intoToken),
     }
@@ -368,4 +392,31 @@ export const deleteToken = functions.https.onCall(async (data, context): Promise
         [`tokenAllocationMap.${partialTokenId}`]: admin.firestore.FieldValue.delete(),
     });
     await tokenDoc.ref.delete();
+});
+
+export const createStubPlayers = functions.https.onCall(async (data, context): Promise<Player[]> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const numPlayers = fullGameInfo.data().players.length;
+    const amount = parseInt(data['amount']);
+
+    const newPlayersRef: admin.firestore.DocumentReference<PlayerDoc>[] = [];
+    const batch = db.batch();
+    for (let i = 0; i < amount; ++i) {
+        const id = generateId();
+        const doc = players.doc(id);
+        batch.create(doc, {
+            playerKey: id,
+            displayName: `プレイヤー${numPlayers + i + 1}`,
+            state: 'STUB',
+        });
+        newPlayersRef.push(doc);
+    }
+    await batch.commit();
+
+    const playerIds = newPlayersRef.map((ref) => ref.id);
+    await fullGameInfo.ref.update({
+        players: admin.firestore.FieldValue.arrayUnion(...playerIds)
+    });
+
+    return Promise.all(newPlayersRef.map(refIntoIdModel));
 });
