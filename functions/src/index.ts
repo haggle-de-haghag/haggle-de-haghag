@@ -115,6 +115,13 @@ function parsePartialToken(data: Record<string, any>): Partial<Token> {
     };
 }
 
+function parsePartialPlayer(data: Record<string, any>): Partial<Player> {
+    return {
+        id: data['id'],
+        displayName: data['displayName'],
+    };
+}
+
 async function getAll<T extends admin.firestore.DocumentData>(refs: admin.firestore.DocumentReference<T>[]): Promise<admin.firestore.DocumentSnapshot<T>[]> {
     if (refs.length == 0) {
         return [];
@@ -130,11 +137,12 @@ async function intoFullGameInfo(doc: FullGameInfoDoc): Promise<FullGameInfo> {
     const tokenDocs = doc.tokens.map((tokenId) => tokens.doc(tokenId));
     const tokenDocSnapshots = await getAll(tokenDocs);
 
-    const playerItems: Player[] = await Promise.all(doc.players.map((id) => refIntoIdModel<PlayerDoc>(players.doc(id))));
+    const playerDocs = doc.players.map((id) => players.doc(id));
+    const playerDocSnapshots = await getAll(playerDocs);
 
     return {
         ...doc,
-        players: playerItems,
+        players: playerDocSnapshots.map(docIntoIdModel),
         rules: ruleDocSnapshots.map(intoRule).sort((a, b) => a.ruleNumber - b.ruleNumber),
         tokens: tokenDocSnapshots.map(intoToken),
     }
@@ -419,4 +427,22 @@ export const createStubPlayers = functions.https.onCall(async (data, context): P
     });
 
     return Promise.all(newPlayersRef.map(refIntoIdModel));
+});
+
+export const kickPlayer = functions.https.onCall(async (data, context): Promise<Player> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialPlayer = parsePartialPlayer(data['player']);
+    const playerId = partialPlayer.id;
+    if (playerId == undefined) {
+        throw new Error(`player.id is required`);
+    }
+
+    await fullGameInfo.ref.update({
+        players: admin.firestore.FieldValue.arrayRemove(playerId)
+    });
+
+    const doc = players.doc(playerId);
+    const player = await refIntoIdModel(doc);
+    await doc.delete();
+    return player;
 });

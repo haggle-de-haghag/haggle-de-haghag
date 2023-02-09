@@ -90,8 +90,8 @@ export function createStubPlayers(amount: number): Promise<Player[]> {
     return callApi('createStubPlayers', { amount });
 }
 
-export function kickPlayer(playerId: number): AbortablePromise<Player> {
-    return del(fullApi(`/players/${playerId}`));
+export function kickPlayer(playerId: number): Promise<Player> {
+    return callApi('kickPlayer', { player: { id: playerId }});
 }
 
 function fullApi(api: string): string {
