@@ -82,8 +82,7 @@ export async function deleteToken(tokenId: number): Promise<void> {
 }
 
 export async function addTokenToPlayer(playerId: number, tokenId: number, amount: number): Promise<number> {
-    const response = await post<{newAmount: number}>(fullApi(`/players/${playerId}/tokens/${tokenId}/add`), { amount });
-    return response.newAmount;
+    return callApi('addTokenToPlayer', { tokenId, playerId, amount });
 }
 
 export function createStubPlayers(amount: number): Promise<Player[]> {

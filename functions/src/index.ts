@@ -402,6 +402,29 @@ export const deleteToken = functions.https.onCall(async (data, context): Promise
     await tokenDoc.ref.delete();
 });
 
+export const addTokenToPlayer = functions.https.onCall(async (data, context): Promise<number> => {
+    const fullGameInfo = await findFullGameInfo(data);
+    const tokenId = data['tokenId'];
+    const playerId = data['playerId'];
+    const amount = parseInt(data['amount']);
+
+    const allocation = fullGameInfo.data().tokenAllocationMap[tokenId];
+    if (allocation == undefined) {
+        throw new Error(`Invalid token id: ${tokenId}`);
+    }
+
+    const entry = allocation.find((e) => e.playerId == playerId);
+    if (entry == undefined) {
+        throw new Error(`Player ${playerId} not found`);
+    }
+
+    entry.amount += amount;
+    await fullGameInfo.ref.update({
+        [`tokenAllocationMap.${tokenId}`]: allocation
+    });
+    return entry.amount;
+});
+
 export const createStubPlayers = functions.https.onCall(async (data, context): Promise<Player[]> => {
     const fullGameInfo = await findFullGameInfo(data);
     const numPlayers = fullGameInfo.data().players.length;
