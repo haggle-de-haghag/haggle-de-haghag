@@ -492,7 +492,7 @@ export const fullPlayerInfo = functions.https.onCall(async (data, context): Prom
     const foreignPlayers: ForeignPlayer[] = fullGameInfo.players.map((pl) => ({
         id: pl.id,
         displayName: pl.displayName
-    }));
+    })).filter((pl) => pl.id != player.id);
 
     const rules = fullGameInfo.rules.map((rule) => {
         const accessList = fullGameInfo.ruleAccessMap[rule.id];
