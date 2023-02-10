@@ -205,6 +205,14 @@ async function findRuleDoc(ruleId: any): Promise<admin.firestore.DocumentSnapsho
     return rules.doc(ruleId).get();
 }
 
+async function findPlayerByKey(playerKey: string): Promise<Player | null> {
+    const querySnapshot = await players.where('playerKey', '==', playerKey).get();
+    if (querySnapshot.size == 0) {
+        return null;
+    }
+    return docIntoIdModel(querySnapshot.docs[0]);
+}
+
 export const fullGameInfo = functions.https.onCall(async (data, context): Promise<FullGameInfo> => {
     const fullGameInfoDocSnapshot = await findFullGameInfo(data);
     return intoFullGameInfo(fullGameInfoDocSnapshot.data());
@@ -440,6 +448,7 @@ export const createStubPlayers = functions.https.onCall(async (data, context): P
             playerKey: id,
             displayName: `プレイヤー${numPlayers + i + 1}`,
             state: 'STUB',
+            gameId: fullGameInfo.id,
         });
         newPlayersRef.push(doc);
     }
@@ -472,13 +481,13 @@ export const kickPlayer = functions.https.onCall(async (data, context): Promise<
 });
 
 export const fullPlayerInfo = functions.https.onCall(async (data, context): Promise<FullPlayerInfo> => {
-    const fullGameInfoDocRef = games.doc(data['gameId']);
-    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
-
-    const player = fullGameInfo.players.find((pl) => pl.playerKey == data['plyaerId']);
-    if (player == undefined) {
-        throw new Error(`Player ${data['playerId']} not found in game ${data['gameId']}`);
+    const player = await findPlayerByKey(data['playerKey']);
+    if (player == null) {
+        throw new Error(`Player ${data['playerKey']} not found`);
     }
+
+    const fullGameInfoDocRef = games.doc(player.gameId);
+    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
 
     const foreignPlayers: ForeignPlayer[] = fullGameInfo.players.map((pl) => ({
         id: pl.id,

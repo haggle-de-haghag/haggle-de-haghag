@@ -26,6 +26,7 @@ export interface Player {
     playerKey: string;
     displayName: string;
     state: PlayerState;
+    gameId: string;
 }
 
 export interface ForeignPlayer {
