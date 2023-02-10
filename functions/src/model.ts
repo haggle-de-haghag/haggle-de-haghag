@@ -67,6 +67,14 @@ export interface FullGameInfo {
     tokenAllocationMap: { [key: TokenId]: PlayerIdWithAmount[] }; // key: tokenId
 }
 
+export interface FullPlayerInfo {
+    gameTitle: string;
+    player: Player;
+    players: ForeignPlayer[];
+    rules: Rule[];
+    tokens: Token[];
+}
+
 export type GameState = 'PLAYING' | 'POST_MORTEM';
 export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
 export type PlayerState = 'ACTIVE' | 'STUB';

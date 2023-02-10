@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { FullGameInfo, Game, Player, PlayerIdWithAmount, Rule, Token } from "./model";
+import { ForeignPlayer, FullGameInfo, FullPlayerInfo, Game, Player, PlayerIdWithAmount, Rule, Token } from "./model";
 
 admin.initializeApp();
 
@@ -413,9 +413,10 @@ export const addTokenToPlayer = functions.https.onCall(async (data, context): Pr
         throw new Error(`Invalid token id: ${tokenId}`);
     }
 
-    const entry = allocation.find((e) => e.playerId == playerId);
+    let entry = allocation.find((e) => e.playerId == playerId);
     if (entry == undefined) {
-        throw new Error(`Player ${playerId} not found`);
+        entry = { playerId, amount: 0 };
+        allocation.push(entry);
     }
 
     entry.amount += amount;
@@ -468,4 +469,47 @@ export const kickPlayer = functions.https.onCall(async (data, context): Promise<
     const player = await refIntoIdModel(doc);
     await doc.delete();
     return player;
+});
+
+export const fullPlayerInfo = functions.https.onCall(async (data, context): Promise<FullPlayerInfo> => {
+    const fullGameInfoDocRef = games.doc(data['gameId']);
+    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
+
+    const player = fullGameInfo.players.find((pl) => pl.playerKey == data['plyaerId']);
+    if (player == undefined) {
+        throw new Error(`Player ${data['playerId']} not found in game ${data['gameId']}`);
+    }
+
+    const foreignPlayers: ForeignPlayer[] = fullGameInfo.players.map((pl) => ({
+        id: pl.id,
+        displayName: pl.displayName
+    }));
+
+    const rules = fullGameInfo.rules.map((rule) => {
+        const accessList = fullGameInfo.ruleAccessMap[rule.id];
+        const access = accessList.find((a) => a.playerId == player.id);
+        if (access != undefined) {
+            return { ...rule, accessType: access.accessType };
+        } else {
+            return null;
+        }
+    }).filter((rule) => rule != null) as Rule[];
+
+    const tokens = fullGameInfo.tokens.map((token) => {
+        const allocationList = fullGameInfo.tokenAllocationMap[token.id];
+        const allocation = allocationList.find((a) => a.playerId == player.id);
+        if (allocation != undefined) {
+            return { ...token, amount: allocation.amount };
+        } else {
+            return null;
+        }
+    }).filter((token) => token != null) as Token[];
+    
+    return {
+        gameTitle: fullGameInfo.game.title,
+        player,
+        players: foreignPlayers,
+        rules: rules.sort((a, b) => a.ruleNumber - b.ruleNumber),
+        tokens: tokens.sort((a, b) => a.id.localeCompare(b.id)),
+    };
 });
