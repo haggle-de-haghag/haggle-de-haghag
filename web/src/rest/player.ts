@@ -34,8 +34,7 @@ export function listFullInfo(): Promise<FullPlayerInfo> {
 }
 
 export async function shareRule(ruleId: RuleId, playerId: PlayerId): Promise<boolean> {
-    const result = await post<{success: boolean}>(`/players/${config.playerKey}/rules/${ruleId}/share`, { playerId });
-    return result.success;
+    return callApi('shareRule', { toPlayerId: playerId, ruleId });
 }
 
 export async function giveToken(tokenId: TokenId, playerId: PlayerId, amount: number): Promise<boolean> {

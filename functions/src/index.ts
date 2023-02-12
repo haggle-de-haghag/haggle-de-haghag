@@ -496,7 +496,7 @@ export const fullPlayerInfo = functions.https.onCall(async (data, context): Prom
 
     const rules = fullGameInfo.rules.map((rule) => {
         const accessList = fullGameInfo.ruleAccessMap[rule.id];
-        const access = accessList.find((a) => a.playerId == player.id);
+        const access = accessList?.find((a) => a.playerId == player.id);
         if (access != undefined) {
             return { ...rule, accessType: access.accessType };
         } else {
@@ -532,4 +532,37 @@ export const updatePlayerName = functions.https.onCall(async (data, context): Pr
     const playerDocRef = players.doc(player.id);
     await playerDocRef.update({ "displayName": data['name'] });
     return refIntoIdModel(playerDocRef);
+});
+
+export const shareRule = functions.https.onCall(async (data, context): Promise<boolean> => {
+    const player = await findPlayerByKey(data['playerKey']);
+    if (player == null) {
+        throw new Error(`Player ${data['playerKey']} not found`);
+    }
+    const ruleId = data['ruleId'];
+    const toPlayerId = data['toPlayerId'];
+
+    const fullGameInfoDocRef = games.doc(player.gameId);
+    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
+
+    const ruleAccessList = fullGameInfo.ruleAccessMap[ruleId];
+    if (ruleAccessList == undefined) {
+        throw new Error(`Rule ${ruleId} not found`);
+    }
+
+    const fromRuleAccess = ruleAccessList.find((a) => a.playerId == player.id);
+    if (fromRuleAccess == undefined || fromRuleAccess.accessType != 'ASSIGNED') {
+        throw new Error(`Invalid access to rule ${ruleId}`);
+    }
+
+    const toRuleAccess = ruleAccessList.find((a) => a.playerId == toPlayerId);
+    if (toRuleAccess != undefined) {
+        console.log(`Player ${toPlayerId} already knows rule ${ruleId}`);
+        return false;
+    }
+
+    await fullGameInfoDocRef.update({
+        [`ruleAccessMap.${ruleId}`]: admin.firestore.FieldValue.arrayUnion({ playerId: toPlayerId, accessType: 'SHARED' }),
+    });
+    return true;
 });
