@@ -25,8 +25,8 @@ export interface FullPlayerInfo {
     tokens: Token[];
 }
 
-export function updateName(name: string): AbortablePromise<Player> {
-    return patch(`/players/${config.playerKey}/name`, { name });
+export function updateName(name: string): Promise<Player> {
+    return callApi('updatePlayerName', { name });
 }
 
 export function listFullInfo(): Promise<FullPlayerInfo> {

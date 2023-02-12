@@ -522,3 +522,14 @@ export const fullPlayerInfo = functions.https.onCall(async (data, context): Prom
         tokens: tokens.sort((a, b) => a.id.localeCompare(b.id)),
     };
 });
+
+export const updatePlayerName = functions.https.onCall(async (data, context): Promise<Player> => {
+    const player = await findPlayerByKey(data['playerKey']);
+    if (player == null) {
+        throw new Error(`Player ${data['playerKey']} not found`);
+    }
+
+    const playerDocRef = players.doc(player.id);
+    await playerDocRef.update({ "displayName": data['name'] });
+    return refIntoIdModel(playerDocRef);
+});
