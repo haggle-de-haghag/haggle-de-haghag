@@ -503,15 +503,21 @@ export const fullPlayerInfo = functions.https.onCall(async (data, context): Prom
         const access = accessList?.find((a) => a.playerId == player.id);
         if (access != undefined) {
             return { ...rule, accessType: access.accessType };
+        } else if (fullGameInfo.game.state == 'POST_MORTEM') {
+            return { ...rule, accessType: 'POST_MORTEM'};
         } else {
             return null;
         }
     }).filter((rule) => rule != null) as Rule[];
 
-    const tokens = Object.entries(player.tokenAllocation).map(([tokenId, amount]) => {
-        const token = fullGameInfo.tokens.find((t) => t.id == tokenId)!!;
-        return { ...token, amount };
-    });
+    const tokens = fullGameInfo.tokens.map((token) => {
+        const amount = player.tokenAllocation[token.id] ?? 0;
+        if (fullGameInfo.game.state == 'POST_MORTEM' || amount > 0) {
+            return { ...token, amount };
+        } else {
+            return null;
+        }
+    }).filter((token) => token != null) as Token[];
     
     return {
         gameTitle: fullGameInfo.game.title,
