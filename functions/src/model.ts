@@ -27,6 +27,7 @@ export interface Player {
     displayName: string;
     state: PlayerState;
     gameId: string;
+    tokenAllocation: Record<string, number>;
 }
 
 export interface ForeignPlayer {
@@ -65,7 +66,7 @@ export interface FullGameInfo {
     players: Player[];
     ruleAccessMap: { [key: RuleId]: PlayerIdWithAccess[] };
     tokens: Token[];
-    tokenAllocationMap: { [key: TokenId]: PlayerIdWithAmount[] }; // key: tokenId
+    tokenAllocationMap: { [key: TokenId]: PlayerIdWithAmount[] };
 }
 
 export interface FullPlayerInfo {
@@ -81,4 +82,4 @@ export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
 export type PlayerState = 'ACTIVE' | 'STUB';
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };
-export type TokenAllocationMap = { [tokenId: number]: PlayerIdWithAmount[] };
+export type TokenAllocationMap = { [tokenId: TokenId]: PlayerIdWithAmount[] };

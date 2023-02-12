@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import { ForeignPlayer, FullGameInfo, FullPlayerInfo, Game, Player, PlayerIdWithAmount, Rule, Token } from "./model";
+import { ForeignPlayer, FullGameInfo, FullPlayerInfo, Game, Player, PlayerIdWithAmount, Rule, Token, TokenAllocationMap } from "./model";
 
 admin.initializeApp();
 
@@ -15,7 +15,7 @@ admin.initializeApp();
 type RuleDoc = Omit<Rule, 'id'>;
 type TokenDoc = Omit<Token, 'id'>;
 type PlayerDoc = Omit<Player, 'id'>;
-type FullGameInfoDoc = Omit<FullGameInfo, 'players' | 'rules' | 'tokens'> & {
+type FullGameInfoDoc = Omit<FullGameInfo, 'players' | 'rules' | 'tokens' | 'tokenAllocationMap'> & {
     players: string[],
     rules: string[],
     tokens: string[],
@@ -140,11 +140,18 @@ async function intoFullGameInfo(doc: FullGameInfoDoc): Promise<FullGameInfo> {
     const playerDocs = doc.players.map((id) => players.doc(id));
     const playerDocSnapshots = await getAll(playerDocs);
 
+    const playerItems = playerDocSnapshots.map(docIntoIdModel);
+    const tokenItems = tokenDocSnapshots.map(intoToken);
+    const tokenAllocationMap: TokenAllocationMap = {};
+    for (let token of tokenItems) {
+        tokenAllocationMap[token.id] = playerItems.map((pl) => ({ playerId: pl.id, amount: pl.tokenAllocation[token.id] }));
+    }
     return {
         ...doc,
-        players: playerDocSnapshots.map(docIntoIdModel),
+        players: playerItems,
         rules: ruleDocSnapshots.map(intoRule).sort((a, b) => a.ruleNumber - b.ruleNumber),
-        tokens: tokenDocSnapshots.map(intoToken),
+        tokens: tokenItems,
+        tokenAllocationMap,
     }
 }
 
@@ -171,7 +178,6 @@ export const createGame = functions.https.onCall(async (data, context) => {
         players: [],
         ruleAccessMap: {},
         tokens: [],
-        tokenAllocationMap: {}
     };
 
     try {
@@ -380,13 +386,23 @@ export const updateToken = functions.https.onCall(async (data, context): Promise
 
     const allocation = data['allocation'] as (Record<string, number> | undefined);
     if (allocation != undefined) {
-        const allocationList: PlayerIdWithAmount[] = Object.entries(allocation).map(([key, val]) => ({ playerId: key, amount: val }));
-        await fullGameInfo.ref.update({ [`tokenAllocationMap.${tokenDoc.id}`]: allocationList });
+        const writeBatch = db.batch();
+        for (let [playerId, amount] of Object.entries(allocation)) {
+            const playerDocRef = players.doc(playerId);
+            writeBatch.update(playerDocRef, {
+                [`tokenAllocation.${tokenDoc.id}`]: amount,
+            });
+        }
+        await writeBatch.commit();
     }
+
+    const playerDocs = await getAll(fullGameInfo.data().players.map((id) => players.doc(id)));
+    const playerItems = playerDocs.map(docIntoIdModel);
+    const playerTokens = playerItems.map((pl) => ({ playerId: pl.id, amount: pl.tokenAllocation[tokenDoc.id] }));
 
     return {
         token: await refIntoToken(tokenDoc.ref),
-        playerTokens: (await fullGameInfo.ref.get()).data()!!.tokenAllocationMap[tokenDoc.id]
+        playerTokens,
     };
 });
 
@@ -405,33 +421,20 @@ export const deleteToken = functions.https.onCall(async (data, context): Promise
 
     await fullGameInfo.ref.update({
         tokens: admin.firestore.FieldValue.arrayRemove(partialTokenId),
-        [`tokenAllocationMap.${partialTokenId}`]: admin.firestore.FieldValue.delete(),
     });
     await tokenDoc.ref.delete();
 });
 
 export const addTokenToPlayer = functions.https.onCall(async (data, context): Promise<number> => {
-    const fullGameInfo = await findFullGameInfo(data);
     const tokenId = data['tokenId'];
     const playerId = data['playerId'];
     const amount = parseInt(data['amount']);
 
-    const allocation = fullGameInfo.data().tokenAllocationMap[tokenId];
-    if (allocation == undefined) {
-        throw new Error(`Invalid token id: ${tokenId}`);
-    }
-
-    let entry = allocation.find((e) => e.playerId == playerId);
-    if (entry == undefined) {
-        entry = { playerId, amount: 0 };
-        allocation.push(entry);
-    }
-
-    entry.amount += amount;
-    await fullGameInfo.ref.update({
-        [`tokenAllocationMap.${tokenId}`]: allocation
+    const playerDoc = players.doc(playerId);
+    await playerDoc.update({
+        [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount),
     });
-    return entry.amount;
+    return (await playerDoc.get()).data()!!.tokenAllocation[tokenId];
 });
 
 export const createStubPlayers = functions.https.onCall(async (data, context): Promise<Player[]> => {
@@ -449,6 +452,7 @@ export const createStubPlayers = functions.https.onCall(async (data, context): P
             displayName: `プレイヤー${numPlayers + i + 1}`,
             state: 'STUB',
             gameId: fullGameInfo.id,
+            tokenAllocation: {},
         });
         newPlayersRef.push(doc);
     }
@@ -504,15 +508,10 @@ export const fullPlayerInfo = functions.https.onCall(async (data, context): Prom
         }
     }).filter((rule) => rule != null) as Rule[];
 
-    const tokens = fullGameInfo.tokens.map((token) => {
-        const allocationList = fullGameInfo.tokenAllocationMap[token.id];
-        const allocation = allocationList.find((a) => a.playerId == player.id);
-        if (allocation != undefined) {
-            return { ...token, amount: allocation.amount };
-        } else {
-            return null;
-        }
-    }).filter((token) => token != null) as Token[];
+    const tokens = Object.entries(player.tokenAllocation).map(([tokenId, amount]) => {
+        const token = fullGameInfo.tokens.find((t) => t.id == tokenId)!!;
+        return { ...token, amount };
+    });
     
     return {
         gameTitle: fullGameInfo.game.title,
@@ -564,5 +563,29 @@ export const shareRule = functions.https.onCall(async (data, context): Promise<b
     await fullGameInfoDocRef.update({
         [`ruleAccessMap.${ruleId}`]: admin.firestore.FieldValue.arrayUnion({ playerId: toPlayerId, accessType: 'SHARED' }),
     });
+    return true;
+});
+
+export const giveToken = functions.https.onCall(async (data, context): Promise<boolean> => {
+    const player = await findPlayerByKey(data['playerKey']);
+    if (player == null) {
+        throw new Error(`Player ${data['playerKey']} not found`);
+    }
+    const tokenId = data['tokenId'];
+    const toPlayerId = data['toPlayerId'];
+    const amount = parseInt(data['amount']);
+
+    if (player.tokenAllocation[tokenId] < amount) {
+        console.log(`Player ${player.id} does not have ${amount} of token ${tokenId}`);
+        return false;
+    }
+
+    await players.doc(toPlayerId).update({
+        [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount)
+    });
+    await players.doc(player.id).update({
+        [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(-amount)
+    });
+
     return true;
 });

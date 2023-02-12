@@ -38,8 +38,7 @@ export async function shareRule(ruleId: RuleId, playerId: PlayerId): Promise<boo
 }
 
 export async function giveToken(tokenId: TokenId, playerId: PlayerId, amount: number): Promise<boolean> {
-    const result = await post<{success: boolean}>(`/players/${config.playerKey}/tokens/${tokenId}/give`, { playerId, amount });
-    return result.success;
+    return callApi('giveToken', { toPlayerId: playerId, tokenId, amount });
 }
 
 async function callApi<T, R>(api: string, payload: T): Promise<R> {
