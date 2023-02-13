@@ -18,9 +18,6 @@ module.exports = {
     },
     resolve: {
         extensions: ['.tsx', '.ts', '.js'],
-        alias: {
-            env: path.join(__dirname, 'src', 'env', process.env.NODE_ENV)
-        }
     },
     output: {
         filename: '[name].js',

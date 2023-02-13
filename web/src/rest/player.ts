@@ -1,7 +1,5 @@
-import {AbortablePromise, get, patch, post} from "./common";
 import {ForeignPlayer, Game, Player, PlayerId, Rule, RuleId, Token, TokenId} from "../model";
 import { Firebase } from "../firebase/firebase";
-import { firebaseConfig } from "../env/development";
 
 interface Config {
     playerKey: string;
@@ -13,7 +11,7 @@ let config: Config;
 export function reconfigure(playerKey: string) {
     config = {
         playerKey,
-        firebase: new Firebase(firebaseConfig),
+        firebase: new Firebase(),
     };
 }
 

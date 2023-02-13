@@ -14,6 +14,7 @@ module.exports = merge(common, {
     plugins: [
         new webpack.DefinePlugin({
             API_BASE_URL: '"http://localhost:8080/api"',
+            BUILD_ENV: '"local"',
         }),
         new webpack.HotModuleReplacementPlugin(),
     ]

@@ -1,7 +1,5 @@
-import { firebaseConfig } from "../env/development";
 import { Firebase } from "../firebase/firebase";
-import {AccessType, ForeignPlayer, Game, GameState, Player, PlayerId, Rule, Token} from "../model";
-import {AbortablePromise, del, get, patch, post, put} from "./common";
+import {AccessType, Game, GameState, Player, PlayerId, Rule, Token} from "../model";
 
 interface Config {
     gameMasterKey: string;
@@ -13,7 +11,7 @@ let config: Config;
 export function configure(gameMasterKey: string) {
     config = {
         gameMasterKey,
-        firebase: new Firebase(firebaseConfig)
+        firebase: new Firebase(),
     }
 }
 

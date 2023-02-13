@@ -1,4 +1,3 @@
-import { firebaseConfig } from "../env/development";
 import { Firebase } from "../firebase/firebase";
 import {Game, Player} from "../model";
 import {post} from "./common";
@@ -12,7 +11,7 @@ let config: Config = {
 let firebase: Firebase;
 
 export function configure() {
-    firebase = new Firebase(firebaseConfig);
+    firebase = new Firebase();
 }
 
 export async function joinGame(gameKey: string, playerName: string): Promise<Player> {

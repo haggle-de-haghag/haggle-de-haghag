@@ -7,6 +7,7 @@ module.exports = merge(common, {
     plugins: [
         new webpack.DefinePlugin({
             API_BASE_URL: '"https://haggle-de-haghag.herokuapp.com/api"',
+            BUILD_ENV: `"${process.env.BUILD_ENV}"`,
         })
     ]
 });
