@@ -65,7 +65,7 @@ async function refIntoIdModel<T>(ref: admin.firestore.DocumentReference<T>): Pro
   return docIntoIdModel(await ref.get());
 }
 
-function parsePartialRule(data: Record<string, unknown>): Partial<Rule> {
+function parsePartialRule(data: Record<string, any>): Partial<Rule> {
   return {
     id: data["id"],
     ruleNumber: parseInt(data["ruleNumber"]),
@@ -107,7 +107,7 @@ async function refIntoToken(docRef: admin.firestore.DocumentReference<TokenDoc>)
   return intoToken(await docRef.get());
 }
 
-function parsePartialToken(data: Record<string, unknown>): Partial<Token> {
+function parsePartialToken(data: Record<string, any>): Partial<Token> {
   return {
     id: data["id"],
     title: data["title"],
@@ -115,7 +115,7 @@ function parsePartialToken(data: Record<string, unknown>): Partial<Token> {
   };
 }
 
-function parsePartialPlayer(data: Record<string, unknown>): Partial<Player> {
+function parsePartialPlayer(data: Record<string, any>): Partial<Player> {
   return {
     id: data["id"],
     displayName: data["displayName"],
