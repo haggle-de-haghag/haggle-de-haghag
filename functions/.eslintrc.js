@@ -27,5 +27,8 @@ module.exports = {
   rules: {
     "quotes": ["error", "double"],
     "import/no-unresolved": 0,
+    "max-len": ["warn", {"code": 180}],
+    "require-jsdoc": "off",
+    "no-unused-vars": ["warn", {"argsIgnorePattern": "context"}],
   },
 };

@@ -77,9 +77,9 @@ export interface FullPlayerInfo {
     tokens: Token[];
 }
 
-export type GameState = 'PLAYING' | 'POST_MORTEM';
-export type AccessType = 'ASSIGNED' | 'SHARED' | 'POST_MORTEM';
-export type PlayerState = 'ACTIVE' | 'STUB';
+export type GameState = "PLAYING" | "POST_MORTEM";
+export type AccessType = "ASSIGNED" | "SHARED" | "POST_MORTEM";
+export type PlayerState = "ACTIVE" | "STUB";
 
 export type RuleAccessMap = { [ruleId: number]: PlayerIdWithAccess[] };
 export type TokenAllocationMap = { [tokenId: TokenId]: PlayerIdWithAmount[] };
