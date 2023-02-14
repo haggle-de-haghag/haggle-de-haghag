@@ -1,6 +1,6 @@
 import * as functions from "firebase-functions";
 import * as admin from "firebase-admin";
-import {ForeignPlayer, FullGameInfo, FullPlayerInfo, Game, Player, PlayerIdWithAmount, Rule, Token, TokenAllocationMap} from "./model";
+import {ForeignPlayer, FullGameInfo, FullPlayerInfo, Game, Player, PlayerIdWithAmount, PlayerState, Rule, Token, TokenAllocationMap} from "./model";
 
 admin.initializeApp();
 
@@ -160,6 +160,36 @@ async function refIntoFullGameInfo(docRef: admin.firestore.DocumentReference<Ful
   return intoFullGameInfo(fullGameInfoDoc.data()!);
 }
 
+interface CreatePlayerTag {
+    state: PlayerState;
+    displayName: string;
+}
+
+async function createPlayers(gameId: string, playerTags: CreatePlayerTag[]): Promise<Player[]> {
+  const newPlayersRef: admin.firestore.DocumentReference<PlayerDoc>[] = [];
+  const batch = db.batch();
+  for (let tag of playerTags) {
+    const id = generateId();
+    const doc = players.doc(id);
+    batch.create(doc, {
+      playerKey: id,
+      displayName: tag.displayName,
+      state: tag.state,
+      gameId: gameId,
+      tokenAllocation: {},
+    });
+    newPlayersRef.push(doc);
+  }
+  await batch.commit();
+
+  const playerIds = newPlayersRef.map((ref) => ref.id);
+  await games.doc(gameId).update({
+    players: admin.firestore.FieldValue.arrayUnion(...playerIds),
+  });
+
+  return Promise.all(newPlayersRef.map(refIntoIdModel));
+}
+
 export const createGame = functions.https.onCall(async (data, context) => {
   const id = generateId();
   const masterKey = generateId();
@@ -188,6 +218,42 @@ export const createGame = functions.https.onCall(async (data, context) => {
   }
 
   return game;
+});
+
+export const joinGame = functions.https.onCall(async (data, context) => {
+    const gameId = data['gameId'];
+    const playerName = data['playerName'];
+
+    const fullGameInfo = await refIntoFullGameInfo(games.doc(gameId));
+    let player: Player | undefined;
+
+    for (let attempt = 0; player == undefined && attempt < 3; ++attempt) {
+        const stubPlayers = fullGameInfo.players.filter((pl) => pl.state == 'STUB');
+        for (let p of stubPlayers) {
+            const playerRef = players.doc(p.id);
+            const playerSnapshot = await playerRef.get();
+            if (playerSnapshot.data()?.state == 'STUB') {
+                try {
+                    await playerRef.update({
+                        state: 'ACTIVE',
+                        displayName: playerName
+                    }, { lastUpdateTime: playerSnapshot.updateTime });
+                    player = await refIntoIdModel(playerRef);
+                    break;
+                } catch (e) {
+                    console.log(`Failed to acquire ${p.id}. Trying next stub.`);
+                }
+            }
+        }
+    }
+
+    if (player == undefined) {
+        // Assume there's no stub remaining. Create a new player.
+        const result = await createPlayers(gameId, [{ state: 'ACTIVE', displayName: playerName }]);
+        player = result[0];
+    }
+
+    return player;
 });
 
 async function findGameByMasterKey(masterKey: string): Promise<admin.firestore.QueryDocumentSnapshot<FullGameInfoDoc> | null> {
@@ -442,28 +508,8 @@ export const createStubPlayers = functions.https.onCall(async (data, context): P
   const numPlayers = fullGameInfo.data().players.length;
   const amount = parseInt(data["amount"]);
 
-  const newPlayersRef: admin.firestore.DocumentReference<PlayerDoc>[] = [];
-  const batch = db.batch();
-  for (let i = 0; i < amount; ++i) {
-    const id = generateId();
-    const doc = players.doc(id);
-    batch.create(doc, {
-      playerKey: id,
-      displayName: `プレイヤー${numPlayers + i + 1}`,
-      state: "STUB",
-      gameId: fullGameInfo.id,
-      tokenAllocation: {},
-    });
-    newPlayersRef.push(doc);
-  }
-  await batch.commit();
-
-  const playerIds = newPlayersRef.map((ref) => ref.id);
-  await fullGameInfo.ref.update({
-    players: admin.firestore.FieldValue.arrayUnion(...playerIds),
-  });
-
-  return Promise.all(newPlayersRef.map(refIntoIdModel));
+  const tags: CreatePlayerTag[] = Array(amount).fill(0).map((_, i) => ({ state: 'STUB', displayName: `プレイヤー${numPlayers + i + 1}` }));
+  return createPlayers(fullGameInfo.id, tags);
 });
 
 export const kickPlayer = functions.https.onCall(async (data, context): Promise<Player> => {

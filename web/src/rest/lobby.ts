@@ -15,7 +15,9 @@ export function configure() {
 }
 
 export async function joinGame(gameKey: string, playerName: string): Promise<Player> {
-    return post(`/games/${gameKey}/join`, { playerName });
+    const func = firebase.getCallable<any, Player>('joinGame')
+    const res = await func({ gameId: gameKey, playerName });
+    return res.data;
 }
 
 export async function createGame(title: string): Promise<Game> {
