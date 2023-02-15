@@ -168,7 +168,7 @@ interface CreatePlayerTag {
 async function createPlayers(gameId: string, playerTags: CreatePlayerTag[]): Promise<Player[]> {
   const newPlayersRef: admin.firestore.DocumentReference<PlayerDoc>[] = [];
   const batch = db.batch();
-  for (let tag of playerTags) {
+  for (const tag of playerTags) {
     const id = generateId();
     const doc = players.doc(id);
     batch.create(doc, {
@@ -221,39 +221,39 @@ export const createGame = functions.https.onCall(async (data, context) => {
 });
 
 export const joinGame = functions.https.onCall(async (data, context) => {
-    const gameId = data['gameId'];
-    const playerName = data['playerName'];
+  const gameId = data["gameId"];
+  const playerName = data["playerName"];
 
-    const fullGameInfo = await refIntoFullGameInfo(games.doc(gameId));
-    let player: Player | undefined;
+  const fullGameInfo = await refIntoFullGameInfo(games.doc(gameId));
+  let player: Player | undefined;
 
-    for (let attempt = 0; player == undefined && attempt < 3; ++attempt) {
-        const stubPlayers = fullGameInfo.players.filter((pl) => pl.state == 'STUB');
-        for (let p of stubPlayers) {
-            const playerRef = players.doc(p.id);
-            const playerSnapshot = await playerRef.get();
-            if (playerSnapshot.data()?.state == 'STUB') {
-                try {
-                    await playerRef.update({
-                        state: 'ACTIVE',
-                        displayName: playerName
-                    }, { lastUpdateTime: playerSnapshot.updateTime });
-                    player = await refIntoIdModel(playerRef);
-                    break;
-                } catch (e) {
-                    console.log(`Failed to acquire ${p.id}. Trying next stub.`);
-                }
-            }
+  for (let attempt = 0; player == undefined && attempt < 3; ++attempt) {
+    const stubPlayers = fullGameInfo.players.filter((pl) => pl.state == "STUB");
+    for (const p of stubPlayers) {
+      const playerRef = players.doc(p.id);
+      const playerSnapshot = await playerRef.get();
+      if (playerSnapshot.data()?.state == "STUB") {
+        try {
+          await playerRef.update({
+            state: "ACTIVE",
+            displayName: playerName,
+          }, {lastUpdateTime: playerSnapshot.updateTime});
+          player = await refIntoIdModel(playerRef);
+          break;
+        } catch (e) {
+          console.log(`Failed to acquire ${p.id}. Trying next stub.`);
         }
+      }
     }
+  }
 
-    if (player == undefined) {
-        // Assume there's no stub remaining. Create a new player.
-        const result = await createPlayers(gameId, [{ state: 'ACTIVE', displayName: playerName }]);
-        player = result[0];
-    }
+  if (player == undefined) {
+    // Assume there's no stub remaining. Create a new player.
+    const result = await createPlayers(gameId, [{state: "ACTIVE", displayName: playerName}]);
+    player = result[0];
+  }
 
-    return player;
+  return player;
 });
 
 async function findGameByMasterKey(masterKey: string): Promise<admin.firestore.QueryDocumentSnapshot<FullGameInfoDoc> | null> {
@@ -508,7 +508,7 @@ export const createStubPlayers = functions.https.onCall(async (data, context): P
   const numPlayers = fullGameInfo.data().players.length;
   const amount = parseInt(data["amount"]);
 
-  const tags: CreatePlayerTag[] = Array(amount).fill(0).map((_, i) => ({ state: 'STUB', displayName: `プレイヤー${numPlayers + i + 1}` }));
+  const tags: CreatePlayerTag[] = Array(amount).fill(0).map((_, i) => ({state: "STUB", displayName: `プレイヤー${numPlayers + i + 1}`}));
   return createPlayers(fullGameInfo.id, tags);
 });
 
