@@ -96,9 +96,10 @@ function fullApi(api: string): string {
 }
 
 async function callApi<T, R>(api: string, payload: T): Promise<R> {
-    const func = config.firebase.getCallable<T, R>(api);
+    const func = config.firebase.getCallable<T, R>('gm');
     const fullPayload = {
         ...payload,
+        op: api,
         masterKey: config.gameMasterKey,
     };
     const res = await func(fullPayload);

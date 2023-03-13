@@ -285,249 +285,262 @@ async function findPlayerByKey(playerKey: string): Promise<Player | null> {
   return docIntoIdModel(querySnapshot.docs[0]);
 }
 
-export const fullGameInfo = functions.https.onCall(async (data, context): Promise<FullGameInfo> => {
-  const fullGameInfoDocSnapshot = await findFullGameInfo(data);
-  return intoFullGameInfo(fullGameInfoDocSnapshot.data());
-});
-
-export const updateTitle = functions.https.onCall(async (data, context): Promise<FullGameInfo> => {
-  const fullGameInfoDocSnapshot = await findFullGameInfo(data);
-  await fullGameInfoDocSnapshot.ref.update({"game.title": data["title"]});
-  return refIntoFullGameInfo(fullGameInfoDocSnapshot.ref);
-});
-
-export const setGameState = functions.https.onCall(async (data, context): Promise<FullGameInfo> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  await fullGameInfo.ref.update({"game.state": data["state"]});
-  return refIntoFullGameInfo(fullGameInfo.ref);
-});
-
-export const createRule = functions.https.onCall(async (data, context): Promise<Rule> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialRule = parsePartialRule(data);
-  const newRuleNumber = fullGameInfo.data().rules.length + 1;
-
-  const doc = rules.doc();
-  const rule: RuleDoc = {
-    ruleNumber: newRuleNumber,
-    title: partialRule.title || "",
-    text: partialRule.text || "",
-    accessType: "ASSIGNED",
-  };
-
-  await doc.create(rule);
-  await fullGameInfo.ref.update({"rules": admin.firestore.FieldValue.arrayUnion(doc.id)});
-
-  return {id: doc.id, ...rule} as Rule;
-});
-
-export const updateRule = functions.https.onCall(async (data, context): Promise<Rule> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialRule = parsePartialRule(data["rule"]);
-  const partialRuleId = partialRule.id;
-  if (partialRuleId == undefined) {
-    throw new Error("rule.id is required");
-  }
-
-  const ruleDoc = await findRuleDoc(partialRuleId);
-  if (!ruleDoc.exists) {
-    throw new Error(`Rule ${partialRule.id} not found`);
-  }
-
-  await ruleDoc.ref.update(stripUndefined({
-    title: partialRule.title,
-    text: partialRule.text,
-  }));
-
-  const assignedPlayerIds = data["assignedPlayerIds"] as (string[] | undefined);
-  if (assignedPlayerIds != undefined) {
-    const assignments = assignedPlayerIds.map((id) => ({playerId: id, accessType: "ASSIGNED"}));
-    await fullGameInfo.ref.update({[`ruleAccessMap.${ruleDoc.id}`]: assignments});
-  }
-
-  return refIntoRule(ruleDoc.ref);
-});
-
-export const deleteRule = functions.https.onCall(async (data, context): Promise<void> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialRule = parsePartialRule(data["rule"]);
-  const partialRuleId = partialRule.id;
-  if (partialRuleId == undefined) {
-    throw new Error("rule.id is required");
-  }
-
-  const ruleDoc = await findRuleDoc(partialRuleId);
-  if (!ruleDoc.exists) {
-    throw new Error(`Rule ${partialRule.id} not found`);
-  }
-
-  await fullGameInfo.ref.update({
-    rules: admin.firestore.FieldValue.arrayRemove(partialRuleId),
-    [`ruleAccessMap.${partialRuleId}`]: admin.firestore.FieldValue.delete(),
-  });
-  await ruleDoc.ref.delete();
-});
-
-export const moveRule = functions.https.onCall(async (data, context): Promise<Rule[]> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const ruleId = data["ruleId"];
-  const toNumber = data["to"];
-
-  const ruleDocsRef = fullGameInfo.data().rules.map((id) => rules.doc(id));
-  const ruleDocSnapshots = await db.getAll(...ruleDocsRef) as admin.firestore.DocumentSnapshot<RuleDoc>[];
-  const ruleItems = ruleDocSnapshots.map((ruleDocSnapshot) => intoRule(ruleDocSnapshot));
-  ruleItems.sort((a, b) => a.ruleNumber - b.ruleNumber);
-
-  const fromIdx = ruleItems.findIndex((rule) => rule.id == ruleId);
-  if (fromIdx == -1) {
-    throw new Error(`Rule ${ruleId} not found`);
-  }
-
-  let index = fromIdx;
-  if (ruleItems[fromIdx].ruleNumber > toNumber) {
-    while (index > 0 && ruleItems[index - 1].ruleNumber >= toNumber) {
-      const tmp = ruleItems[index];
-      ruleItems[index] = ruleItems[index - 1];
-      ruleItems[index - 1] = tmp;
-      index--;
-    }
-  } else {
-    while (index < ruleItems.length - 1 && ruleItems[index + 1].ruleNumber <= toNumber) {
-      const tmp = ruleItems[index];
-      ruleItems[index] = ruleItems[index + 1];
-      ruleItems[index + 1] = tmp;
-      index++;
-    }
-  }
-
-  const writeBatch = db.batch();
-  ruleItems.forEach((rule, i) => {
-    const docRef = rules.doc(rule.id);
-    writeBatch.update(docRef, {ruleNumber: i+1});
-  });
-  await writeBatch.commit();
-
-  return (await refIntoFullGameInfo(fullGameInfo.ref)).rules;
-});
-
-export const createToken = functions.https.onCall(async (data, context): Promise<Token> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialToken = parsePartialToken(data);
-
-  const doc = tokens.doc();
-  const tokenDoc: TokenDoc = {
-    title: partialToken.title || "",
-    text: partialToken.text || "",
-    amount: 0,
-  };
-
-  await doc.create(tokenDoc);
-  await fullGameInfo.ref.update({"tokens": admin.firestore.FieldValue.arrayUnion(doc.id)});
-
-  return refIntoToken(doc);
-});
-
+type GMOperation<T> = (data: any, context: any) => Promise<T>;
 interface UpdateTokenResponse {
     token: Token;
     playerTokens: PlayerIdWithAmount[];
 }
 
-export const updateToken = functions.https.onCall(async (data, context): Promise<UpdateTokenResponse> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialToken = parsePartialToken(data["token"]);
-  const partialTokenId = partialToken.id;
-  if (partialTokenId == undefined) {
-    throw new Error("token.id is required");
-  }
+const gmApi: Record<string, GMOperation<any>> = {
+  async fullGameInfo(data, context): Promise<FullGameInfo> {
+    const fullGameInfoDocSnapshot = await findFullGameInfo(data);
+    return intoFullGameInfo(fullGameInfoDocSnapshot.data());
+  },
 
-  const tokenDoc = await tokens.doc(partialTokenId).get();
-  if (!tokenDoc.exists) {
-    throw new Error(`Token ${partialToken.id} not found`);
-  }
+  async updateTitle(data, context): Promise<FullGameInfo> {
+    const fullGameInfoDocSnapshot = await findFullGameInfo(data);
+    await fullGameInfoDocSnapshot.ref.update({"game.title": data["title"]});
+    return refIntoFullGameInfo(fullGameInfoDocSnapshot.ref);
+  },
 
-  await tokenDoc.ref.update(stripUndefined({
-    title: partialToken.title,
-    text: partialToken.text,
-  }));
+  async setGameState(data, context): Promise<FullGameInfo> {
+    const fullGameInfo = await findFullGameInfo(data);
+    await fullGameInfo.ref.update({"game.state": data["state"]});
+    return refIntoFullGameInfo(fullGameInfo.ref);
+  },
 
-  const allocation = data["allocation"] as (Record<string, number> | undefined);
-  if (allocation != undefined) {
-    const writeBatch = db.batch();
-    for (const [playerId, amount] of Object.entries(allocation)) {
-      const playerDocRef = players.doc(playerId);
-      writeBatch.update(playerDocRef, {
-        [`tokenAllocation.${tokenDoc.id}`]: amount,
-      });
+  async createRule(data, context): Promise<Rule> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialRule = parsePartialRule(data);
+    const newRuleNumber = fullGameInfo.data().rules.length + 1;
+
+    const doc = rules.doc();
+    const rule: RuleDoc = {
+      ruleNumber: newRuleNumber,
+      title: partialRule.title || "",
+      text: partialRule.text || "",
+      accessType: "ASSIGNED",
+    };
+
+    await doc.create(rule);
+    await fullGameInfo.ref.update({"rules": admin.firestore.FieldValue.arrayUnion(doc.id)});
+
+    return {id: doc.id, ...rule} as Rule;
+  },
+
+  async updateRule(data, context): Promise<Rule> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialRule = parsePartialRule(data["rule"]);
+    const partialRuleId = partialRule.id;
+    if (partialRuleId == undefined) {
+      throw new Error("rule.id is required");
     }
+
+    const ruleDoc = await findRuleDoc(partialRuleId);
+    if (!ruleDoc.exists) {
+      throw new Error(`Rule ${partialRule.id} not found`);
+    }
+
+    await ruleDoc.ref.update(stripUndefined({
+      title: partialRule.title,
+      text: partialRule.text,
+    }));
+
+    const assignedPlayerIds = data["assignedPlayerIds"] as (string[] | undefined);
+    if (assignedPlayerIds != undefined) {
+      const assignments = assignedPlayerIds.map((id) => ({playerId: id, accessType: "ASSIGNED"}));
+      await fullGameInfo.ref.update({[`ruleAccessMap.${ruleDoc.id}`]: assignments});
+    }
+
+    return refIntoRule(ruleDoc.ref);
+  },
+
+  async deleteRule(data, context): Promise<void> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialRule = parsePartialRule(data["rule"]);
+    const partialRuleId = partialRule.id;
+    if (partialRuleId == undefined) {
+      throw new Error("rule.id is required");
+    }
+
+    const ruleDoc = await findRuleDoc(partialRuleId);
+    if (!ruleDoc.exists) {
+      throw new Error(`Rule ${partialRule.id} not found`);
+    }
+
+    await fullGameInfo.ref.update({
+      rules: admin.firestore.FieldValue.arrayRemove(partialRuleId),
+      [`ruleAccessMap.${partialRuleId}`]: admin.firestore.FieldValue.delete(),
+    });
+    await ruleDoc.ref.delete();
+  },
+
+  async moveRule(data, context): Promise<Rule[]> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const ruleId = data["ruleId"];
+    const toNumber = data["to"];
+
+    const ruleDocsRef = fullGameInfo.data().rules.map((id) => rules.doc(id));
+    const ruleDocSnapshots = await db.getAll(...ruleDocsRef) as admin.firestore.DocumentSnapshot<RuleDoc>[];
+    const ruleItems = ruleDocSnapshots.map((ruleDocSnapshot) => intoRule(ruleDocSnapshot));
+    ruleItems.sort((a, b) => a.ruleNumber - b.ruleNumber);
+
+    const fromIdx = ruleItems.findIndex((rule) => rule.id == ruleId);
+    if (fromIdx == -1) {
+      throw new Error(`Rule ${ruleId} not found`);
+    }
+
+    let index = fromIdx;
+    if (ruleItems[fromIdx].ruleNumber > toNumber) {
+      while (index > 0 && ruleItems[index - 1].ruleNumber >= toNumber) {
+        const tmp = ruleItems[index];
+        ruleItems[index] = ruleItems[index - 1];
+        ruleItems[index - 1] = tmp;
+        index--;
+      }
+    } else {
+      while (index < ruleItems.length - 1 && ruleItems[index + 1].ruleNumber <= toNumber) {
+        const tmp = ruleItems[index];
+        ruleItems[index] = ruleItems[index + 1];
+        ruleItems[index + 1] = tmp;
+        index++;
+      }
+    }
+
+    const writeBatch = db.batch();
+    ruleItems.forEach((rule, i) => {
+      const docRef = rules.doc(rule.id);
+      writeBatch.update(docRef, {ruleNumber: i + 1});
+    });
     await writeBatch.commit();
+
+    return (await refIntoFullGameInfo(fullGameInfo.ref)).rules;
+  },
+
+  async createToken(data, context): Promise<Token> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data);
+
+    const doc = tokens.doc();
+    const tokenDoc: TokenDoc = {
+      title: partialToken.title || "",
+      text: partialToken.text || "",
+      amount: 0,
+    };
+
+    await doc.create(tokenDoc);
+    await fullGameInfo.ref.update({"tokens": admin.firestore.FieldValue.arrayUnion(doc.id)});
+
+    return refIntoToken(doc);
+  },
+
+  async updateToken(data, context): Promise<UpdateTokenResponse> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data["token"]);
+    const partialTokenId = partialToken.id;
+    if (partialTokenId == undefined) {
+      throw new Error("token.id is required");
+    }
+
+    const tokenDoc = await tokens.doc(partialTokenId).get();
+    if (!tokenDoc.exists) {
+      throw new Error(`Token ${partialToken.id} not found`);
+    }
+
+    await tokenDoc.ref.update(stripUndefined({
+      title: partialToken.title,
+      text: partialToken.text,
+    }));
+
+    const allocation = data["allocation"] as (Record<string, number> | undefined);
+    if (allocation != undefined) {
+      const writeBatch = db.batch();
+      for (const [playerId, amount] of Object.entries(allocation)) {
+        const playerDocRef = players.doc(playerId);
+        writeBatch.update(playerDocRef, {
+          [`tokenAllocation.${tokenDoc.id}`]: amount,
+        });
+      }
+      await writeBatch.commit();
+    }
+
+    const playerDocs = await getAll(fullGameInfo.data().players.map((id) => players.doc(id)));
+    const playerItems = playerDocs.map(docIntoIdModel);
+    const playerTokens = playerItems.map((pl) => ({playerId: pl.id, amount: pl.tokenAllocation[tokenDoc.id]}));
+
+    return {
+      token: await refIntoToken(tokenDoc.ref),
+      playerTokens,
+    };
+  },
+
+  async deleteToken(data, context): Promise<void> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialToken = parsePartialToken(data["token"]);
+    const partialTokenId = partialToken.id;
+    if (partialTokenId == undefined) {
+      throw new Error("token.id is required");
+    }
+
+    const tokenDoc = await tokens.doc(partialTokenId).get();
+    if (!tokenDoc.exists) {
+      throw new Error(`Rule ${partialToken.id} not found`);
+    }
+
+    await fullGameInfo.ref.update({
+      tokens: admin.firestore.FieldValue.arrayRemove(partialTokenId),
+    });
+    await tokenDoc.ref.delete();
+  },
+
+  async addTokenToPlayer(data, context): Promise<number> {
+    const tokenId = data["tokenId"];
+    const playerId = data["playerId"];
+    const amount = parseInt(data["amount"]);
+
+    const playerDoc = players.doc(playerId);
+    await playerDoc.update({
+      [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount),
+    });
+    return (await playerDoc.get()).data()!.tokenAllocation[tokenId];
+  },
+
+  async createStubPlayers(data, context): Promise<Player[]> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const numPlayers = fullGameInfo.data().players.length;
+    const amount = parseInt(data["amount"]);
+
+    const tags: CreatePlayerTag[] = Array(amount).fill(0).map((_, i) => ({state: "STUB", displayName: `プレイヤー${numPlayers + i + 1}`}));
+    return createPlayers(fullGameInfo.id, tags);
+  },
+
+  async kickPlayer(data, context): Promise<Player> {
+    const fullGameInfo = await findFullGameInfo(data);
+    const partialPlayer = parsePartialPlayer(data["player"]);
+    const playerId = partialPlayer.id;
+    if (playerId == undefined) {
+      throw new Error("player.id is required");
+    }
+
+    await fullGameInfo.ref.update({
+      players: admin.firestore.FieldValue.arrayRemove(playerId),
+    });
+
+    const doc = players.doc(playerId);
+    const player = await refIntoIdModel(doc);
+    await doc.delete();
+    return player;
+  },
+};
+
+export const gm = functions.https.onCall(async (data, context): Promise<any> => {
+  const opName = data["op"] as string;
+  const api = gmApi[opName];
+  if (api == undefined) {
+    throw new Error(`Operation ${opName} not found`);
   }
 
-  const playerDocs = await getAll(fullGameInfo.data().players.map((id) => players.doc(id)));
-  const playerItems = playerDocs.map(docIntoIdModel);
-  const playerTokens = playerItems.map((pl) => ({playerId: pl.id, amount: pl.tokenAllocation[tokenDoc.id]}));
-
-  return {
-    token: await refIntoToken(tokenDoc.ref),
-    playerTokens,
-  };
-});
-
-export const deleteToken = functions.https.onCall(async (data, context): Promise<void> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialToken = parsePartialToken(data["token"]);
-  const partialTokenId = partialToken.id;
-  if (partialTokenId == undefined) {
-    throw new Error("token.id is required");
-  }
-
-  const tokenDoc = await tokens.doc(partialTokenId).get();
-  if (!tokenDoc.exists) {
-    throw new Error(`Rule ${partialToken.id} not found`);
-  }
-
-  await fullGameInfo.ref.update({
-    tokens: admin.firestore.FieldValue.arrayRemove(partialTokenId),
-  });
-  await tokenDoc.ref.delete();
-});
-
-export const addTokenToPlayer = functions.https.onCall(async (data, context): Promise<number> => {
-  const tokenId = data["tokenId"];
-  const playerId = data["playerId"];
-  const amount = parseInt(data["amount"]);
-
-  const playerDoc = players.doc(playerId);
-  await playerDoc.update({
-    [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount),
-  });
-  return (await playerDoc.get()).data()!.tokenAllocation[tokenId];
-});
-
-export const createStubPlayers = functions.https.onCall(async (data, context): Promise<Player[]> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const numPlayers = fullGameInfo.data().players.length;
-  const amount = parseInt(data["amount"]);
-
-  const tags: CreatePlayerTag[] = Array(amount).fill(0).map((_, i) => ({state: "STUB", displayName: `プレイヤー${numPlayers + i + 1}`}));
-  return createPlayers(fullGameInfo.id, tags);
-});
-
-export const kickPlayer = functions.https.onCall(async (data, context): Promise<Player> => {
-  const fullGameInfo = await findFullGameInfo(data);
-  const partialPlayer = parsePartialPlayer(data["player"]);
-  const playerId = partialPlayer.id;
-  if (playerId == undefined) {
-    throw new Error("player.id is required");
-  }
-
-  await fullGameInfo.ref.update({
-    players: admin.firestore.FieldValue.arrayRemove(playerId),
-  });
-
-  const doc = players.doc(playerId);
-  const player = await refIntoIdModel(doc);
-  await doc.delete();
-  return player;
+  return api(data, context);
 });
 
 export const fullPlayerInfo = functions.https.onCall(async (data, context): Promise<FullPlayerInfo> => {
