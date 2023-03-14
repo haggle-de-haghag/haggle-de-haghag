@@ -543,114 +543,127 @@ export const gm = functions.https.onCall(async (data, context): Promise<any> => 
   return api(data, context);
 });
 
-export const fullPlayerInfo = functions.https.onCall(async (data, context): Promise<FullPlayerInfo> => {
-  const player = await findPlayerByKey(data["playerKey"]);
-  if (player == null) {
-    throw new Error(`Player ${data["playerKey"]} not found`);
-  }
-
-  const fullGameInfoDocRef = games.doc(player.gameId);
-  const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
-
-  const foreignPlayers: ForeignPlayer[] = fullGameInfo.players.map((pl) => ({
-    id: pl.id,
-    displayName: pl.displayName,
-  })).filter((pl) => pl.id != player.id);
-
-  const rules = fullGameInfo.rules.map((rule) => {
-    const accessList = fullGameInfo.ruleAccessMap[rule.id];
-    const access = accessList?.find((a) => a.playerId == player.id);
-    if (access != undefined) {
-      return {...rule, accessType: access.accessType};
-    } else if (fullGameInfo.game.state == "POST_MORTEM") {
-      return {...rule, accessType: "POST_MORTEM"};
-    } else {
-      return null;
+type PlayerOperation<T> = (data: any, context: any) => Promise<T>;
+const playerApi: Record<string, PlayerOperation<any>> = {
+  async fullPlayerInfo(data, context): Promise<FullPlayerInfo> {
+    const player = await findPlayerByKey(data["playerKey"]);
+    if (player == null) {
+      throw new Error(`Player ${data["playerKey"]} not found`);
     }
-  }).filter((rule) => rule != null) as Rule[];
 
-  const tokens = fullGameInfo.tokens.map((token) => {
-    const amount = player.tokenAllocation[token.id] ?? 0;
-    if (fullGameInfo.game.state == "POST_MORTEM" || amount > 0) {
-      return {...token, amount};
-    } else {
-      return null;
+    const fullGameInfoDocRef = games.doc(player.gameId);
+    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
+
+    const foreignPlayers: ForeignPlayer[] = fullGameInfo.players.map((pl) => ({
+      id: pl.id,
+      displayName: pl.displayName,
+    })).filter((pl) => pl.id != player.id);
+
+    const rules = fullGameInfo.rules.map((rule) => {
+      const accessList = fullGameInfo.ruleAccessMap[rule.id];
+      const access = accessList?.find((a) => a.playerId == player.id);
+      if (access != undefined) {
+        return {...rule, accessType: access.accessType};
+      } else if (fullGameInfo.game.state == "POST_MORTEM") {
+        return {...rule, accessType: "POST_MORTEM"};
+      } else {
+        return null;
+      }
+    }).filter((rule) => rule != null) as Rule[];
+
+    const tokens = fullGameInfo.tokens.map((token) => {
+      const amount = player.tokenAllocation[token.id] ?? 0;
+      if (fullGameInfo.game.state == "POST_MORTEM" || amount > 0) {
+        return {...token, amount};
+      } else {
+        return null;
+      }
+    }).filter((token) => token != null) as Token[];
+
+    return {
+      gameTitle: fullGameInfo.game.title,
+      player,
+      players: foreignPlayers,
+      rules: rules.sort((a, b) => a.ruleNumber - b.ruleNumber),
+      tokens: tokens.sort((a, b) => a.id.localeCompare(b.id)),
+    };
+  },
+
+  async updatePlayerName(data, context): Promise<Player> {
+    const player = await findPlayerByKey(data["playerKey"]);
+    if (player == null) {
+      throw new Error(`Player ${data["playerKey"]} not found`);
     }
-  }).filter((token) => token != null) as Token[];
 
-  return {
-    gameTitle: fullGameInfo.game.title,
-    player,
-    players: foreignPlayers,
-    rules: rules.sort((a, b) => a.ruleNumber - b.ruleNumber),
-    tokens: tokens.sort((a, b) => a.id.localeCompare(b.id)),
-  };
-});
+    const playerDocRef = players.doc(player.id);
+    await playerDocRef.update({"displayName": data["name"]});
+    return refIntoIdModel(playerDocRef);
+  },
 
-export const updatePlayerName = functions.https.onCall(async (data, context): Promise<Player> => {
-  const player = await findPlayerByKey(data["playerKey"]);
-  if (player == null) {
-    throw new Error(`Player ${data["playerKey"]} not found`);
+  async shareRule(data, context): Promise<boolean> {
+    const player = await findPlayerByKey(data["playerKey"]);
+    if (player == null) {
+      throw new Error(`Player ${data["playerKey"]} not found`);
+    }
+    const ruleId = data["ruleId"];
+    const toPlayerId = data["toPlayerId"];
+
+    const fullGameInfoDocRef = games.doc(player.gameId);
+    const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
+
+    const ruleAccessList = fullGameInfo.ruleAccessMap[ruleId];
+    if (ruleAccessList == undefined) {
+      throw new Error(`Rule ${ruleId} not found`);
+    }
+
+    const fromRuleAccess = ruleAccessList.find((a) => a.playerId == player.id);
+    if (fromRuleAccess == undefined || fromRuleAccess.accessType != "ASSIGNED") {
+      throw new Error(`Invalid access to rule ${ruleId}`);
+    }
+
+    const toRuleAccess = ruleAccessList.find((a) => a.playerId == toPlayerId);
+    if (toRuleAccess != undefined) {
+      console.log(`Player ${toPlayerId} already knows rule ${ruleId}`);
+      return false;
+    }
+
+    await fullGameInfoDocRef.update({
+      [`ruleAccessMap.${ruleId}`]: admin.firestore.FieldValue.arrayUnion({playerId: toPlayerId, accessType: "SHARED"}),
+    });
+    return true;
+  },
+
+  async giveToken(data, context): Promise<boolean> {
+    const player = await findPlayerByKey(data["playerKey"]);
+    if (player == null) {
+      throw new Error(`Player ${data["playerKey"]} not found`);
+    }
+    const tokenId = data["tokenId"];
+    const toPlayerId = data["toPlayerId"];
+    const amount = parseInt(data["amount"]);
+
+    if (player.tokenAllocation[tokenId] < amount) {
+      console.log(`Player ${player.id} does not have ${amount} of token ${tokenId}`);
+      return false;
+    }
+
+    await players.doc(toPlayerId).update({
+      [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount),
+    });
+    await players.doc(player.id).update({
+      [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(-amount),
+    });
+
+    return true;
+  },
+};
+
+export const player = functions.https.onCall(async (data, context): Promise<any> => {
+  const opName = data["op"] as string;
+  const api = playerApi[opName];
+  if (api == undefined) {
+    throw new Error(`Operation ${opName} not found`);
   }
 
-  const playerDocRef = players.doc(player.id);
-  await playerDocRef.update({"displayName": data["name"]});
-  return refIntoIdModel(playerDocRef);
-});
-
-export const shareRule = functions.https.onCall(async (data, context): Promise<boolean> => {
-  const player = await findPlayerByKey(data["playerKey"]);
-  if (player == null) {
-    throw new Error(`Player ${data["playerKey"]} not found`);
-  }
-  const ruleId = data["ruleId"];
-  const toPlayerId = data["toPlayerId"];
-
-  const fullGameInfoDocRef = games.doc(player.gameId);
-  const fullGameInfo = await refIntoFullGameInfo(fullGameInfoDocRef);
-
-  const ruleAccessList = fullGameInfo.ruleAccessMap[ruleId];
-  if (ruleAccessList == undefined) {
-    throw new Error(`Rule ${ruleId} not found`);
-  }
-
-  const fromRuleAccess = ruleAccessList.find((a) => a.playerId == player.id);
-  if (fromRuleAccess == undefined || fromRuleAccess.accessType != "ASSIGNED") {
-    throw new Error(`Invalid access to rule ${ruleId}`);
-  }
-
-  const toRuleAccess = ruleAccessList.find((a) => a.playerId == toPlayerId);
-  if (toRuleAccess != undefined) {
-    console.log(`Player ${toPlayerId} already knows rule ${ruleId}`);
-    return false;
-  }
-
-  await fullGameInfoDocRef.update({
-    [`ruleAccessMap.${ruleId}`]: admin.firestore.FieldValue.arrayUnion({playerId: toPlayerId, accessType: "SHARED"}),
-  });
-  return true;
-});
-
-export const giveToken = functions.https.onCall(async (data, context): Promise<boolean> => {
-  const player = await findPlayerByKey(data["playerKey"]);
-  if (player == null) {
-    throw new Error(`Player ${data["playerKey"]} not found`);
-  }
-  const tokenId = data["tokenId"];
-  const toPlayerId = data["toPlayerId"];
-  const amount = parseInt(data["amount"]);
-
-  if (player.tokenAllocation[tokenId] < amount) {
-    console.log(`Player ${player.id} does not have ${amount} of token ${tokenId}`);
-    return false;
-  }
-
-  await players.doc(toPlayerId).update({
-    [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(amount),
-  });
-  await players.doc(player.id).update({
-    [`tokenAllocation.${tokenId}`]: admin.firestore.FieldValue.increment(-amount),
-  });
-
-  return true;
+  return api(data, context);
 });

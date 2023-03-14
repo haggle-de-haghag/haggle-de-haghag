@@ -40,9 +40,10 @@ export async function giveToken(tokenId: TokenId, playerId: PlayerId, amount: nu
 }
 
 async function callApi<T, R>(api: string, payload: T): Promise<R> {
-    const func = config.firebase.getCallable<T, R>(api);
+    const func = config.firebase.getCallable<T, R>('player');
     const fullPayload = {
         ...payload,
+        op: api,
         playerKey: config.playerKey,
     };
     const res = await func(fullPayload);
